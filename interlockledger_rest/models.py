@@ -1,0 +1,547 @@
+'''
+
+Copyright (c) 2018-2019 InterlockLedger Network
+All rights reserved.
+
+Redistribution and use in source and binary forms = auto() with or without
+modification = auto() are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice = auto() this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice = auto()
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+* Neither the name of the copyright holder nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES = auto() INCLUDING = auto() BUT NOT LIMITED TO = auto() THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT = auto() INDIRECT = auto() INCIDENTAL = auto() SPECIAL = auto() EXEMPLARY = auto() OR CONSEQUENTIAL
+DAMAGES (INCLUDING = auto() BUT NOT LIMITED TO = auto() PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE = auto() DATA = auto() OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY = auto() WHETHER IN CONTRACT = auto() STRICT LIABILITY = auto()
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE = auto() EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+'''
+
+import os
+import json
+import re
+import datetime
+import functools
+import base64
+
+from packaging import version
+from colour import Color
+
+
+from .enumerations import KeyPurpose
+from .enumerations import RecordType
+from .limited_range import LimitedRange
+
+substitutions = {
+'att_must_change': 'after_change'
+}
+get_att_name = lambda x: x if x not in substitutions else substitutions[x]
+
+def null_condition_attribute(obj, attribute) :
+    if (obj is None):
+        return None
+    else :
+        return getattr(obj, attribute)
+
+def string2datetime(time_string) :
+    time_string = time_string if time_string[-3] != ':' else time_string[:-3] + time_string[-2:]
+    if '.' in time_string :
+        return datetime.datetime.strptime(time_string,'%Y-%m-%dT%H:%M:%S.%f%z')
+    else :
+        return datetime.datetime.strptime(time_string,'%Y-%m-%dT%H:%M:%S%z')
+
+
+def to_bytes(value) :
+    """Decodes a string, list to bytes.
+    
+    Parameters
+    ----------
+    value : 
+        Value to decode to bytes
+
+    Returns
+    -------
+    bytes
+        if type(value) is bytes, return value
+        if type(value) is string, returns the base64 decoded bytes
+        otherwise, returns bytes(value) 
+    """
+    if type(value) is bytes :
+        return value
+    elif type(value) is str :
+        return base64.b64decode(value)
+    else :
+        return bytes(value)
+
+
+
+class CustomEncoder(json.JSONEncoder) :
+    def default(self, obj) :
+        print(type(obj))
+        if isinstance(obj, datetime.datetime) :
+            t = obj.strftime('%Y-%m-%dT%H:%M:%S.%f')
+            z = obj.strftime('%z')
+            return t + z[:-2] + ':' + t[-2:]
+        elif isinstance(obj, Color) :
+            return obj.web
+        elif isinstance(obj, version.Version) :
+            return str(obj)
+        elif isinstance(obj, LimitedRange) :
+            return str(obj)
+        elif isinstance(obj, bytes) :
+            return base64.b64encode(obj).decode('utf-8')
+        else :
+            return obj.__dict__
+
+
+class BaseModel :
+    @classmethod
+    def from_json(cls, json_data) :
+        return cls(**json_data)
+
+
+class AppsModel(BaseModel) :
+    def __init__(self, network = None, validApps = [], **kwargs) :
+        self.network = network
+        self.validApps = []
+        for item in validApps :
+            self.validApps.append(item if type(item) is self.PublishedApp else self.PublishedApp.from_json(item))
+        
+    @functools.total_ordering
+    class PublishedApp(BaseModel) :
+        def __init__(self, alternativeId = None, appVersion = None, description = None, app_id = None, name = None, publisherId = None, publisherName = None, reservedILTagIds = None, start = None, version_ = None, **kwargs) :
+            self.alternativeId = alternativeId
+            self.appVersion = appVersion if type(appVersion) is version.Version else version.parse(appVersion)
+            self.description = description
+            self.id = kwargs.get('id', app_id)
+            self.name = name
+            self.publisherId = publisherId
+            self.publisherName = publisherName
+
+            self.reservedILTagIds = []
+            for item in reservedILTagIds :
+                self.reservedILTagIds.append(item if type(item) is LimitedRange else LimitedRange.resolve(item))
+            
+            self.start = start if type(start) is datetime.datetime else string2datetime(start)
+            self.version = kwargs.get('version', version_)
+
+
+        @property
+        def compositeName(self):
+            return self.__safe(f'{self.publisherName}.{self.name}#{self.appVersion}')
+        
+
+        def __str__(self) :
+            return f'  #{self.id} {self.compositeName}   {os.linesep}    {self.description}'
+        
+        @staticmethod
+        def __safe(name):
+            return re.sub('[\s\\\/:""<>|\*\?]+', '_', name) 
+
+        def __eq__(self, other) :
+            if other is None :
+                return False
+            
+            if self.id == other.id: 
+                return self.appVersion == other.appVersion
+            else :
+                return False
+
+        def __lt__(self, other) :
+            if other is None :
+                return False
+            if self.id == other.id: 
+                return self.appVersion < other.appVersion
+            else :
+                return self.id < other.id
+
+
+@functools.total_ordering
+class ChainIdModel(BaseModel) :
+    def __init__(self, chain_id=None, name=None, **kwargs) :
+        self.id = kwargs.get('id', chain_id)
+        self.name = name
+
+    def __eq__(self, other) :
+        return (other is not None) and self.id == other.id
+
+    def __lt__(self, other) :
+        if other is None :
+            return False
+        return self.id < other.id
+
+    def __hash__(self):
+        if self.id is None or self.id.__hash__() is None :
+            return 0
+        else :
+            return self.id.__hash__()
+
+    def __str__(self) :
+        return f"Chain '{self.name}' #{self.id}"
+
+
+class ChainSummaryModel(BaseModel) :
+    def __init__(self, activeApps = [], description = None, isClosedForNewTransactions = False, lastRecord = None, **kwarg) :
+        self.activeApps = activeApps
+        self.description = description
+        self.isClosedForNewTransactions = isClosedForNewTransactions
+        self.lastRecord = lastRecord
+
+
+class DocumentBaseModel(BaseModel) :
+    def __init__(self, cipher = None, keyId = None, name = None, previousVersion = None, **kwargs) :
+        self.cipher = cipher
+        self.keyId = keyId
+        self.name = name
+        self.previousVersion = previousVersion
+
+    @property
+    def is_ciphered(self):
+        return self.cipher != CipherAlgorithms.NONE.value and not self.cipher.strip()
+    
+
+class DocumentDetailsModel(DocumentBaseModel) :
+    def __init__(self, cipher = None, keyId = None, name = None, previousVersion = None, contentType = None, fileId = None, physicalDocumentID = None, **kwargs):
+        super().__init__(cipher, keyId, name, previousVersion,**kwargs)
+        self.contentType = contentType
+        self.fileId = fileId
+        self.physicalDocumentID = physicalDocumentID
+
+    @property
+    def is_plain_text(self):
+        return self.contentType == "plain/text"
+
+    def __str__(self) :
+        return f"Document '{self.name}' [{self.contentType}] {self.fileId}"
+
+
+class DocumentUploadModel(DocumentBaseModel) :
+    def __init__(self, cipher = None, keyId = None, name = None, previousVersion = None, contentType = None, **kwargs) :
+        if name is None or name.strip().isspace() :
+            raise ValueError('Document must have a name')
+            
+        if contentType is None or contentType.strip().isspace() :
+            raise ValueError('Document must have a contentType')
+            
+        super().__init__(cipher, keyId, name, previousVersion,**kwargs)
+        self.contentType = contentType
+
+    def to_query_string(self) :
+        sb = f"?cipher={self.cipher}&name={self.name}"
+        if self.keyId :
+            sb += f"&keyId={self.keyId}"
+        if self.previousVersion :
+            sb += f"&previousVersion={self.previousVersion}"
+        return sb
+
+
+
+
+class KeyModel(BaseModel) :
+    def __init__(self, app = None, appActions = None, key_id = None, name = None, publicKey = None, purposes = None, **kwargs) :
+        self.app = app
+        self.appActions = appActions
+        self.id = kwargs.get('id', key_id)
+        self.name = name
+        self.publicKey = publicKey
+        self.purposes = purposes
+
+    @property
+    def actionable(self) :
+        return 'Action' in self.purposes
+
+    @property
+    def __actions_for(self):
+        return self.__app_and_actions() if self.actionable else ''
+    
+    def __app_and_actions(self) :
+        actions = self.appActions if self.appActions is not None else []
+        if self.app == 0 and not actions :
+            return "All Apps & Actions"
+        plural = "" if len(actions) == 1 else "s"
+        str_actions = ",".join(str(item) for item in actions) if actions else "All Actions"
+        return f"App #{self.app} {f'Action{plural} {str_actions}'}"
+
+    def __str__(self) :
+        return f"Key '{self.name}' {self.id} purposes [{', '.join(sorted(self.purposes))}]  {self.__actions_for.lower()}"
+
+
+class KeyPermitModel(BaseModel) :
+    def __init__(self, app, appActions, key_id, name, publicKey, purposes, **kwargs) :
+        key_id = kwargs.get("id", key_id)
+        if appAction is None :
+            raise TypeError('appAction is None')
+        elif not appAction :
+            raise ValueError("This key doesn't have at least one action to be permitted")
+        if key_id is None :
+            raise TypeError('key_id is None')
+        if name is None :
+            raise TypeError('name is None')
+        if publicKey is None :
+            raise TypeError('publicKey is None')
+        if purposes is None :
+            raise TypeError('purposes is None')
+        elif KeyPurpose.Action.value not in purposes and KeyPurpose.Protocol.value not in purposes :
+            raise ValueError("This key doesn't have the required purposes to be permitted")
+
+        self.app = app
+        self.appActions = appActions
+        self.id = key_id
+        self.name = name
+        self.publicKey = publicKey
+        self.purposes = purposes
+
+
+class NewRecordModelBase(BaseModel) :
+    def __init__(self, applicationId = None, rec_type = RecordType.Data.value, **kwargs) :
+        self.applicationId = applicationId
+        self.type = kwargs.get('type', rec_type)
+
+
+class NewRecordModelAsJson(NewRecordModelBase) :
+    def __init__(self, applicationId = None, rec_type = RecordType.Data.value, rec_json = None, payloadTagId = None, **kwargs) :
+        rec_type = kwargs.get('type', rec_type)
+        super().__init__(applicationId, rec_type, **kwargs)
+        self.json = kwargs.get('json', rec_json)
+        self.payloadTagId = payloadTagId
+
+
+class NewRecordModel(NewRecordModelBase) :
+    def __init__(self, applicationId = None, rec_type = RecordType.Data.value, payloadBytes = None, **kwargs) :
+        rec_type = kwargs.get('type', rec_type)
+        super().__init__(applicationId, rec_type, **kwargs)
+        self.payloadBytes = to_bytes(payloadBytes)
+
+
+class NodeCommonModel(BaseModel) :
+    ''' Node/Peer common details '''
+    def __init__(self, color = None, node_id = None, name = None, network = None, ownerId = None, ownerName = None, roles = None, softwareVersions = None, **kwargs) :
+        # Mapping color
+        self.color = Color(color)
+        # Unique node id
+        self.id = kwargs.get('id', node_id)
+        # Node name
+        self.name = name
+        # Network this node participates on
+        self.network = network
+        # Node owner id [optional]
+        self.ownerId = ownerId
+        # Node ownder name [optional]
+        self.ownerName = ownerName
+        # List of active roles running in the node
+        self.roles = roles
+        # Version of softaware running the Node
+
+        self.softwareVersions = softwareVersions if type(softwareVersions) is Versions else Versions(**softwareVersions)
+
+    def __str__(self) :
+        ret = f"Node '{self.name}' {self.id}"
+        ret += f"\nRunning il2 node#{null_condition_attribute(self.softwareVersions, 'node')} using [Message Envelope Wire Format #{null_condition_attribute(self.softwareVersions, 'messageEnvelopeWireFormat')}] with Peer2Peer#{null_condition_attribute(self.softwareVersions, 'peer2peer')}"
+        ret += f"\nNetwork {self.network}"
+        ret += f"\nColor {self.fancy_color}"
+        ret += f"\nOwner {self.ownerName} #{self.ownerId}"
+        ret += f"\nRoles: {','.join(self.roles)}"
+        ret += f"\n{self._extras}"
+        ret += "\n"
+        return ret
+
+    @property
+    def fancy_color(self) :
+        return self.color.web if self.color is not None else None
+
+    @property
+    def _empty(self):
+        return []
+    
+    @property
+    def _extras(self):
+        return ''
+
+
+class NodeDetailsModel(NodeCommonModel) :
+    ''' Node details '''
+
+    def __init__(self, color = None, node_id = None, name = None, network = None, ownerId = None, ownerName = None, roles = None, softwareVersions = None, chains = [], **kwargs) :
+        node_id = kwargs.get('id', node_id)
+        super().__init__(color, node_id, name, network, ownerId, ownerName, roles, softwareVersions, **kwargs)
+        self.chains = chains
+
+    @property
+    def _extras(self):
+        return 'Chains: {}'.format(', '.join(self.chains))
+
+
+class PeerModel(NodeCommonModel) :
+    def __init__(self, color = None, node_id = None, name = None, network = None, ownerId = None, ownerName = None, roles = None, softwareVersions = None, address = None, port = None, protocol = None, **kwargs) :
+        node_id = kwargs.get('id', node_id)
+        super().__init__(color, node_id, name, network, ownerId, ownerName, roles, softwareVersions, **kwargs)
+
+        self.address = address
+        self.port = port
+        self.protocol = protocol
+
+    def __lt__(self, other) :
+        return self.name < other.name
+
+    @property
+    def _extras(self):
+        return f'P2P listening at {self.address}:{self.port}'
+
+
+class RecordModelBase(BaseModel) :
+    def __init__(self, applicationId = None, chainId = None, createdAt = None, rec_hash = None, 
+                 payloadTagId = None, serial = None, rec_type = None, version = None, **kwargs) :
+        rec_hash = kwargs.get('hash', rec_hash)
+        rec_type = kwargs.get('type', rec_type)
+
+        self.applicationId = applicationId
+        self.chainId = chainId
+        self.createdAt = createdAt
+        self.hash = rec_hash
+        self.payloadTagId = payloadTagId
+        self.serial = serial
+        self.type = rec_type
+        self.version = version
+
+    def __str__(self) :
+        return json.dumps(self, indent=4, cls=CustomEncoder)
+
+
+class RecordModel(RecordModelBase) :
+    def __init__(self, applicationId = None, chainId = None, createdAt = None, rec_hash = None, 
+                 payloadTagId = None, serial = None, rec_type = None, version = None, 
+                 payloadBytes = None, **kwargs) :
+        rec_hash = kwargs.get('hash', rec_hash)
+        rec_type = kwargs.get('type', rec_type)
+        super().__init__(applicationId, chainId, createdAt, rec_hash, payloadTagId, serial, rec_type, version, **kwargs)
+        
+        self.payloadBytes = to_bytes(payloadBytes)
+
+
+class RecordModelAsJson(RecordModelBase) :
+    def __init__(self, applicationId = None, chainId = None, createdAt = None, rec_hash = None, 
+                 payloadTagId = None, serial = None, rec_type = None, version = None, 
+                 payload = None, **kwargs) :
+        rec_hash = kwargs.get('hash', rec_hash)
+        rec_type = kwargs.get('type', rec_type)
+        super().__init__(applicationId, chainId, createdAt, rec_hash, payloadTagId, serial, rec_type, version, **kwargs)
+        self.payload = payload
+
+
+class InterlockingRecordModel(RecordModel) :
+    def __init__(self, applicationId = None, chainId = None, createdAt = None, rec_hash = None, 
+                 payloadTagId = None, serial = None, rec_type = None, version = None, 
+                 payloadBytes = None, interlockedChainId = None, interlockedRecordHash = None, 
+                 interlockedRecordOffset = None, interlockedRecordSerial = None, **kwargs) :
+        rec_hash = kwargs.get('hash', rec_hash)
+        rec_type = kwargs.get('type', rec_type)
+        super().__init__(applicationId, chainId, createdAt, rec_hash, payloadTagId, serial, rec_type, version, payloadBytes, **kwargs)
+        self.interlockedChainId = interlockedChainId
+        self.interlockedRecordHash = interlockedRecordHash
+        self.interlockedRecordOffset = interlockedRecordOffset
+        self.interlockedRecordSerial = interlockedRecordSerial
+
+    def __str__(self) :
+        return f"Interlocked chain {self.interlockedChainId} at record #{self.interlockedRecordSerial} (offset: {self.interlockedRecordOffset}) with hash {self.interlockedRecordHash}{os.linesep}{super()}"
+
+
+
+
+
+class Versions(BaseModel) :
+    ''' Versions for parts of the software '''
+
+    def __init__(self, coreLibs = None, messageEnvelopeWireFormat = None, node = None, peer2peer = None, **kwargs) :
+        # Core libraries and il2apps version
+        self.coreLibs = coreLibs
+        # Message envelope wire format version
+        self.messageEnvelopeWireFormat = messageEnvelopeWireFormat
+        # Interlockledger node daemon version
+        self.node = node
+        # Peer2Peer connectivity library version
+        self.peer2peer = peer2peer
+
+
+
+
+if __name__ == '__main__' :
+    def test_version() :
+        json_data = {'coreLibs': '2.2.0', 'messageEnvelopeWireFormat': '1','node': '0.18.0','peer2peer': '0.26.2'}
+        v = Versions.from_json(json_data)
+        print(json_data)
+        print(json.dumps(v, cls = CustomEncoder))
+        print(type(v))
+
+    def test_node_common_model() :
+        json_data = {'chains': ['cA7CTUJxkcpGMpuGtg59kB9z5BllR-gQ4k4xBn8VAuo'],
+                    'color': '#20F9C7',
+                    'extensions': {'MaximumNumberOfNodesProxyed': '32',
+                    'RequiresProxying': 'False'},
+                    'id': 'Node!qh8D-FVQ8-2ng_EIDN8C9m3pOLAtz0BXKuCh9OBDr6U',
+                    'name': 'Node for il2tester on Apollo',
+                    'network': 'Apollo',
+                    'ownerId': 'Owner!yj_wQTrTDbBjQlTPF-qrtyfagLeT3UT8Mb5ObvqPXzk',
+                    'ownerName': 'il2tester',
+                    'peerAddress': 'ilkl-apollo://localhost:32021',
+                    'roles': ['Interlocking', 'Mirror', 'PeerRegistry', 'Relay', 'User'],
+                    'softwareVersions': {'coreLibs': '2.2.0',
+                    'messageEnvelopeWireFormat': '1',
+                    'node': '0.18.0',
+                    'peer2peer': '0.26.2'}}
+
+
+        node = NodeCommonModel.from_json(json_data)
+
+        print(type(node))
+        print()
+        print(node)
+
+
+        print(json.dumps(node, indent = 4, cls=CustomEncoder))
+    
+    def test_node_details_model() :
+        json_data = {'chains': ['cA7CTUJxkcpGMpuGtg59kB9z5BllR-gQ4k4xBn8VAuo'],
+                    'color': '#20F9C7',
+                    'extensions': {'MaximumNumberOfNodesProxyed': '32',
+                    'RequiresProxying': 'False'},
+                    'id': 'Node!qh8D-FVQ8-2ng_EIDN8C9m3pOLAtz0BXKuCh9OBDr6U',
+                    'name': 'Node for il2tester on Apollo',
+                    'network': 'Apollo',
+                    'ownerId': 'Owner!yj_wQTrTDbBjQlTPF-qrtyfagLeT3UT8Mb5ObvqPXzk',
+                    'ownerName': 'il2tester',
+                    'peerAddress': 'ilkl-apollo://localhost:32021',
+                    'roles': ['Interlocking', 'Mirror', 'PeerRegistry', 'Relay', 'User'],
+                    'softwareVersions': {'coreLibs': '2.2.0',
+                    'messageEnvelopeWireFormat': '1',
+                    'node': '0.18.0',
+                    'peer2peer': '0.26.2'}}
+
+
+        node = NodeDetailsModel.from_json(json_data)
+
+        print(type(node))
+        print()
+        print(node)
+
+
+        print(json.dumps(node, indent = 4, cls=CustomEncoder))
+    
+    
+    
+    #test_version()
+    #test_node_common_model()
+    #test_node_details_model()
+    
