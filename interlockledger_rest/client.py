@@ -58,6 +58,7 @@ from cryptography.hazmat.primitives.serialization import Encoding
 from .enumerations import NetworkPredefinedPorts
 from .enumerations import RecordType
 
+from .models import CustomEncoder
 from .models import NodeDetailsModel
 from .models import AppsModel
 from .models import PeerModel
@@ -68,6 +69,8 @@ from .models import DocumentDetailsModel
 from .models import InterlockingRecordModel
 from .models import RecordModel
 from .models import RecordModelAsJson
+from .models import DocumentUploadModel
+
 
 class RestChain :
     def __init__(self, rest, chainId, **kwargs) :
@@ -82,6 +85,8 @@ class RestChain :
 
         self.id = chainId.id
         self.name = chainId.name
+    
+
 
     @property
     def active_apps(self):
@@ -105,6 +110,16 @@ class RestChain :
         json_data = self.__rest.get(f'/chain/{self.id}/key')
         return [KeyModel.from_json(item) for item in json_data]
     
+    @property
+    def records(self):
+        json_data = self.__rest.get(f'/chain/{self.id}/record')
+        return [RecordModel.from_json(item) for item in json_data]
+    
+    @property
+    def records_as_json(self):
+        json_data = self.__rest.get(f'/chain/{self.id}/record.json')
+        return [RecordModelAsJson.from_json(item) for item in json_data]
+    
     
 
     @property
@@ -120,12 +135,39 @@ class RestChain :
             return RecordModel.from_json(self.__rest.post(f"/chain/{self.id}/record", model))
 
 
+    def add_record_as_json(self, model) :
+        if type(model) is not NewRecordModelAsJson :
+            raise TypeError('model must be NewRecordModelAsJson')
+            RecordModelAsJson.from_json(self.__rest.post(f"/chain/{self.id}/record.json", model))
+
+    
     def document_as_plain(self, fileId) :
         return self.__rest.call_api_plain_doc(f"/chain/{self.id}/document/{fileId}", "GET")
 
     def document_as_raw(self, fileId) :
         return self.__rest.call_api_raw_doc(f"/chain/{self.id}/document/{fileId}", "GET")
 
+
+    def force_interlock(self, model) : 
+        return InterlockingRecordModel.from_json(self.__rest.post(f"/chain/{self.id}/interlock", model))
+
+
+    def permit_apps(self, apps_to_permit) :
+        return InterlockingRecordModel.from_json(self.__rest.post(f"/chain/{self.id}/activeApps", apps_to_permit))
+
+
+    def permit_keys(self, keys_to_permit) :
+        json_data = self.__rest.post(f"/chain/{self.id}/key", keys_to_permit)
+        return [KeyModel.from_json(item) for item in json_data]
+
+
+    def records_from(self, firstSerial) :
+        json_data = self.__rest.get(f"/chain/{self.id}/record?firstSerial={firstSerial}")
+        return [RecordModel.from_json(item) for item in json_data]
+
+    def records_from_as_json(self, firstSerial) :
+        json_data = self.__rest.get(f"/chain/{self.id}/record.json?firstSerial={firstSerial}")
+        return [RecordModelAsJson.from_json(item) for item in json_data]
 
     def records_from_to(self, firstSerial, lastSerial) :
         json_data = self.__rest.get(f"/chain/{self.id}/record?firstSerial={firstSerial}&lastSerial={lastSerial}")
@@ -136,8 +178,33 @@ class RestChain :
         return [RecordModelAsJson.from_json(item) for item in json_data]
 
 
+    def store_document_from_bytes(self, doc_bytes, name = None, content_type = None, model = None) :
+        if model is None :
+            print(name, content_type)
+            return self.__post_document(doc_bytes, DocumentUploadModel(name = name, contentType = content_type))
+        else :
+            return self.__post_document(doc_bytes, model)
+
+    def store_document_from_file(self, file_path, name = None, content_type = None, model = None) :
+        if not os.path.is_file(file_path) :
+            raise FileNotFoundError(f"No file '{file_path}' to store as a document!")
+
+        with open(file_path, 'rb') as f :
+            doc_bytes = f.read()
+
+        if model is None :
+            model = DocumentUploadModel(name = name, contentType = content_type)
+            
+        return self.__post_document(doc_bytes, model)
+
+    def store_document_from_text(self, content, name, content_type = "plain/text") :
+        return self.store_document_from_bytes(doc_bytes = content.encode('utf-8'), name = name, content_type = content_type)
+
     def __str__(self) :
         return f"Chain '{self.name}' #{self.id}"
+
+    def __post_document(self, doc_bytes, model) :
+        return DocumentDetailsModel.from_json(self.__rest.post_raw(f"/chain/{self.id}/document{model.to_query_string()}", doc_bytes, model.contentType))
 
 
 
@@ -171,15 +238,20 @@ class RestNode :
     @property
     def certificate_name(self) :
         return self.__certificate.get_friendlyname()
+    
+    @property
+    def chains(self):
+        json_data = self.get('/chain')
+        return [RestChain(self, ChainIdModel.from_json(item)) for item in json_data]
 
     @property
     def details(self):
         return NodeDetailsModel.from_json(self.get('/'))
     
     @property
-    def chains(self):
-        json_data = self.get('/chain')
-        return [RestChain(self, item) for item in json_data]
+    def mirrors(self):
+        json_data = self.get('/mirrors')
+        return [RestChain(self, ChainIdModel.from_json(item)) for item in json_data]
     
 
     @property
@@ -190,6 +262,12 @@ class RestNode :
         #    peers_list.append(PeerModel.from_json(item))
         return [PeerModel.from_json(item) for item in json_data]
     
+    def add_mirrors_of(self, new_mirrors) :
+        json_data = self.post("/mirrors", new_mirrors)
+        return [ChainIdModel.from_json(item) for item in json_data]
+
+    def create_chain(self, model) :
+        return ChainCreatedModel.from_json(self.post("/chain", model))
 
     def interlocks_of(self, chain) :
         json_data = self.get(f"/interlockings/{chain}")
@@ -205,14 +283,17 @@ class RestNode :
     def get(self, url) :
         return self.call_api(url, 'GET').json()
 
+    def post(self, url, body) :
+        return self.prepare_post_request(url, body, "application/json").json()
+
     def post_raw(self, url, body, contentType) :
-        return self.get_string_response(self.prepare_post_raw_request(url, body, "application/json", contentType))
+        return self.prepare_post_raw_request(url, body, "application/json", contentType)
 
-    def get_string_response(self, req) :
-        return req.text
-
+    
     def call_api(self, url, method, accept = "application/json") :
         return self.prepare_request(url, method, accept)
+
+
 
     def prepare_request(self, url, method, accept) :
         cur_uri = uri.URI(self.base_uri, path = url)
@@ -226,11 +307,28 @@ class RestNode :
         #session = requests.Session()
         #session.cert = ('test_cert.pem', 'test_cert.key')
         #response = requests.get(cur_uri, cert = ('test_cert.pem', 'test_cert.key'))
-        print(f'Trying:\n{cur_uri}')
         response = requests.request(method = method, url = cur_uri, 
                                 headers={'Accept': accept}, verify = False)
         
+        response.raise_for_status()
         return response
+
+    def prepare_post_request(self, url, body, accept) :
+        cur_uri = uri.URI(self.base_uri, path = url)
+        json_data = json.dumps(body, cls = CustomEncoder)
+        headers = {'Accept': accept,
+                   'Content-type' : "application/json; charset=utf-8"}
+
+        print(json_data)
+
+        response = requests.post(url = cur_uri, headers=headers,
+                                json = json_data, verify = False)
+        
+        
+
+        response.raise_for_status()
+        return response
+        
 
     def prepare_post_raw_request(self, url, body, accept, contentType) :
         cur_uri = uri.URI(self.base_uri, path = url)
@@ -238,6 +336,7 @@ class RestNode :
         enc = base64.b64encode(body)
         response = requests.post(url = cur_uri, data = enc, headers={'Accept': accept}, verify = False)
         
+        response.raise_for_status()
         return response
 
 

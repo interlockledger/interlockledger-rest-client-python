@@ -44,9 +44,12 @@ sys.path.append('../')
 from interlockledger_rest.client import RestNode
 from interlockledger_rest.models import CustomEncoder
 from interlockledger_rest.models import KeyPermitModel
+from interlockledger_rest.models import NewRecordModel
+from interlockledger_rest.models import ForceInterlockModel
 from interlockledger_rest.enumerations import KeyStrength
 from interlockledger_rest.enumerations import KeyPurpose
 from interlockledger_rest.enumerations import Algorithms
+from interlockledger_rest.enumerations import HashAlgorithms
 
 def main() :
     parser = argparse.ArgumentParser(description = 'Testing the python\'s REST client implementation.')
@@ -62,8 +65,8 @@ def main() :
     except :
         print(traceback.format_exc())
 
-def add_record(chain, appIp, payload) :
-    return chain.add_record(NewRecordModel(applicationId = appId, payloadBytes = payload))
+def add_record(chain, appId, payload) :
+    return chain.add_record(model = NewRecordModel(applicationId = appId, payloadBytes = payload))
 
 def create_chain(node) :
     print("-- Create Chain:")
@@ -160,12 +163,12 @@ def exercise_chain(node, chain, transact = False) :
     if transact :
         try_to_add_nice_unpacked_record(chain)
         try_to_add_nice_record(chain)
-        #try_to_add_badly_encoded_unpacked_record(chain)
-        #try_to_add_bad_record(chain)
-        #try_to_permit_app4(chain)
-        #try_to_store_nice_document(chain)
-        #try_to_force_interlock(chain)
-        #try_to_permit_key(chain)
+        try_to_add_badly_encoded_unpacked_record(chain)
+        try_to_add_bad_record(chain)
+        try_to_permit_app4(chain)
+        try_to_store_nice_document(chain)
+        try_to_force_interlock(chain)
+        try_to_permit_key(chain)
     print()
 
 
@@ -173,8 +176,7 @@ def try_to_add_badly_encoded_unpacked_record(chain) :
     try :
         print()
         print("  Trying to add a badly encoded unpacked record:")
-        # remember how to make byte array
-        record = chain.add_record(1, 300, bytes([10, 5, 0, 0, 20, 5, 4, 0, 1, 2, 3]))
+        record = chain.add_record(applicationId = 1, payloadTagId = 300, rec_bytes = bytes([10, 5, 0, 0, 20, 5, 4, 0, 1, 2, 3]))
         print(f"    {record}")
     except :
         print(traceback.format_exc())
@@ -184,7 +186,6 @@ def try_to_add_bad_record(chain) :
     try :
         print()
         print("  Trying to add a bad record:")
-        # remember how to make byte array
         record = add_record(chain, 1, bytes(0))
         print(f"    {record}")
     except :
@@ -205,7 +206,6 @@ def try_to_add_nice_unpacked_record(chain) :
     try :
         print()
         print("  Trying to add a nice unpacked record:")
-        # remember how to make byte array
         record = chain.add_record(applicationId = 1, payloadTagId = 300, rec_bytes = bytes([ 5, 0, 0, 20, 5, 4, 0, 1, 2, 3]))
         print(f"    {record}")
     except :
@@ -227,7 +227,7 @@ def try_to_force_interlock(chain) :
 
 def try_to_permit_app4(chain) :
     try :
-        apps = chain.permit_apps(4)
+        apps = chain.permit_apps([4])
         print(f"  Permit app 4: {', '.join(apps)}")
         print()
     except :
@@ -239,10 +239,10 @@ def try_to_permit_key(chain) :
         print()
         print("  Trying to permit some keys:")
         for key in chain.permit_keys(
-                            KeyPermitModel(4, [1000, 1001],
+                            [KeyPermitModel(4, [1000, 1001],
                                            "Key!U0y4av1fQGnOkC_1RkZLd4gE8vVSGVGJO5o1pzprQHo", "InterlockLedger Documenter",
                                            "PubKey!KPkBERD5AQiuLtsWMFr3H6HtQVUMky1wFzL0TQF3VC-X24G4gjFqcrHHawNxNgDiw21YS8Fx6o1ornUOHqJPvIpYX1H2T2bqbIsIMNgyO4H234Ahken7SadTlnRPw92_sRpqprBobfuX9f9K6iM-SUJ2WY_6U4bAG4HdsFRV4yqfdDhrCAedBUs8O9qyne6vHFN8CiTEcapfQE7K-StPlW2wVmLdIXov2FdfYdJpFLXbbkgBCdkAZl2Oc86PRVzPkqD5dzl86QNZGZxhq2ngQ1UXASUQVh4tV5XqXQoe7xgeiE-1O82oWZWOvH6xdHjY9sMFyY3Mhjz8_MrI_0_DBEH7Pikmhp0LlyucyUA6dz4G_e13Xmyty2LDeqyYNhYORuZu2ev7zIEPvclpKeztC5gmJdCdcXZf_Omigb6I20HiggFBBrTGIjxJ_5xvpfb8DZCB6jqG5deTqybkjDJYPkA0TeoswKlwncT6mmZ3RdNNxoojUEX0TcBfSioKrnWRqGZ6Yc5wPFIvZ2REU6NP5gJv53FYe2yGAFygvWM1t2wBpWb6bx4h4BFKbfHPcCdmPqJHF0WQdMd7rtryENICHh9ozcVHtpHUtGdwoqV8gmeav836canWcXhKWQILiTiLpGAMa7FuUmPUr3K3q0c2rAy0IYXigjHvujTMz_0aGYqZoHD726gb4RADAQAB#RSA",
-                                           KeyPurpose.Protocol.value, KeyPurpose.Action.value)) :
+                                           [KeyPurpose.Protocol.value, KeyPurpose.Action.value])]) :
             print(f"    {key}")
     except :
         print(traceback.format_exc())

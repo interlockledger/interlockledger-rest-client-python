@@ -42,7 +42,11 @@ from colour import Color
 
 
 from .enumerations import KeyPurpose
+from .enumerations import KeyStrength
+from .enumerations import Algorithms
 from .enumerations import RecordType
+from .enumerations import CipherAlgorithms
+from .enumerations import HashAlgorithms
 from .limited_range import LimitedRange
 
 substitutions = {
@@ -90,7 +94,6 @@ def to_bytes(value) :
 
 class CustomEncoder(json.JSONEncoder) :
     def default(self, obj) :
-        print(type(obj))
         if isinstance(obj, datetime.datetime) :
             t = obj.strftime('%Y-%m-%dT%H:%M:%S.%f')
             z = obj.strftime('%z')
@@ -169,6 +172,13 @@ class AppsModel(BaseModel) :
                 return self.id < other.id
 
 
+class ExportedKeyFile(BaseModel) :
+    def __init__(self, keyFileBytes = None, keyFileName = None, keyName = None, **kwargs) :
+        self.keyFileBytes = to_bytes(keyFileBytes)
+        self.keyFileName = keyFileName
+        self.keyName = keyName
+
+
 @functools.total_ordering
 class ChainIdModel(BaseModel) :
     def __init__(self, chain_id=None, name=None, **kwargs) :
@@ -193,6 +203,30 @@ class ChainIdModel(BaseModel) :
         return f"Chain '{self.name}' #{self.id}"
 
 
+class ChainCreatedModel(ChainIdModel) :
+    def __init__(self, chain_id=None, name=None, keyFiles = None, **kwargs) :
+        chain_id = kwargs.get('id', chain_id)
+        super().__init__(chain_id, name)
+        self.keyFiles = [item if type(item) is ExportedKeyFile else ExportedKeyFile.from_json(item) for item in keyFiles]
+
+
+class ChainCreationModel(BaseModel) :
+    def __init__(self, additionalApps = None, description = None, emergencyClosingKeyPassword = None,
+                emergencyClosingKeyStrength = KeyStrength.ExtraStrong.value, keyManagementKeyPassword = None,
+                keyManagementKeyStrength = KeyStrength.Strong.value, keysAlgorithm = Algorithms.RSA.value,
+                name = None, operatingKeyStrength = KeyStrength.Normal.value, parent = None, **kwargs) :
+        self.additionalApps = [item if type(item) is int else int(item) for item in additionalApps]
+        self.description = description 
+        self.emergencyClosingKeyPassword = emergencyClosingKeyPassword 
+        self.emergencyClosingKeyStrength = emergencyClosingKeyStrength 
+        self.keyManagementKeyPassword = keyManagementKeyPassword 
+        self.keyManagementKeyStrength = keyManagementKeyStrength 
+        self.keysAlgorithm = keysAlgorithm 
+        self.name = name 
+        self.operatingKeyStrength = operatingKeyStrength 
+        self.parent = parent
+
+
 class ChainSummaryModel(BaseModel) :
     def __init__(self, activeApps = [], description = None, isClosedForNewTransactions = False, lastRecord = None, **kwarg) :
         self.activeApps = activeApps
@@ -202,7 +236,7 @@ class ChainSummaryModel(BaseModel) :
 
 
 class DocumentBaseModel(BaseModel) :
-    def __init__(self, cipher = None, keyId = None, name = None, previousVersion = None, **kwargs) :
+    def __init__(self, cipher = CipherAlgorithms.NONE.value, keyId = None, name = None, previousVersion = None, **kwargs) :
         self.cipher = cipher
         self.keyId = keyId
         self.name = name
@@ -214,7 +248,7 @@ class DocumentBaseModel(BaseModel) :
     
 
 class DocumentDetailsModel(DocumentBaseModel) :
-    def __init__(self, cipher = None, keyId = None, name = None, previousVersion = None, contentType = None, fileId = None, physicalDocumentID = None, **kwargs):
+    def __init__(self, cipher = CipherAlgorithms.NONE.value, keyId = None, name = None, previousVersion = None, contentType = None, fileId = None, physicalDocumentID = None, **kwargs):
         super().__init__(cipher, keyId, name, previousVersion,**kwargs)
         self.contentType = contentType
         self.fileId = fileId
@@ -229,7 +263,7 @@ class DocumentDetailsModel(DocumentBaseModel) :
 
 
 class DocumentUploadModel(DocumentBaseModel) :
-    def __init__(self, cipher = None, keyId = None, name = None, previousVersion = None, contentType = None, **kwargs) :
+    def __init__(self, cipher = CipherAlgorithms.NONE.value, keyId = None, name = None, previousVersion = None, contentType = None, **kwargs) :
         if name is None or name.strip().isspace() :
             raise ValueError('Document must have a name')
             
@@ -246,6 +280,17 @@ class DocumentUploadModel(DocumentBaseModel) :
         if self.previousVersion :
             sb += f"&previousVersion={self.previousVersion}"
         return sb
+
+
+class ForceInterlockModel(BaseModel) :
+    def __init__(self, hashAlgorithm = HashAlgorithms.SHA256.value, minSerial = 0, targetChain = None, **kwargs) :
+        self.hashAlgorithm = hashAlgorithm
+        self.minSerial = minSerial
+        self.targetChain = targetChain
+
+    def __str__(self) :
+        return f"force interlock on {self.targetChain} @{self.minSerial}+ using {self.hashAlgorithm}"
+
 
 
 
@@ -280,11 +325,12 @@ class KeyModel(BaseModel) :
 
 
 class KeyPermitModel(BaseModel) :
-    def __init__(self, app, appActions, key_id, name, publicKey, purposes, **kwargs) :
+    def __init__(self, app = None, appActions = [], key_id = None, name = None, 
+                publicKey = None, purposes = [], **kwargs) :
         key_id = kwargs.get("id", key_id)
-        if appAction is None :
+        if appActions is None :
             raise TypeError('appAction is None')
-        elif not appAction :
+        elif not appActions :
             raise ValueError("This key doesn't have at least one action to be permitted")
         if key_id is None :
             raise TypeError('key_id is None')
@@ -303,6 +349,19 @@ class KeyPermitModel(BaseModel) :
         self.name = name
         self.publicKey = publicKey
         self.purposes = purposes
+
+
+class MessageModel(BaseModel) :
+    def __init__(self, applicationId = None, chainId = None, messageType = None,
+                 payload = None, payloadAsText = None, **kwargs) :
+        self.applicationId = applicationId
+        self.chainId = chainId
+        self.messageType = messageType
+        self.payload = to_bytes(payload)
+        self.payloadAsText = payloadAsText
+
+    def __str__(self) :
+        return f"Message {self.messageType} Chain {self.chainId} App {self.applicationId} : {self.payloadAsText}"
 
 
 class NewRecordModelBase(BaseModel) :
@@ -363,10 +422,6 @@ class NodeCommonModel(BaseModel) :
         return self.color.web if self.color is not None else None
 
     @property
-    def _empty(self):
-        return []
-    
-    @property
     def _extras(self):
         return ''
 
@@ -399,6 +454,30 @@ class PeerModel(NodeCommonModel) :
     @property
     def _extras(self):
         return f'P2P listening at {self.address}:{self.port}'
+
+
+class RawDocumentModel(BaseModel) :
+    def __init__(self, contentType = None, content = None, name = None, **kwargs) :
+        if contentType is None :
+            raise TypeError('contentType is None')
+        if content is None :
+            raise TypeError('content is None')
+        if name is None :
+            raise TypeError('name is None')
+
+        self.contentType = contentType
+        self.content = to_bytes(content)
+        self.name = name
+
+    def __str__(self) :
+        return f"Document '{self.name}' [{self.contentType}]{os.linesep}{self.__partialContentAsBase64}"
+
+    def __partialContentAsBase64(self) :
+        if not self.content :
+            return "?"
+        else :
+            converted = base64.b64encode(self.content).decode('utf-8')
+            return converted[:256]+"..." if len(converted) > 256 else converted
 
 
 class RecordModelBase(BaseModel) :
