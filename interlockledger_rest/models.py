@@ -47,7 +47,7 @@ from .enumerations import Algorithms
 from .enumerations import RecordType
 from .enumerations import CipherAlgorithms
 from .enumerations import HashAlgorithms
-from .limited_range import LimitedRange
+from .util import LimitedRange
 
 substitutions = {
 'att_must_change': 'after_change'
