@@ -94,13 +94,13 @@ class RestChain :
 
     @property
     def documents(self):
-        json_data = self.__rest.get(f'/chain/{self.id}/document')
+        json_data = self.__rest.get(f'/documents@{self.id}')
         #print(json.dumps(json_data, indent = 2))
         return [DocumentDetailsModel.from_json(item) for item in json_data]
     
     @property
     def interlocks(self):
-        json_data = self.__rest.get(f'/chain/{self.id}/interlock')
+        json_data = self.__rest.get(f'/chain/{self.id}/interlockings')
         #print(json.dumps(json_data, indent = 2))
         return [InterlockingRecordModel.from_json(item) for item in json_data]
     
@@ -112,12 +112,12 @@ class RestChain :
     
     @property
     def records(self):
-        json_data = self.__rest.get(f'/chain/{self.id}/record')
+        json_data = self.__rest.get(f'/records@{self.id}')
         return [RecordModel.from_json(item) for item in json_data]
     
     @property
     def records_as_json(self):
-        json_data = self.__rest.get(f'/chain/{self.id}/record.json')
+        json_data = self.__rest.get(f'/records@{self.id}/asJson')
         return [RecordModelAsJson.from_json(item) for item in json_data]
     
     
@@ -129,23 +129,23 @@ class RestChain :
 
     def add_record(self, applicationId = None, payloadTagId = None, rec_type = RecordType.Data.value, rec_bytes = None, model = None) :
         if model is None :
-            cur_url = f"/chain/{self.id}/record/with?applicationId={applicationId}&payloadTagId={payloadTagId}&type={rec_type}"
+            cur_url = f"/records@{self.id}/with?applicationId={applicationId}&payloadTagId={payloadTagId}&type={rec_type}"
             return RecordModel.from_json(self.__rest.post_raw(cur_url, rec_bytes, "application/interlockledger"))
         else :
-            return RecordModel.from_json(self.__rest.post(f"/chain/{self.id}/record", model))
+            return RecordModel.from_json(self.__rest.post(f"/records@{self.id}", model))
 
 
     def add_record_as_json(self, model) :
         if type(model) is not NewRecordModelAsJson :
             raise TypeError('model must be NewRecordModelAsJson')
-            RecordModelAsJson.from_json(self.__rest.post(f"/chain/{self.id}/record.json", model))
+            RecordModelAsJson.from_json(self.__rest.post(f"/records@{self.id}/asJson", model))
 
     
     def document_as_plain(self, fileId) :
-        return self.__rest.call_api_plain_doc(f"/chain/{self.id}/document/{fileId}", "GET")
+        return self.__rest.call_api_plain_doc(f"/documents@{self.id}/{fileId}", "GET")
 
     def document_as_raw(self, fileId) :
-        return self.__rest.call_api_raw_doc(f"/chain/{self.id}/document/{fileId}", "GET")
+        return self.__rest.call_api_raw_doc(f"/documents@{self.id}/{fileId}", "GET")
 
 
     def force_interlock(self, model) : 
@@ -162,19 +162,19 @@ class RestChain :
 
 
     def records_from(self, firstSerial) :
-        json_data = self.__rest.get(f"/chain/{self.id}/record?firstSerial={firstSerial}")
+        json_data = self.__rest.get(f"/records@{self.id}?firstSerial={firstSerial}")
         return [RecordModel.from_json(item) for item in json_data]
 
     def records_from_as_json(self, firstSerial) :
-        json_data = self.__rest.get(f"/chain/{self.id}/record.json?firstSerial={firstSerial}")
+        json_data = self.__rest.get(f"/records@{self.id}/asJson?firstSerial={firstSerial}")
         return [RecordModelAsJson.from_json(item) for item in json_data]
 
     def records_from_to(self, firstSerial, lastSerial) :
-        json_data = self.__rest.get(f"/chain/{self.id}/record?firstSerial={firstSerial}&lastSerial={lastSerial}")
+        json_data = self.__rest.get(f"/records@{self.id}?firstSerial={firstSerial}&lastSerial={lastSerial}")
         return [RecordModel.from_json(item) for item in json_data]
 
     def records_from_to_as_json(self, firstSerial, lastSerial) :
-        json_data = self.__rest.get(f"/chain/{self.id}/record.json?firstSerial={firstSerial}&lastSerial={lastSerial}")
+        json_data = self.__rest.get(f"/records@{self.id}/asJson?firstSerial={firstSerial}&lastSerial={lastSerial}")
         return [RecordModelAsJson.from_json(item) for item in json_data]
 
 
@@ -204,7 +204,7 @@ class RestChain :
         return f"Chain '{self.name}' #{self.id}"
 
     def __post_document(self, doc_bytes, model) :
-        return DocumentDetailsModel.from_json(self.__rest.post_raw(f"/chain/{self.id}/document{model.to_query_string()}", doc_bytes, model.contentType))
+        return DocumentDetailsModel.from_json(self.__rest.post_raw(f"/documents@{self.id}?{model.to_query_string()}", doc_bytes, model.contentType))
 
 
 
@@ -234,7 +234,8 @@ class RestNode :
     
     def __get_cert_from_file(self, cert_path, cert_pass) :
         return crypto.load_pkcs12(open(cert_path, 'rb').read(), cert_pass.encode())
-    
+
+
     @property
     def certificate_name(self) :
         return self.__certificate.get_friendlyname()
