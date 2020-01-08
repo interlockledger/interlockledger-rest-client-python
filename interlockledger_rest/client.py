@@ -45,7 +45,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 
-
+import contextlib
+import tempfile
 import uri
 import requests
 import json
@@ -204,7 +205,7 @@ class RestChain :
         return f"Chain '{self.name}' #{self.id}"
 
     def __post_document(self, doc_bytes, model) :
-        return DocumentDetailsModel.from_json(self.__rest.post_raw(f"/documents@{self.id}?{model.to_query_string()}", doc_bytes, model.contentType))
+        return DocumentDetailsModel.from_json(self.__rest.post_raw(f"/documents@{self.id}{model.to_query_string()}", doc_bytes, model.contentType))
 
 
 
@@ -234,6 +235,19 @@ class RestNode :
     
     def __get_cert_from_file(self, cert_path, cert_pass) :
         return crypto.load_pkcs12(open(cert_path, 'rb').read(), cert_pass.encode())
+
+    @contextlib.contextmanager
+    def __pfx_to_pem(self) :
+        with tempfile.NamedTemporaryFile(suffix='.pem') as t_pem: 
+            f_pem = open(t_pem.name, 'wb')
+            f_pem.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, self.__certificate.get_privatekey()))
+            f_pem.write(crypto.dump_certificate(crypto.FILETYPE_PEM, self.__certificate.get_certificate()))
+            #ca = self.__certificate.get_ca_certificates()
+            #if ca is not None :
+            #    for cert in ca :
+            #        f_pem.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
+            f_pem.close()
+            yield t_pem.name
 
 
     @property
@@ -275,11 +289,11 @@ class RestNode :
         return [InterlockingRecordModel.from_json(item) for item in json_data]
 
 
-    def call_api_plain_doc(url, method, accept = "plain/text") :
-        return self.get_string_response(self.prepare_request(url, method, accept))
+    def call_api_plain_doc(self, url, method, accept = "plain/text") :
+        return self.prepare_request(url, method, accept).text
 
-    def call_api_raw_doc(url, method, accept = "*") :
-        return self.get_raw_response(self.prepare_request(url, method, accept))
+    def call_api_raw_doc(self, url, method, accept = "*") :
+        return self.prepare_request(url, method, accept).raw.data
 
     def get(self, url) :
         return self.call_api(url, 'GET').json()
@@ -299,17 +313,9 @@ class RestNode :
     def prepare_request(self, url, method, accept) :
         cur_uri = uri.URI(self.base_uri, path = url)
         
-        with open('test_cert.pem', 'wb') as pem_file :
-            pem_file.write(crypto.dump_certificate(crypto.FILETYPE_PEM, self.__certificate.get_certificate()))
-
-        with open('test_cert.key', 'wb') as key_file :
-            key_file.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, self.__certificate.get_privatekey()))
-
-        #session = requests.Session()
-        #session.cert = ('test_cert.pem', 'test_cert.key')
-        #response = requests.get(cur_uri, cert = ('test_cert.pem', 'test_cert.key'))
-        response = requests.request(method = method, url = cur_uri, 
-                                headers={'Accept': accept}, verify = False)
+        with self.__pfx_to_pem() as cert :
+            response = requests.request(method = method, url = cur_uri, stream = True,
+                                headers={'Accept': accept}, cert = cert, verify = False)
         
         response.raise_for_status()
         return response
@@ -320,22 +326,23 @@ class RestNode :
         headers = {'Accept': accept,
                    'Content-type' : "application/json; charset=utf-8"}
 
-        print(json_data)
-
-        response = requests.post(url = cur_uri, headers=headers,
-                                json = json_data, verify = False)
+        with self.__pfx_to_pem() as cert :
+            response = requests.post(url = cur_uri, headers=headers,
+                                    json = json_data, cert = cert, verify = False)
+                                    #json = json_data)
         
-        
-
         response.raise_for_status()
         return response
         
 
     def prepare_post_raw_request(self, url, body, accept, contentType) :
         cur_uri = uri.URI(self.base_uri, path = url)
-
+        
         enc = base64.b64encode(body)
-        response = requests.post(url = cur_uri, data = enc, headers={'Accept': accept}, verify = False)
+        
+        with self.__pfx_to_pem() as cert :
+            response = requests.post(url = cur_uri, data = enc, headers={'Accept': accept}
+                        , cert = cert, verify = False, stream = True)
         
         response.raise_for_status()
         return response
