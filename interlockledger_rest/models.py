@@ -3,13 +3,13 @@
 Copyright (c) 2018-2019 InterlockLedger Network
 All rights reserved.
 
-Redistribution and use in source and binary forms = auto() with or without
-modification = auto() are permitted provided that the following conditions are met:
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-* Redistributions of source code must retain the above copyright notice = auto() this
+* Redistributions of source code must retain the above copyright notice, this
   list of conditions and the following disclaimer.
 
-* Redistributions in binary form must reproduce the above copyright notice = auto()
+* Redistributions in binary form must reproduce the above copyright notice,
   this list of conditions and the following disclaimer in the documentation
   and/or other materials provided with the distribution.
 
@@ -18,15 +18,15 @@ modification = auto() are permitted provided that the following conditions are m
   this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES = auto() INCLUDING = auto() BUT NOT LIMITED TO = auto() THE
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT = auto() INDIRECT = auto() INCIDENTAL = auto() SPECIAL = auto() EXEMPLARY = auto() OR CONSEQUENTIAL
-DAMAGES (INCLUDING = auto() BUT NOT LIMITED TO = auto() PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE = auto() DATA = auto() OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY = auto() WHETHER IN CONTRACT = auto() STRICT LIABILITY = auto()
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE = auto() EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 '''
 
@@ -510,6 +510,7 @@ class RecordModel(RecordModelBase) :
         self.payloadBytes = to_bytes(payloadBytes)
 
 
+
 class RecordModelAsJson(RecordModelBase) :
     def __init__(self, applicationId = None, chainId = None, createdAt = None, rec_hash = None, 
                  payloadTagId = None, serial = None, rec_type = None, version = None, 
@@ -534,7 +535,7 @@ class InterlockingRecordModel(RecordModel) :
         self.interlockedRecordSerial = interlockedRecordSerial
 
     def __str__(self) :
-        return f"Interlocked chain {self.interlockedChainId} at record #{self.interlockedRecordSerial} (offset: {self.interlockedRecordOffset}) with hash {self.interlockedRecordHash}{os.linesep}{super()}"
+        return f"Interlocked chain {self.interlockedChainId} at record #{self.interlockedRecordSerial} (offset: {self.interlockedRecordOffset}) with hash {self.interlockedRecordHash}{os.linesep}{super().__str__()}"
 
 
 

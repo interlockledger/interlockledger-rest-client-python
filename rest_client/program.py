@@ -106,7 +106,6 @@ def exercise(node) :
     print('-- Chains:')
     for chain in node.chains :
         exercise_chain(node, chain, transact = True)
-
     print()
     print('-- Mirrors:')
     for chain in node.mirrors :
@@ -160,6 +159,7 @@ def exercise_chain(node, chain, transact = False) :
     print("  RecordsAsJson")
     for record in chain.records_from_to_as_json(0,1) :
         print(f"    {record}")
+    
     if transact :
         try_to_add_nice_unpacked_record(chain)
         try_to_add_nice_record(chain)

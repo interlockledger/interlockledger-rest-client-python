@@ -51,8 +51,8 @@ import uri
 import requests
 import json
 import base64
+from urllib3.exceptions import InsecureRequestWarning
 from OpenSSL import crypto
-
 from cryptography.hazmat.primitives.serialization import Encoding
 
 
@@ -72,6 +72,8 @@ from .models import RecordModel
 from .models import RecordModelAsJson
 from .models import DocumentUploadModel
 
+
+requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
 class RestChain :
     def __init__(self, rest, chainId, **kwargs) :
@@ -181,7 +183,6 @@ class RestChain :
 
     def store_document_from_bytes(self, doc_bytes, name = None, content_type = None, model = None) :
         if model is None :
-            print(name, content_type)
             return self.__post_document(doc_bytes, DocumentUploadModel(name = name, contentType = content_type))
         else :
             return self.__post_document(doc_bytes, model)
@@ -205,6 +206,7 @@ class RestChain :
         return f"Chain '{self.name}' #{self.id}"
 
     def __post_document(self, doc_bytes, model) :
+        print('__post_document', doc_bytes, model.to_query_string())
         return DocumentDetailsModel.from_json(self.__rest.post_raw(f"/documents@{self.id}{model.to_query_string()}", doc_bytes, model.contentType))
 
 
@@ -293,7 +295,7 @@ class RestNode :
         return self.prepare_request(url, method, accept).text
 
     def call_api_raw_doc(self, url, method, accept = "*") :
-        return self.prepare_request(url, method, accept).raw.data
+        return self.get_raw_response(url, method, accept).raw.data
 
     def get(self, url) :
         return self.call_api(url, 'GET').json()
@@ -308,13 +310,21 @@ class RestNode :
     def call_api(self, url, method, accept = "application/json") :
         return self.prepare_request(url, method, accept)
 
-
+    def get_raw_response(self, url, method, accept) :
+        cur_uri = uri.URI(self.base_uri, path = url)
+        
+        with self.__pfx_to_pem() as cert :
+            response = requests.request(method = method, url = cur_uri, stream = True,
+                                headers={'Accept': accept}, cert = cert, verify = False)
+        
+        response.raise_for_status()
+        return response
 
     def prepare_request(self, url, method, accept) :
         cur_uri = uri.URI(self.base_uri, path = url)
         
         with self.__pfx_to_pem() as cert :
-            response = requests.request(method = method, url = cur_uri, stream = True,
+            response = requests.request(method = method, url = cur_uri,
                                 headers={'Accept': accept}, cert = cert, verify = False)
         
         response.raise_for_status()
@@ -329,7 +339,6 @@ class RestNode :
         with self.__pfx_to_pem() as cert :
             response = requests.post(url = cur_uri, headers=headers,
                                     json = json_data, cert = cert, verify = False)
-                                    #json = json_data)
         
         response.raise_for_status()
         return response
@@ -339,10 +348,10 @@ class RestNode :
         cur_uri = uri.URI(self.base_uri, path = url)
         
         enc = base64.b64encode(body)
-        
+
         with self.__pfx_to_pem() as cert :
-            response = requests.post(url = cur_uri, data = enc, headers={'Accept': accept}
-                        , cert = cert, verify = False, stream = True)
+            response = requests.post(url = cur_uri, data = body, headers={'Accept': accept}, 
+                        cert = cert, verify = False)
         
         response.raise_for_status()
         return response
