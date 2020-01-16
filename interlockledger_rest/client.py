@@ -30,20 +30,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 '''
 
-#using System;
-#using System.Collections.Generic;
-#using System.IO;
-#using System.Linq;
-#using System.Net;
-#using System.Net.Mime;
-#using System.Net.Security;
-#using System.Security.Cryptography.X509Certificates;
-#using System.Text;
-#using Newtonsoft.Json;
-#using Newtonsoft.Json.Serialization;
-
-
-
 
 import contextlib
 import tempfile
@@ -63,6 +49,7 @@ from .models import CustomEncoder
 from .models import NodeDetailsModel
 from .models import AppsModel
 from .models import PeerModel
+from .models import ChainCreatedModel
 from .models import ChainIdModel
 from .models import ChainSummaryModel
 from .models import KeyModel
@@ -332,7 +319,7 @@ class RestNode :
 
     def prepare_post_request(self, url, body, accept) :
         cur_uri = uri.URI(self.base_uri, path = url)
-        json_data = json.dumps(body, cls = CustomEncoder)
+        json_data = json.loads(json.dumps(body, cls = CustomEncoder))
         headers = {'Accept': accept,
                    'Content-type' : "application/json; charset=utf-8"}
 
@@ -340,6 +327,7 @@ class RestNode :
             response = requests.post(url = cur_uri, headers=headers,
                                     json = json_data, cert = cert, verify = False)
         
+        print(response.text)
         response.raise_for_status()
         return response
         
@@ -349,10 +337,18 @@ class RestNode :
         
         enc = base64.b64encode(body)
 
+        print('!!!! ', url)
+        print('@@@@ ', str(cur_uri))
+        print('#### ')
+        print('\tBody: ', body, enc)
+        print('\tAccept: ', accept)
+        print('\tcontentType: ', contentType)
+        print('#### ')
+
         with self.__pfx_to_pem() as cert :
             response = requests.post(url = cur_uri, data = body, headers={'Accept': accept}, 
                         cert = cert, verify = False)
-        
+        print(response.text)
         response.raise_for_status()
         return response
 

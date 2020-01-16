@@ -94,7 +94,9 @@ def to_bytes(value) :
 
 class CustomEncoder(json.JSONEncoder) :
     def default(self, obj) :
-        if isinstance(obj, datetime.datetime) :
+        if obj is None :
+            return
+        elif isinstance(obj, datetime.datetime) :
             t = obj.strftime('%Y-%m-%dT%H:%M:%S.%f')
             z = obj.strftime('%z')
             return t + z[:-2] + ':' + t[-2:]
@@ -204,17 +206,17 @@ class ChainIdModel(BaseModel) :
 
 
 class ChainCreatedModel(ChainIdModel) :
-    def __init__(self, chain_id=None, name=None, keyFiles = None, **kwargs) :
+    def __init__(self, chain_id=None, name=None, keyFiles = [], **kwargs) :
         chain_id = kwargs.get('id', chain_id)
         super().__init__(chain_id, name)
         self.keyFiles = [item if type(item) is ExportedKeyFile else ExportedKeyFile.from_json(item) for item in keyFiles]
 
 
 class ChainCreationModel(BaseModel) :
-    def __init__(self, additionalApps = None, description = None, emergencyClosingKeyPassword = None,
+    def __init__(self, additionalApps = [], description = None, emergencyClosingKeyPassword = None,
                 emergencyClosingKeyStrength = KeyStrength.ExtraStrong.value, keyManagementKeyPassword = None,
                 keyManagementKeyStrength = KeyStrength.Strong.value, keysAlgorithm = Algorithms.RSA.value,
-                name = None, operatingKeyStrength = KeyStrength.Normal.value, parent = None, **kwargs) :
+                appManagementKeyPassword = None, name = None, operatingKeyStrength = KeyStrength.Normal.value, parent = None, **kwargs) :
         self.additionalApps = [item if type(item) is int else int(item) for item in additionalApps]
         self.description = description 
         self.emergencyClosingKeyPassword = emergencyClosingKeyPassword 
@@ -222,6 +224,7 @@ class ChainCreationModel(BaseModel) :
         self.keyManagementKeyPassword = keyManagementKeyPassword 
         self.keyManagementKeyStrength = keyManagementKeyStrength 
         self.keysAlgorithm = keysAlgorithm 
+        self.appManagementKeyPassword = appManagementKeyPassword
         self.name = name 
         self.operatingKeyStrength = operatingKeyStrength 
         self.parent = parent

@@ -47,7 +47,7 @@ class Algorithms(AutoName) :
     EdDSA = auto()
 
 class CipherAlgorithms(AutoName) :
-    NONE = "None"   # default
+    NONE = 0   # default
     AES256 = auto()
 
 class HashAlgorithms(AutoName) :
