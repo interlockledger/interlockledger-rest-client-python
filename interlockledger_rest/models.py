@@ -60,6 +60,14 @@ def null_condition_attribute(obj, attribute) :
     else :
         return getattr(obj, attribute)
 
+def filter_none(d) :
+    if isinstance(d, dict) :
+        return {k: filter_none(v) for k,v in d.items() if v is not None}
+    elif isinstance(d, list) :
+        return [filter_none(v) for v in d]
+    else :
+        return d
+
 def string2datetime(time_string) :
     time_string = time_string if time_string[-3] != ':' else time_string[:-3] + time_string[-2:]
     if '.' in time_string :
@@ -83,10 +91,13 @@ def to_bytes(value) :
         if type(value) is string, returns the base64 decoded bytes
         otherwise, returns bytes(value) 
     """
-    if type(value) is bytes :
+    if value is None :
+        return value
+    elif type(value) is bytes :
         return value
     elif type(value) is str :
-        return base64.b64decode(value)
+    #    return base64.b64decode(value)
+        return value.encode()
     else :
         return bytes(value)
 
@@ -106,15 +117,24 @@ class CustomEncoder(json.JSONEncoder) :
             return str(obj)
         elif isinstance(obj, LimitedRange) :
             return str(obj)
-        elif isinstance(obj, bytes) :
-            return base64.b64encode(obj).decode('utf-8')
+        #elif isinstance(obj, bytes) :
+        #    return base64.b64encode(obj).decode('utf-8')
         else :
             return obj.__dict__
 
 
 class BaseModel :
+    def json(self, hide_null = True) :
+        ret_json = json.loads(json.dumps(self, cls = CustomEncoder))
+        if hide_null :
+            ret_json = filter_none(ret_json)
+        return ret_json
+
+
     @classmethod
     def from_json(cls, json_data) :
+        #print(json_data.keys())
+        json_data['from_json'] = True
         return cls(**json_data)
 
 
@@ -357,6 +377,11 @@ class KeyPermitModel(BaseModel) :
 class MessageModel(BaseModel) :
     def __init__(self, applicationId = None, chainId = None, messageType = None,
                  payload = None, payloadAsText = None, **kwargs) :
+        
+        if kwargs.get('from_json') :
+            payload = base64.b64decode(payload)
+
+
         self.applicationId = applicationId
         self.chainId = chainId
         self.messageType = messageType
@@ -385,6 +410,11 @@ class NewRecordModel(NewRecordModelBase) :
     def __init__(self, applicationId = None, rec_type = RecordType.Data.value, payloadBytes = None, **kwargs) :
         rec_type = kwargs.get('type', rec_type)
         super().__init__(applicationId, rec_type, **kwargs)
+
+        if kwargs.get('from_json') :
+            payloadBytes = base64.b64decode(payloadBytes)
+
+
         self.payloadBytes = to_bytes(payloadBytes)
 
 
@@ -510,6 +540,9 @@ class RecordModel(RecordModelBase) :
         rec_type = kwargs.get('type', rec_type)
         super().__init__(applicationId, chainId, createdAt, rec_hash, payloadTagId, serial, rec_type, version, **kwargs)
         
+        if kwargs.get('from_json') :
+            payloadBytes = base64.b64decode(payloadBytes)
+
         self.payloadBytes = to_bytes(payloadBytes)
 
 
@@ -521,6 +554,11 @@ class RecordModelAsJson(RecordModelBase) :
         rec_hash = kwargs.get('hash', rec_hash)
         rec_type = kwargs.get('type', rec_type)
         super().__init__(applicationId, chainId, createdAt, rec_hash, payloadTagId, serial, rec_type, version, **kwargs)
+        
+        if kwargs.get('from_json') :
+            payload = base64.b64decode(payload)
+
+
         self.payload = payload
 
 

@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 '''
 
-
+import os
 import contextlib
 import tempfile
 import uri
@@ -45,7 +45,6 @@ from cryptography.hazmat.primitives.serialization import Encoding
 from .enumerations import NetworkPredefinedPorts
 from .enumerations import RecordType
 
-from .models import CustomEncoder
 from .models import NodeDetailsModel
 from .models import AppsModel
 from .models import PeerModel
@@ -175,16 +174,16 @@ class RestChain :
             return self.__post_document(doc_bytes, model)
 
     def store_document_from_file(self, file_path, name = None, content_type = None, model = None) :
-        if not os.path.is_file(file_path) :
+        if not os.path.isfile(file_path) :
             raise FileNotFoundError(f"No file '{file_path}' to store as a document!")
 
-        with open(file_path, 'rb') as f :
-            doc_bytes = f.read()
+        if name is None :
+            name = os.path.basename(file_path)
 
         if model is None :
             model = DocumentUploadModel(name = name, contentType = content_type)
             
-        return self.__post_document(doc_bytes, model)
+        return self.__post_file_document(file_path, model)
 
     def store_document_from_text(self, content, name, content_type = "plain/text") :
         return self.store_document_from_bytes(doc_bytes = content.encode('utf-8'), name = name, content_type = content_type)
@@ -193,8 +192,10 @@ class RestChain :
         return f"Chain '{self.name}' #{self.id}"
 
     def __post_document(self, doc_bytes, model) :
-        print('__post_document', doc_bytes, model.to_query_string())
-        return DocumentDetailsModel.from_json(self.__rest.post_raw(f"/documents@{self.id}{model.to_query_string()}", doc_bytes, model.contentType))
+        return DocumentDetailsModel.from_json(self.__rest.post_raw(f"/documents@{self.id}{model.to_query_string()}", doc_bytes, model.contentType).json())
+
+    def __post_file_document(self, filepath, model) :
+        return DocumentDetailsModel.from_json(self.__rest.post_file(f"/documents@{self.id}{model.to_query_string()}", filepath, model.contentType).json())
 
 
 
@@ -293,6 +294,9 @@ class RestNode :
     def post_raw(self, url, body, contentType) :
         return self.prepare_post_raw_request(url, body, "application/json", contentType)
 
+    def post_file(self, url, file_path, contentType) :
+        return self.prepare_post_file_request(url, file_path, "application/json", contentType)
+
     
     def call_api(self, url, method, accept = "application/json") :
         return self.prepare_request(url, method, accept)
@@ -311,7 +315,7 @@ class RestNode :
         cur_uri = uri.URI(self.base_uri, path = url)
         
         with self.__pfx_to_pem() as cert :
-            response = requests.request(method = method, url = cur_uri,
+            response = requests.request(method = method, url = cur_uri, stream = True,
                                 headers={'Accept': accept}, cert = cert, verify = False)
         
         response.raise_for_status()
@@ -319,7 +323,7 @@ class RestNode :
 
     def prepare_post_request(self, url, body, accept) :
         cur_uri = uri.URI(self.base_uri, path = url)
-        json_data = json.loads(json.dumps(body, cls = CustomEncoder))
+        json_data = body.json()
         headers = {'Accept': accept,
                    'Content-type' : "application/json; charset=utf-8"}
 
@@ -334,20 +338,25 @@ class RestNode :
 
     def prepare_post_raw_request(self, url, body, accept, contentType) :
         cur_uri = uri.URI(self.base_uri, path = url)
+        headers = {'Accept': accept,
+                   'Content-type' : contentType}
         
-        enc = base64.b64encode(body)
-
-        print('!!!! ', url)
-        print('@@@@ ', str(cur_uri))
-        print('#### ')
-        print('\tBody: ', body, enc)
-        print('\tAccept: ', accept)
-        print('\tcontentType: ', contentType)
-        print('#### ')
-
         with self.__pfx_to_pem() as cert :
-            response = requests.post(url = cur_uri, data = body, headers={'Accept': accept}, 
+            response = requests.post(url = cur_uri, data = body, headers=headers, 
                         cert = cert, verify = False)
+        print(response.text)
+        response.raise_for_status()
+        return response
+
+    def prepare_post_file_request(self, url, file_path, accept, contentType) :
+        cur_uri = uri.URI(self.base_uri, path = url)
+        headers = {'Accept': accept,
+                   'Content-type' : contentType}
+        
+        with self.__pfx_to_pem() as cert :
+            with open(file_path, 'rb') as f :
+                response = requests.post(url = cur_uri, data = f, headers=headers, 
+                            cert = cert, verify = False)
         print(response.text)
         response.raise_for_status()
         return response
