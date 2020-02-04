@@ -32,6 +32,13 @@
 Utility classes and functions for the InterlockLedger API.
 """
 
+import json
+import datetime
+import base64
+
+from packaging import version
+from colour import Color
+
 
 def null_condition_attribute(obj, attribute) :
     """
@@ -49,6 +56,102 @@ def null_condition_attribute(obj, attribute) :
         return None
     else :
         return getattr(obj, attribute)
+
+
+
+def filter_none(d) :
+    """
+    Remove items of a dictionary with None values.
+
+    Args:
+        d (:obj:`dict`): Dictionary object.
+
+    Returns:
+        :obj:`dict`: Dictionary without None items.
+    """
+    if isinstance(d, dict) :
+        return {k: filter_none(v) for k,v in d.items() if v is not None}
+    elif isinstance(d, list) :
+        return [filter_none(v) for v in d]
+    else :
+        return d
+
+
+
+def string2datetime(time_string) :
+    """
+    Convert a string to datetime object.
+    The format of the string is as follows: 'yyyy-mm-ddTHH:MM:SS+HH:MM'.
+
+    Args:
+        time_string (:obj:`str`): string with date and time.
+    
+    Returns:
+        :obj:`datetime.datetime`: date time object.
+    """
+
+    time_string = time_string if time_string[-3] != ':' else time_string[:-3] + time_string[-2:]
+    if '.' in time_string :
+        return datetime.datetime.strptime(time_string,'%Y-%m-%dT%H:%M:%S.%f%z')
+    else :
+        return datetime.datetime.strptime(time_string,'%Y-%m-%dT%H:%M:%S%z')
+
+
+def to_bytes(value) :
+    """
+    Decodes value to bytes.
+    
+    Args:
+        value : Value to decode to bytes
+
+    Returns:
+        :obj:`bytes` : Return the value as bytes:
+
+            if type(value) is :obj:`bytes`, return value;
+
+            if type(value) is :obj:`str`, return the string encoded with UTF-8;
+
+            otherwise, returns bytes(value).
+    """
+    if value is None :
+        return value
+    elif type(value) is bytes :
+        return value
+    elif type(value) is str :
+        return value.encode()
+    else :
+        return bytes(value)
+
+
+
+class CustomEncoder(json.JSONEncoder) :
+    """
+    Custom JSON encoder for the IL2 REST API models.
+    """
+
+    def default(self, obj) :
+        """
+        Set the behavior of the encoder depending on the type of obj.
+
+        """
+
+        if isinstance(obj, datetime.datetime) :
+            t = obj.strftime('%Y-%m-%dT%H:%M:%S.%f')
+            z = obj.strftime('%z')
+            if len(z) >=5 :
+                z = z[:-2] + ':' + t[-2:]
+            return t + z
+        elif isinstance(obj, Color) :
+            return obj.web
+        elif isinstance(obj, version.Version) :
+            return str(obj)
+        elif isinstance(obj, LimitedRange) :
+            return str(obj)
+        elif isinstance(obj, bytes) :
+            return base64.b64encode(obj).decode('utf-8')
+        else :
+            return obj.__dict__
+
 
 class LimitedRange :
     """ 

@@ -50,70 +50,13 @@ from .enumerations import CipherAlgorithms
 from .enumerations import HashAlgorithms
 from .util import LimitedRange
 from .util import null_condition_attribute
+from .util import filter_none
+from .util import string2datetime
+from .util import to_bytes
+from .util import CustomEncoder
 
 
 
-def filter_none(d) :
-    if isinstance(d, dict) :
-        return {k: filter_none(v) for k,v in d.items() if v is not None}
-    elif isinstance(d, list) :
-        return [filter_none(v) for v in d]
-    else :
-        return d
-
-def string2datetime(time_string) :
-    time_string = time_string if time_string[-3] != ':' else time_string[:-3] + time_string[-2:]
-    if '.' in time_string :
-        return datetime.datetime.strptime(time_string,'%Y-%m-%dT%H:%M:%S.%f%z')
-    else :
-        return datetime.datetime.strptime(time_string,'%Y-%m-%dT%H:%M:%S%z')
-
-
-def to_bytes(value) :
-    """Decodes a string, list to bytes.
-    
-    Parameters
-    ----------
-    value : 
-        Value to decode to bytes
-
-    Returns
-    -------
-    bytes
-        if type(value) is bytes, return value
-        if type(value) is string, returns the base64 decoded bytes
-        otherwise, returns bytes(value) 
-    """
-    if value is None :
-        return value
-    elif type(value) is bytes :
-        return value
-    elif type(value) is str :
-    #    return base64.b64decode(value)
-        return value.encode()
-    else :
-        return bytes(value)
-
-
-
-class CustomEncoder(json.JSONEncoder) :
-    def default(self, obj) :
-        if obj is None :
-            return
-        elif isinstance(obj, datetime.datetime) :
-            t = obj.strftime('%Y-%m-%dT%H:%M:%S.%f')
-            z = obj.strftime('%z')
-            return t + z[:-2] + ':' + t[-2:]
-        elif isinstance(obj, Color) :
-            return obj.web
-        elif isinstance(obj, version.Version) :
-            return str(obj)
-        elif isinstance(obj, LimitedRange) :
-            return str(obj)
-        elif isinstance(obj, bytes) :
-            return base64.b64encode(obj).decode('utf-8')
-        else :
-            return obj.__dict__
 
 
 class BaseModel :
