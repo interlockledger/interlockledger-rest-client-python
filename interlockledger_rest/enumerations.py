@@ -1,44 +1,50 @@
-'''
+# Copyright (c) 2018-2020 InterlockLedger Network
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+# 
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+# 
+# * Neither the name of the copyright holder nor the names of its
+#   contributors may be used to endorse or promote products derived from
+#   this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Copyright (c) 2018-2019 InterlockLedger Network
-All rights reserved.
-
-Redistribution and use in source and binary forms = auto() with or without
-modification = auto() are permitted provided that the following conditions are met:
-
-* Redistributions of source code must retain the above copyright notice = auto() this
-  list of conditions and the following disclaimer.
-
-* Redistributions in binary form must reproduce the above copyright notice = auto()
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
-
-* Neither the name of the copyright holder nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES = auto() INCLUDING = auto() BUT NOT LIMITED TO = auto() THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT = auto() INDIRECT = auto() INCIDENTAL = auto() SPECIAL = auto() EXEMPLARY = auto() OR CONSEQUENTIAL
-DAMAGES (INCLUDING = auto() BUT NOT LIMITED TO = auto() PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE = auto() DATA = auto() OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY = auto() WHETHER IN CONTRACT = auto() STRICT LIABILITY = auto()
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE = auto() EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-'''
+"""
+Enumerations used in the InterlockLedger REST API.
+"""
 
 from enum import Enum
 from enum import IntEnum
 from enum import auto
 
 class AutoName(Enum) :
+    """
+    Base Enum class to automatically generate the enumerations values based on the enumeration name.
+    """
     def _generate_next_value_(name, start, count, last_values):
         return name
 
 class Algorithms(AutoName) :
+    """
+    Enumeration of the digital signature algorithms available in IL2.
+    """
     RSA = auto()        # PKCS#1 RSASSA-PSS
     RSA15 = auto()      # RSASSA-PKCS1-v1_5
     DSA = auto()        
@@ -47,10 +53,16 @@ class Algorithms(AutoName) :
     EdDSA = auto()
 
 class CipherAlgorithms(AutoName) :
-    NONE = 0   # default
+    """
+    Enumeration of the cipher algorithms available in IL2.
+    """
+    NONE = 'None'   # default
     AES256 = auto()
 
 class HashAlgorithms(AutoName) :
+    """
+    Enumeration of the hash algorithms available in IL2.
+    """
     SHA256 = auto()   # default
     SHA1 = auto()
     SHA512 = auto()
@@ -59,6 +71,9 @@ class HashAlgorithms(AutoName) :
     Copy = auto()
 
 class KeyPurpose(AutoName) :
+    """
+    Enumeration of the purpose of keys in IL2.
+    """
     Action = auto()
     ChainOperation = auto()
     Encryption = auto()
@@ -68,8 +83,23 @@ class KeyPurpose(AutoName) :
 
 
 class KeyStrength(AutoName) :
-    Normal = auto()         # RSA 2048
-    Strong = auto()         # RSA 3072
+    """
+    Enumeration of the strength of keys.
+    """
+
+    #The algorithm used by each key strength is as follows:
+    #
+    #Attributes:
+    #    Normal : RSA 2048
+    #    Strong : RSA 3072
+    #    ExtraStrong : RSA 4096
+    #    MegaStrong : RSA 5120
+    #    SuperStrong : RSA 6144
+    #    HyperStrong : RSA 7172
+    #    UltraStrong : RSA 8192
+
+    Normal = auto()        # RSA 2048
+    Strong = auto()        # RSA 3072
     ExtraStrong = auto()   # RSA 4096
     MegaStrong = auto()    # RSA 5120
     SuperStrong = auto()   # RSA 6144
@@ -78,6 +108,9 @@ class KeyStrength(AutoName) :
 
 
 class NetworkPredefinedPorts(IntEnum) :
+    """
+    Enumeration of the default ports of the IL2 networks.
+    """
     MainNet = 32032
     MetaNet = 32036
     TestNet_Jupiter = 32030
@@ -90,6 +123,9 @@ class NetworkPredefinedPorts(IntEnum) :
 
 
 class RecordType(AutoName) :
+    """
+    Enumeration of the types of Records available in IL2.
+    """
     Data = auto()
     Root = auto()
     Closing = auto()
