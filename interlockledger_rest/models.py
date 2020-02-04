@@ -28,7 +28,7 @@
 
 
 """
-Sample documentation
+Resource models available ih the IL2 REST API.
 """
 
 import os
@@ -49,17 +49,9 @@ from .enumerations import RecordType
 from .enumerations import CipherAlgorithms
 from .enumerations import HashAlgorithms
 from .util import LimitedRange
+from .util import null_condition_attribute
 
-substitutions = {
-'att_must_change': 'after_change'
-}
-get_att_name = lambda x: x if x not in substitutions else substitutions[x]
 
-def null_condition_attribute(obj, attribute) :
-    if (obj is None):
-        return None
-    else :
-        return getattr(obj, attribute)
 
 def filter_none(d) :
     if isinstance(d, dict) :

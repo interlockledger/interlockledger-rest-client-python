@@ -29,8 +29,26 @@
 
 
 """
-Utility classes for the InterlockLedger API.
+Utility classes and functions for the InterlockLedger API.
 """
+
+
+def null_condition_attribute(obj, attribute) :
+    """
+    Return the value of the item with key equals to attribute.
+
+    Args:
+        obj (:obj:`dict`) : Dictionary object.
+        attribute (:obj:`str`) : Attribute name of obj.
+
+    Returns:
+        The value of the item.
+        If obj is None, return None.
+    """
+    if (obj is None):
+        return None
+    else :
+        return getattr(obj, attribute)
 
 class LimitedRange :
     """ 
