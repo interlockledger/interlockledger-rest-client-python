@@ -45,6 +45,7 @@ from cryptography.hazmat.primitives.serialization import Encoding
 from .enumerations import NetworkPredefinedPorts
 from .enumerations import RecordType
 
+from .models import BaseModel
 from .models import NodeDetailsModel
 from .models import AppsModel
 from .models import PeerModel
@@ -138,7 +139,7 @@ class RestChain :
 
 
     def force_interlock(self, model) : 
-        return InterlockingRecordModel.from_json(self.__rest.post(f"/chain/{self.id}/interlock", model))
+        return InterlockingRecordModel.from_json(self.__rest.post(f"/chain/{self.id}/interlockings", model))
 
 
     def permit_apps(self, apps_to_permit) :
@@ -323,7 +324,8 @@ class RestNode :
 
     def prepare_post_request(self, url, body, accept) :
         cur_uri = uri.URI(self.base_uri, path = url)
-        json_data = body.json()
+        
+        json_data = BaseModel.json(body)
         headers = {'Accept': accept,
                    'Content-type' : "application/json; charset=utf-8"}
 
@@ -331,7 +333,6 @@ class RestNode :
             response = requests.post(url = cur_uri, headers=headers,
                                     json = json_data, cert = cert, verify = False)
         
-        print(response.text)
         response.raise_for_status()
         return response
         
@@ -344,7 +345,7 @@ class RestNode :
         with self.__pfx_to_pem() as cert :
             response = requests.post(url = cur_uri, data = body, headers=headers, 
                         cert = cert, verify = False)
-        print(response.text)
+        
         response.raise_for_status()
         return response
 
@@ -357,7 +358,7 @@ class RestNode :
             with open(file_path, 'rb') as f :
                 response = requests.post(url = cur_uri, data = f, headers=headers, 
                             cert = cert, verify = False)
-        print(response.text)
+        
         response.raise_for_status()
         return response
 

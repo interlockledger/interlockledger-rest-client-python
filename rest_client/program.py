@@ -106,6 +106,7 @@ def exercise(node) :
     print('-- Chains:')
     for chain in node.chains :
         exercise_chain(node, chain, transact = True)
+        break
     print()
     print('-- Mirrors:')
     for chain in node.mirrors :

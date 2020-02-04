@@ -117,15 +117,16 @@ class CustomEncoder(json.JSONEncoder) :
             return str(obj)
         elif isinstance(obj, LimitedRange) :
             return str(obj)
-        #elif isinstance(obj, bytes) :
-        #    return base64.b64encode(obj).decode('utf-8')
+        elif isinstance(obj, bytes) :
+            return base64.b64encode(obj).decode('utf-8')
         else :
             return obj.__dict__
 
 
 class BaseModel :
-    def json(self, hide_null = True) :
-        ret_json = json.loads(json.dumps(self, cls = CustomEncoder))
+    @staticmethod
+    def json(obj, hide_null = True) :
+        ret_json = json.loads(json.dumps(obj, cls = CustomEncoder))
         if hide_null :
             ret_json = filter_none(ret_json)
         return ret_json
@@ -555,10 +556,6 @@ class RecordModelAsJson(RecordModelBase) :
         rec_type = kwargs.get('type', rec_type)
         super().__init__(applicationId, chainId, createdAt, rec_hash, payloadTagId, serial, rec_type, version, **kwargs)
         
-        if kwargs.get('from_json') :
-            payload = base64.b64decode(payload)
-
-
         self.payload = payload
 
 
