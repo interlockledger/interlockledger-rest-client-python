@@ -28,7 +28,7 @@
 
 
 """
-Resource models available ih the IL2 REST API.
+Resource models available in the IL2 REST API.
 """
 
 import os
@@ -60,8 +60,23 @@ from .util import CustomEncoder
 
 
 class BaseModel :
-    @staticmethod
-    def json(obj, hide_null = True) :
+    """
+    Base class for all models.
+    """    
+
+    @classmethod
+    def json(cls, obj, hide_null = True) :
+        """
+        Convert a BaseModel class to a dict (JSON like).
+
+        Args:
+            obj (:obj:`BaseModel`): BaseModel object to be converted.
+            hide_null (:obj:`bool`, optional): If True, discards every item (key, value) where value is None.
+
+        Returns:
+            :obj:`dict` : return obj as a JSON
+        """   
+
         ret_json = json.loads(json.dumps(obj, cls = CustomEncoder))
         if hide_null :
             ret_json = filter_none(ret_json)
@@ -70,12 +85,34 @@ class BaseModel :
 
     @classmethod
     def from_json(cls, json_data) :
-        #print(json_data.keys())
+        """
+        Convert a dict (JSON like) to a :obj:`BaseModel` object.
+
+        Args:
+            obj (:obj:`BaseModel`): :obj:`BaseModel` object to be converted.
+            hide_null (:obj:`bool`, optional): If True, discards every item (key, value) where value is None.
+
+        Returns:
+            :obj:`dict` : return obj as a dict (JSON like)
+        """   
         json_data['from_json'] = True
         return cls(**json_data)
 
 
 class AppsModel(BaseModel) :
+    """
+    Details of the InterlockApps available in the chain.
+
+    Args:
+        network (:obj:`str`): Network name.
+        validApps (:obj:`list` of :obj:`PublishedApp`/:obj:`list` of :obj:`dict`): List of currently valid apps for this network.
+        **kwargs: Arbitrary keyword arguments.
+
+    Attributes:
+        network (:obj:`str`): Network name
+        validApps (:obj:`list` of :obj:`PublishedApp`): Currently valid apps for this network
+    """
+
     def __init__(self, network = None, validApps = [], **kwargs) :
         self.network = network
         self.validApps = []
@@ -84,7 +121,26 @@ class AppsModel(BaseModel) :
         
     @functools.total_ordering
     class PublishedApp(BaseModel) :
-        def __init__(self, alternativeId = None, appVersion = None, description = None, app_id = None, name = None, publisherId = None, publisherName = None, reservedILTagIds = None, start = None, version_ = None, **kwargs) :
+        """
+        InterlockApp permitted in the chain.
+
+        Attributes:
+            alternativeId (:obj:`int`): 
+            appVersion (:obj:`version`): Application semantic version, with four numeric parts.
+            description (:obj:`str`): Description of the application.
+            id (:obj:`int`): Unique id for the application.
+            name (:obj:`str`):  Application name.
+            publisherId (:obj:`str`): Publisher id, which is the identifier for the key the publisher uses to sign the workflow requests in its own chain. It should match the PublisherName
+            publisherName (:obj:`str`): Publisher name as registered in the Genesis chain of the network.
+            reservedILTagIds (:obj:`list` of :obj:`LimitedRange`): The list of ranges of ILTagIds to reserve for the application.
+            simplifiedHashCode (:obj:`int`): The start date for the validity of the app, but if prior to the effective publication of the app will be overridden with the publication date and time.
+            start (:obj:`datetime.datetime`): The start date for the validity of the app, but if prior to the effective publication of the app will be overridden with the publication date and time.
+            version (:obj:`int`): 
+        """
+
+        def __init__(self, alternativeId = None, appVersion = None, description = None, app_id = None, name = None, publisherId = None, dataModels = None, publisherName = None, reservedILTagIds = None, simplifiedHashCode = None, start = None, version_ = None, **kwargs) :
+
+
             self.alternativeId = alternativeId
             self.appVersion = appVersion if type(appVersion) is version.Version else version.parse(appVersion)
             self.description = description
@@ -93,16 +149,19 @@ class AppsModel(BaseModel) :
             self.publisherId = publisherId
             self.publisherName = publisherName
 
-            self.reservedILTagIds = []
-            for item in reservedILTagIds :
-                self.reservedILTagIds.append(item if type(item) is LimitedRange else LimitedRange.resolve(item))
-            
+            self.dataModels = [item if type(item) is DataModel else DataModel.from_json(item) for item in dataModels]
+
+            self.reservedILTagIds = [item if type(item) is LimitedRange else LimitedRange.resolve(item) for item in reservedILTagIds]
+            #for item in reservedILTagIds :
+            #    self.reservedILTagIds.append(item if type(item) is LimitedRange else LimitedRange.resolve(item))
+            self.simplifiedHashCode = simplifiedHashCode
             self.start = start if type(start) is datetime.datetime else string2datetime(start)
             self.version = kwargs.get('version', version_)
 
 
         @property
         def compositeName(self):
+            """ :obj:`str`: Concatenation of the App's publisher name, name and version."""
             return self.__safe(f'{self.publisherName}.{self.name}#{self.appVersion}')
         
 
@@ -129,6 +188,91 @@ class AppsModel(BaseModel) :
                 return self.appVersion < other.appVersion
             else :
                 return self.id < other.id
+
+class DataModel(BaseModel) :
+    """
+    Data model
+    
+    Attributes:
+        description(:obj:`str`): TODO
+        dataFields(:obj:`list` of :obj:`DataModel.DataField`): TODO
+        indexes(:obj:`list` of :obj:`DataModel.DataIndex`): TODO
+        payloadName(:obj:`str`): TODO
+        payloadTagId(:obj:`int`): TODO      
+        version (:obj:`int`) : TODO
+    """
+    def __init__(self, description = None, dataFields = None, indexes = None, payloadName = None, payloadTagId = None, version = None, **kwargs) :
+        self.description = description
+        self.dataFields = [item if type(item) is self.DataField else self.DataField.from_json(item) for item in dataFields]
+        self.indexes = [item if type(item) is self.DataIndex else self.DataIndex.from_json(item) for item in indexes]
+        self.payloadName = payloadName
+        self.payloadTagId = payloadTagId
+        self.version = version
+
+    class DataField(BaseModel) :
+        """
+        Data field
+
+        Attributes:
+            cast (:obj:`str`): TODO - *** ENUM***
+            elementTagId (:obj:`int`): TODO
+            isOpaque (:obj:`bool`): TODO
+            isOptional (:obj:`bool`): TODO
+            name (:obj:`str`): TODO
+            serializationVersion (:obj:`int`): TODO    
+            subDataFields (:obj:`list` of :obj:`DataModel.DataField`): TODO
+            tagId (:obj:`int`): TODO
+            version (:obj:`int`): TODO            
+        """
+
+        def __init__(self, cast = None, elementTagId = None, isOpaque = None, isOptional = None, description = None, Enumeration = None, enumerationAsFlags = None, name = None, serializationVersion = None, subDataFields = None, tagId = None, version = None, **kwargs) :
+            
+
+
+            self.cast = cast
+            self.elementTagId = elementTagId
+            self.isOpaque = isOpaque
+            self.isOptional = isOptional
+            self.description = description
+            self.Enumeration = Enumeration
+            self.enumerationAsFlags = enumerationAsFlags
+            self.name = name
+            self.serializationVersion = serializationVersion
+            if subDataFields :
+                self.subDataFields = [item if type(item) is DataModel.DataField else DataModel.DataField.from_json(item) for item in subDataFields]
+            else:
+                self.subDataFields = subDataFields
+            self.tagId = tagId
+            self.version = version
+
+    class DataIndex(BaseModel) :
+        """
+        Data index
+
+        Attributes:
+            elements (:obj:`list` of :obj:`DataIndex.DataIndexElement`): TODO
+            isUnique (:obj:`bool`): TODO
+            name (:obj:`str`): TODO
+        """
+
+        def __init__(self, elements = None, isUnique = None, name = None, **kwargs) :
+            self.elements = [item if type(item) is self.DataIndexElement else self.DataIndexElement.from_json(item) for item in elements]
+            self.isUnique = isUnique
+            self.name = name
+
+        class DataIndexElement(BaseModel) :
+            """
+            Data index element
+
+            Attributes:
+                descendingOrder (:obj:`bool`): TODO
+                fieldPath (:obj:`str`): TODO
+                function (:obj:`str`): TODO
+            """
+            def __init__(self, descendingOrder = None, fieldPath = None, function = None, **kwargs) :
+                self.descendingOrder = descendingOrder
+                self.fieldPath = fieldPath
+                self.function = function
 
 
 class ExportedKeyFile(BaseModel) :
@@ -356,24 +500,28 @@ class NewRecordModel(NewRecordModelBase) :
 
 
 class NodeCommonModel(BaseModel) :
-    ''' Node/Peer common details '''
-    def __init__(self, color = None, node_id = None, name = None, network = None, ownerId = None, ownerName = None, roles = None, softwareVersions = None, **kwargs) :
-        # Mapping color
-        self.color = Color(color)
-        # Unique node id
-        self.id = kwargs.get('id', node_id)
-        # Node name
-        self.name = name
-        # Network this node participates on
-        self.network = network
-        # Node owner id [optional]
-        self.ownerId = ownerId
-        # Node ownder name [optional]
-        self.ownerName = ownerName
-        # List of active roles running in the node
-        self.roles = roles
-        # Version of softaware running the Node
+    """ 
+    Node/Peer common details 
+    
+    Attributes:
+        color (:obj:`Color`): Mapping color.
+        id (:obj:`str`): Unique node id
+        name (:obj:`str`): Node name.
+        network (:obj:`str`): Network this node participates on.
+        ownerId (:obj:`str`): Node owner id
+        ownerName (:obj:`str`): Node owner name.
+        roles (:obj:`list` of :obj:`str`): List of active roles running in the node
+        softwareVersions (:obj:`Versions`): Version of software running the Node.
 
+    """
+    def __init__(self, color = None, node_id = None, name = None, network = None, ownerId = None, ownerName = None, roles = None, softwareVersions = None, **kwargs) :
+        self.color = Color(color)
+        self.id = kwargs.get('id', node_id)
+        self.name = name
+        self.network = network
+        self.ownerId = ownerId
+        self.ownerName = ownerName
+        self.roles = roles
         self.softwareVersions = softwareVersions if type(softwareVersions) is Versions else Versions(**softwareVersions)
 
     def __str__(self) :
@@ -397,7 +545,12 @@ class NodeCommonModel(BaseModel) :
 
 
 class NodeDetailsModel(NodeCommonModel) :
-    ''' Node details '''
+    """ 
+    Node details 
+    
+    Attributes:
+        chains (:obj:`list` of :obj:`str`): List of owned records, only the ids
+    """
 
     def __init__(self, color = None, node_id = None, name = None, network = None, ownerId = None, ownerName = None, roles = None, softwareVersions = None, chains = [], **kwargs) :
         node_id = kwargs.get('id', node_id)
@@ -516,16 +669,21 @@ class InterlockingRecordModel(RecordModel) :
 
 
 class Versions(BaseModel) :
-    ''' Versions for parts of the software '''
+    """
+    Versions for parts of the software.
+
+    Attributes:
+        coreLibs (:obj:`str`): Core libraries and il2apps version.
+        messageEnvelopeWireFormat (:obj:`str`): Message envelope wire format version.
+        node (:obj:`str`): Interlockledger node daemon version.
+        peer2peer (:obj:`str`): Peer2Peer connectivity library version.
+    """
 
     def __init__(self, coreLibs = None, messageEnvelopeWireFormat = None, node = None, peer2peer = None, **kwargs) :
-        # Core libraries and il2apps version
+        
         self.coreLibs = coreLibs
-        # Message envelope wire format version
         self.messageEnvelopeWireFormat = messageEnvelopeWireFormat
-        # Interlockledger node daemon version
         self.node = node
-        # Peer2Peer connectivity library version
         self.peer2peer = peer2peer
 
 

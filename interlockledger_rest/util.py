@@ -158,24 +158,22 @@ class LimitedRange :
     
     A closed interval of integers represented by the notation '[start-end]'.
     If the range has only one value, the range is represented by '[start]'.
-
-    Attributes:
-        start (:obj:`int`): Initial value of the interval
-        end (:obj:`int`): End value of the interval
-    """
-
-    def __init__(self, start, count = 1, end = None) :
-        """ Construct a new :obj:`LimitedRange` object.
-        
-        Args:
+    
+    Args:
             start (:obj:`int`): Initial value of the interval
             count (:obj:`int`, optional): How many elements are in the range
             end (:obj:`int`, optional): If defined, define the end value of the interval
 
-        Raises:
-            ValueError: If 'count' is 0
-        """
+    Raises:
+        ValueError: If 'count' is 0
 
+    Attributes:
+        start (:obj:`int`): Initial value of the interval
+        end (:obj:`int`): End value of the interval
+    
+    """
+
+    def __init__(self, start, count = 1, end = None) :
         if count == 0 :
             raise ValueError(f'count is out of range')
         
@@ -224,6 +222,8 @@ class LimitedRange :
 
     def __contains__(self, item) :
         """ 
+        Check if item is in self.
+
         Args:
             item (:obj:`int`/:obj:`LimitedRange`): Item to check if is in self.
         

@@ -96,7 +96,7 @@ def exercise(node) :
     for app in sorted(apps.validApps) :
         print(app)
     print()
-    
+
     peers = node.peers
     print('-- Known peers:')
     for peer in sorted(peers) :
