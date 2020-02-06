@@ -46,6 +46,7 @@ from interlockledger_rest.models import CustomEncoder
 from interlockledger_rest.models import KeyPermitModel
 from interlockledger_rest.models import NewRecordModel
 from interlockledger_rest.models import ForceInterlockModel
+from interlockledger_rest.models import NewRecordModelAsJson
 from interlockledger_rest.enumerations import KeyStrength
 from interlockledger_rest.enumerations import KeyPurpose
 from interlockledger_rest.enumerations import Algorithms
@@ -162,14 +163,22 @@ def exercise_chain(node, chain, transact = False) :
         print(f"    {record}")
     
     if transact :
-        try_to_add_nice_unpacked_record(chain)
-        try_to_add_nice_record(chain)
-        try_to_add_badly_encoded_unpacked_record(chain)
-        try_to_add_bad_record(chain)
+        #model = NewRecordModelAsJson(applicationId = 1, payloadTagId = 300, rec_json= {'tagId': 300,'version' : 0, 'apps': [0,1,2,3,4]})
+        #print(NewRecordModelAsJson.json(model))
+        #chain.add_record_as_json(model)
+        #exit()
+        
+        #try_to_add_nice_unpacked_record(chain)
+        #try_to_add_nice_record(chain)
+        #try_to_add_badly_encoded_unpacked_record(chain)
+        #try_to_add_bad_record(chain)
+
+
         try_to_permit_app4(chain)
-        try_to_store_nice_document(chain)
-        try_to_force_interlock(chain)
-        try_to_permit_key(chain)
+        #try_to_store_nice_document(chain)
+        #try_to_force_interlock(chain)
+        #try_to_permit_key(chain)
+        exit()
     print()
 
 
@@ -228,6 +237,7 @@ def try_to_force_interlock(chain) :
 
 def try_to_permit_app4(chain) :
     try :
+        print("  Trying to permit app 4:")
         apps = chain.permit_apps([4])
         print(f"  Permit app 4: {', '.join(apps)}")
         print()

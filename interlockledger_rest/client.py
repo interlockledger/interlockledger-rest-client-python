@@ -53,6 +53,7 @@ from .models import DocumentDetailsModel
 from .models import InterlockingRecordModel
 from .models import RecordModel
 from .models import RecordModelAsJson
+from .models import NewRecordModelAsJson
 from .models import DocumentUploadModel
 
 
@@ -118,13 +119,15 @@ class RestChain :
             cur_url = f"/records@{self.id}/with?applicationId={applicationId}&payloadTagId={payloadTagId}&type={rec_type}"
             return RecordModel.from_json(self.__rest.post_raw(cur_url, rec_bytes, "application/interlockledger"))
         else :
+            print(json.dumps(BaseModel.json(model), indent = 4))
+
             return RecordModel.from_json(self.__rest.post(f"/records@{self.id}", model))
 
 
     def add_record_as_json(self, model) :
         if type(model) is not NewRecordModelAsJson :
             raise TypeError('model must be NewRecordModelAsJson')
-            RecordModelAsJson.from_json(self.__rest.post(f"/records@{self.id}/asJson", model))
+        RecordModelAsJson.from_json(self.__rest.post(f"/records@{self.id}/asJson", model))
 
     
     def document_as_plain(self, fileId) :
@@ -325,10 +328,14 @@ class RestNode :
         headers = {'Accept': accept,
                    'Content-type' : "application/json; charset=utf-8"}
 
+        print('@@@@@@',json_data)
+
         with self.__pfx_to_pem() as cert :
             response = requests.post(url = cur_uri, headers=headers,
                                     json = json_data, cert = cert, verify = False)
         
+        print(response.text)
+
         response.raise_for_status()
         return response
         
