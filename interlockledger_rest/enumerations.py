@@ -93,7 +93,6 @@ class KeyPurpose(AutoName) :
     InvalidKey = auto()
     ClaimSigner = auto()
 
-
 class KeyStrength(AutoName) :
     """
     Enumeration of the strength of keys.
@@ -124,7 +123,7 @@ class NetworkProtocol(AutoName) :
     Enumeration of the network protocols.
     """
     TCP_Direct = auto()
-    TCP_Proxied, = auto()
+    TCP_Proxied = auto()
     HTTPS_Proxied = auto()
     Originator_Only = auto()
 

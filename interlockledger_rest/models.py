@@ -48,6 +48,7 @@ from .enumerations import KeyStrength
 from .enumerations import Algorithms
 from .enumerations import RecordType
 from .enumerations import CipherAlgorithms
+from .enumerations import NetworkProtocol
 from .enumerations import HashAlgorithms
 from .util import LimitedRange
 from .util import null_condition_attribute
@@ -100,7 +101,9 @@ class BaseModel :
         Returns:
             :obj:`dict` : return obj as a dict (JSON like)
         """   
-        json_data['from_json'] = True
+
+        if type(json_data) is dict :
+            json_data['from_json'] = True
         return cls(**json_data)
 
 
@@ -402,8 +405,8 @@ class ChainSummaryModel(BaseModel) :
         lastRecord (:obj:`int`): Serial number of the last record.
         name (:obj:`str`): Name of the chain.
     """
-    def __init__(self, chain_id, activeApps = [], description = None, isClosedForNewTransactions = False, lastRecord = None, name = None, **kwarg) :
-        self.id = kwargs.get('id', chain_id)
+    def __init__(self, chain_id = None, activeApps = [], description = None, isClosedForNewTransactions = False, lastRecord = None, name = None, **kwarg) :
+        self.id = kwarg.get('id', chain_id)
         self.activeApps = activeApps
         self.description = description
         self.isClosedForNewTransactions = isClosedForNewTransactions
@@ -521,12 +524,16 @@ class RawDocumentModel(BaseModel) :
     def __str__(self) :
         return f"Document '{self.name}' [{self.contentType}]{os.linesep}{self.__partialContentAsBase64}"
 
+    @property
     def __partialContentAsBase64(self) :
         if not self.content :
             return "?"
         else :
-            converted = base64.b64encode(self.content).decode('utf-8')
-            return converted[:256]+"..." if len(converted) > 256 else converted
+            if self.contentType == 'plain/text':
+                return self.content[:256]+"..." if len(self.content) > 256 else self.content
+            else:
+                converted = base64.b64encode(self.content).decode('utf-8')
+                return converted[:256]+"..." if len(converted) > 256 else converted
 
 
 
@@ -575,7 +582,7 @@ class KeyModel(BaseModel) :
         publicKey (:obj:`str`): Key public key.
         purposes (:obj:`list` of :obj:`KeyPurpose`): Key valid purposes.
     """
-    def __init__(self, app, appActions, key_id, publicKey, purposes, name = None, **kwargs) :
+    def __init__(self, app, appActions, publicKey, purposes, key_id = None, name = None, **kwargs) :
         self.app = app
         self.appActions = appActions
         self.id = kwargs.get('id', key_id)
@@ -602,7 +609,8 @@ class KeyModel(BaseModel) :
 
     def __str__(self) :
         """(:obj:`str`): String representation of the key details."""
-        return f"Key '{self.name}' {self.id} purposes [{', '.join(sorted(self.purposes))}]  {self.__actions_for.lower()}"
+        purposes_str = [item.value for item in self.purposes]
+        return f"Key '{self.name}' {self.id} purposes [{', '.join(sorted(purposes_str))}]  {self.__actions_for.lower()}"
 
 
 class KeyPermitModel(BaseModel) :
@@ -802,7 +810,10 @@ class PeerModel(NodeCommonModel) :
 
         self.address = address
         self.port = port
-        self.protocol = protocol if type(protocol) is NetworkProtocol else NetworkProtocol(protocol)
+        if protocol :
+            self.protocol = protocol if type(protocol) is NetworkProtocol else NetworkProtocol(protocol)
+        else:
+            self.protocol = None
 
     def __lt__(self, other) :
         return self.name < other.name

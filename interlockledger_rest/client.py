@@ -33,6 +33,7 @@ import uri
 import requests
 import json
 import base64
+import re
 from urllib3.exceptions import InsecureRequestWarning
 from OpenSSL import crypto
 from cryptography.hazmat.primitives.serialization import Encoding
@@ -50,6 +51,7 @@ from .models import ChainIdModel
 from .models import ChainSummaryModel
 from .models import KeyModel
 from .models import DocumentDetailsModel
+from .models import RawDocumentModel
 from .models import InterlockingRecordModel
 from .models import RecordModel
 from .models import RecordModelAsJson
@@ -134,7 +136,16 @@ class RestChain :
         return self.__rest.call_api_plain_doc(f"/documents@{self.id}/{fileId}", "GET")
 
     def document_as_raw(self, fileId) :
-        return RawDocumentModel.from_json(self.__rest.call_api_raw_doc(f"/documents@{self.id}/{fileId}", "GET"))
+        response = self.__rest.call_api_raw_doc(f"/documents@{self.id}/{fileId}", "GET")
+
+        content = response.content
+        content_type = response.headers['Content-type']
+        content_disposition = response.headers['Content-Disposition']
+        name = re.findall("filename=([^;]+)", content_disposition)[0]
+        
+        ret = RawDocumentModel(contentType = content_type, name = name, content = content)
+
+        return ret
 
 
     def force_interlock(self, model) : 
@@ -283,7 +294,7 @@ class RestNode :
         return self.prepare_request(url, method, accept).text
 
     def call_api_raw_doc(self, url, method, accept = "*") :
-        return self.get_raw_response(url, method, accept).raw.data
+        return self.get_raw_response(url, method, accept)
 
     def get(self, url) :
         return self.call_api(url, 'GET').json()

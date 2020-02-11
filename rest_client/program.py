@@ -149,7 +149,9 @@ def exercise_chain(node, chain, transact = False) :
     for doc in chain.documents :
         print(f"    {doc}")
         if first and doc.is_plain_text :
+            print("     Retrieving document as plain")
             dump(chain.document_as_plain(doc.fileId))
+            print("     Retrieving document as raw")
             dump(str(chain.document_as_raw(doc.fileId)))
             first = False
     print()
