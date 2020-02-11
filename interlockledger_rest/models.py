@@ -64,8 +64,8 @@ class BaseModel :
     Base class for all models.
     """    
 
-    @classmethod
-    def json(cls, obj, hide_null = True) :
+    #@classmethod
+    def to_json(self, hide_null = True, return_as_str = False) :
         """
         Convert a BaseModel class to a dict (JSON like).
 
@@ -76,11 +76,15 @@ class BaseModel :
         Returns:
             :obj:`dict` : return obj as a JSON
         """   
-
-        ret_json = json.loads(json.dumps(obj, cls = CustomEncoder))
+        ret_json = json.loads(json.dumps(self, cls = CustomEncoder))
         if hide_null :
             ret_json = filter_none(ret_json)
-        return ret_json
+        
+        if return_as_str :
+            return json.dumps(ret_json)
+        else :
+            return ret_json
+    
 
 
     @classmethod
@@ -166,6 +170,7 @@ class AppsModel(BaseModel) :
         
 
         def __str__(self) :
+            """ :obj:`str`: String representation of the published app."""
             return f'  #{self.id} {self.compositeName}   {os.linesep}    {self.description}'
         
         @staticmethod
@@ -173,6 +178,7 @@ class AppsModel(BaseModel) :
             return re.sub('[\s\\\/:""<>|\*\?]+', '_', name) 
 
         def __eq__(self, other) :
+            """ :obj:`bool`: Return True if self and other have the same id and appVersion."""
             if other is None :
                 return False
             
@@ -182,6 +188,7 @@ class AppsModel(BaseModel) :
                 return False
 
         def __lt__(self, other) :
+            """ :obj:`bool`: Return self.id < other.id. If self and other have the same id, return self.appVersion < other.appVersion."""
             if other is None :
                 return False
             if self.id == other.id: 
@@ -203,13 +210,13 @@ class DataModel(BaseModel) :
     """
     def __init__(self, description = None, dataFields = None, indexes = None, payloadName = None, payloadTagId = None, version = None, **kwargs) :
         self.description = description
-        self.dataFields = [item if type(item) is self.DataField else self.DataField.from_json(item) for item in dataFields]
-        self.indexes = [item if type(item) is self.DataIndex else self.DataIndex.from_json(item) for item in indexes]
+        self.dataFields = [item if type(item) is self.DataFieldModel else self.DataFieldModel.from_json(item) for item in dataFields]
+        self.indexes = [item if type(item) is self.DataIndexModel else self.DataIndexModel.from_json(item) for item in indexes]
         self.payloadName = payloadName
         self.payloadTagId = payloadTagId
         self.version = version
 
-    class DataField(BaseModel) :
+    class DataFieldModel(BaseModel) :
         """
         Data field
 
@@ -239,13 +246,13 @@ class DataModel(BaseModel) :
             self.name = name
             self.serializationVersion = serializationVersion
             if subDataFields :
-                self.subDataFields = [item if type(item) is DataModel.DataField else DataModel.DataField.from_json(item) for item in subDataFields]
+                self.subDataFields = [item if type(item) is DataModel.DataFieldModel else DataModel.DataFieldModel.from_json(item) for item in subDataFields]
             else:
                 self.subDataFields = subDataFields
             self.tagId = tagId
             self.version = version
 
-    class DataIndex(BaseModel) :
+    class DataIndexModel(BaseModel) :
         """
         Data index
 
@@ -256,11 +263,11 @@ class DataModel(BaseModel) :
         """
 
         def __init__(self, elements = None, isUnique = None, name = None, **kwargs) :
-            self.elements = [item if type(item) is self.DataIndexElement else self.DataIndexElement.from_json(item) for item in elements]
+            self.elements = [item if type(item) is self.DataIndexElementModel else self.DataIndexElementModel.from_json(item) for item in elements]
             self.isUnique = isUnique
             self.name = name
 
-        class DataIndexElement(BaseModel) :
+        class DataIndexElementModel(BaseModel) :
             """
             Data index element
 
@@ -276,6 +283,15 @@ class DataModel(BaseModel) :
 
 
 class ExportedKeyFile(BaseModel) :
+    """
+    Key file info.
+
+    Attributes:
+        keyFileBytes (:obj:`byte`): TODO
+        keyFileName (:obj:`str`): TODO
+        keyName (:obj:`str`): TODO
+    """
+
     def __init__(self, keyFileBytes = None, keyFileName = None, keyName = None, **kwargs) :
         self.keyFileBytes = to_bytes(keyFileBytes)
         self.keyFileName = keyFileName
@@ -284,29 +300,50 @@ class ExportedKeyFile(BaseModel) :
 
 @functools.total_ordering
 class ChainIdModel(BaseModel) :
+    """
+    Chain Id
+
+    Attributes:
+        id (:obj:`str`): Unique record id
+        name (:obj:`str`): Chain name
+    """
+
     def __init__(self, chain_id=None, name=None, **kwargs) :
         self.id = kwargs.get('id', chain_id)
         self.name = name
 
     def __eq__(self, other) :
+        """ :obj:`bool`: Return self.id == other.id."""
         return (other is not None) and self.id == other.id
 
     def __lt__(self, other) :
+        """ :obj:`bool`: Return self.id < other.id."""
         if other is None :
             return False
         return self.id < other.id
 
     def __hash__(self):
+        """ :obj:`int`: Hash representation of self."""
         if self.id is None or self.id.__hash__() is None :
             return 0
         else :
             return self.id.__hash__()
 
     def __str__(self) :
+        """ :obj:`str`: String representation of the :obj:`ChainIdModel`."""
         return f"Chain '{self.name}' #{self.id}"
 
 
 class ChainCreatedModel(ChainIdModel) :
+    """
+    Chain created response.
+
+    Attributes:
+        id (:obj:`str`): Unique record id.
+        keyFiles (:obj:`list` of :obj:`ExportedKeyFile`): Emergency key file names.
+        name (:obj:`str`): Chain name.
+    """
+
     def __init__(self, chain_id=None, name=None, keyFiles = [], **kwargs) :
         chain_id = kwargs.get('id', chain_id)
         super().__init__(chain_id, name)
@@ -314,25 +351,56 @@ class ChainCreatedModel(ChainIdModel) :
 
 
 class ChainCreationModel(BaseModel) :
-    def __init__(self, additionalApps = [], description = None, emergencyClosingKeyPassword = None,
-                emergencyClosingKeyStrength = KeyStrength.ExtraStrong.value, keyManagementKeyPassword = None,
-                keyManagementKeyStrength = KeyStrength.Strong.value, keysAlgorithm = Algorithms.RSA.value,
-                appManagementKeyPassword = None, name = None, operatingKeyStrength = KeyStrength.Normal.value, parent = None, **kwargs) :
-        self.additionalApps = [item if type(item) is int else int(item) for item in additionalApps]
+    """
+    Chain creation parameters.
+
+    Attributes:
+        additionalApps (:obj:`list` of :obj:`int`): List of additional apps (only numeric ids).
+        description (:obj:`str`): Description (perhaps intended primary usage).
+        emergencyClosingKeyPassword (:obj:`str`): Emergency closing key password.
+        emergencyClosingKeyStrength (:obj:`KeyStrength`):  Emergency closing key strength of key.
+        keyManagementKeyPassword (:obj:`str`): Key management key password.
+        keyManagementKeyStrength (:obj:`KeyStrength`): Key management strength of key.
+        keysAlgorithm (:obj:`Algorithms`): Keys algorithm.
+        appManagementKeyPassword (:obj:`str`):  App management key password.
+        name (:obj:`str`): Name of the chain.
+        operatingKeyStrength (:obj:`KeyStrength`): Operating key strength of key.
+        parent (:obj:`str`): Parent record Id.
+    """
+    def __init__(self, name, emergencyClosingKeyPassword, keyManagementKeyPassword, appManagementKeyPassword,
+                additionalApps = None, description = None, emergencyClosingKeyStrength = KeyStrength.ExtraStrong,
+                keyManagementKeyStrength = KeyStrength.Strong, keysAlgorithm = Algorithms.RSA,
+                operatingKeyStrength = KeyStrength.Normal, parent = None, **kwargs) :
+        if additionalApps is None :
+            self.additionalApps = None
+        else :
+            self.additionalApps = [item if type(item) is int else int(item) for item in additionalApps]
         self.description = description 
         self.emergencyClosingKeyPassword = emergencyClosingKeyPassword 
-        self.emergencyClosingKeyStrength = emergencyClosingKeyStrength 
+        self.emergencyClosingKeyStrength = emergencyClosingKeyStrength if type(emergencyClosingKeyStrength) is KeyStrength else KeyStrength(emergencyClosingKeyStrength)
         self.keyManagementKeyPassword = keyManagementKeyPassword 
-        self.keyManagementKeyStrength = keyManagementKeyStrength 
-        self.keysAlgorithm = keysAlgorithm 
+        self.keyManagementKeyStrength = keyManagementKeyStrength if type(keyManagementKeyStrength) is KeyStrength else KeyStrength(keyManagementKeyStrength)
+        self.keysAlgorithm = keysAlgorithm if type(keysAlgorithm) is Algorithms else Algorithms(keysAlgorithm)
         self.appManagementKeyPassword = appManagementKeyPassword
         self.name = name 
-        self.operatingKeyStrength = operatingKeyStrength 
+        self.operatingKeyStrength = operatingKeyStrength if type(operatingKeyStrength) is KeyStrength else KeyStrength(operatingKeyStrength)
         self.parent = parent
 
 
 class ChainSummaryModel(BaseModel) :
-    def __init__(self, activeApps = [], description = None, isClosedForNewTransactions = False, lastRecord = None, **kwarg) :
+    """
+    Chain summary.
+
+    Attributes:
+        id (:obj:`str`): Unique record id.
+        activeApps (:obj:`list` of :obj:`int`): List of active apps (only the numeric ids).
+        description (:obj:`str`): Description (perhaps intended primary usage).
+        isClosedForNewTransactions (:obj:`bool`): Indicates if the chain accepts new records.
+        lastRecord (:obj:`int`): Serial number of the last record.
+        name (:obj:`str`): Name of the chain.
+    """
+    def __init__(self, chain_id, activeApps = [], description = None, isClosedForNewTransactions = False, lastRecord = None, name = None, **kwarg) :
+        self.id = kwargs.get('id', chain_id)
         self.activeApps = activeApps
         self.description = description
         self.isClosedForNewTransactions = isClosedForNewTransactions
@@ -340,19 +408,38 @@ class ChainSummaryModel(BaseModel) :
 
 
 class DocumentBaseModel(BaseModel) :
-    def __init__(self, cipher = CipherAlgorithms.NONE.value, keyId = None, name = None, previousVersion = None, **kwargs) :
-        self.cipher = cipher
+    """
+    Document base model.
+
+    Attributes:
+        cipher (:obj:`CipherAlgorithms`): Cipher algorithm used to cipher the document.
+        keyId (:obj:`str`): Unique id of key that ciphers this document.
+        name (:obj:`str`):  Document name, may be a file name with an extension.
+        previousVersion (:obj:`str`): A reference to a previous version of this document (ChainId and RecordNumber).
+    """
+    def __init__(self, cipher = CipherAlgorithms.NONE, keyId = None, name = None, previousVersion = None, **kwargs) :
+        self.cipher = cipher if type(cipher) is CipherAlgorithms else CipherAlgorithms(cipher)
         self.keyId = keyId
         self.name = name
         self.previousVersion = previousVersion
 
     @property
     def is_ciphered(self):
-        return self.cipher != CipherAlgorithms.NONE.value and not self.cipher.strip()
+        """(:obj:`bool`): Return True if the document is ciphered."""
+        return self.cipher != CipherAlgorithms.NONE and not self.cipher.value.strip()
     
 
 class DocumentDetailsModel(DocumentBaseModel) :
-    def __init__(self, cipher = CipherAlgorithms.NONE.value, keyId = None, name = None, previousVersion = None, contentType = None, fileId = None, physicalDocumentID = None, **kwargs):
+    """
+    Document details.
+
+    Attributes:
+        contentType (:obj:`str`): Document content type (mime-type).
+        fileId (:obj:`str`): Unique id of the document derived from its content. The same content stored in different chains will have the same FileId.
+        physicalDocumentID (:obj:`str`): Compound id for this document as stored in this chain.
+    """
+
+    def __init__(self, cipher = CipherAlgorithms.NONE, keyId = None, name = None, previousVersion = None, contentType = None, fileId = None, physicalDocumentID = None, **kwargs):
         super().__init__(cipher, keyId, name, previousVersion,**kwargs)
         self.contentType = contentType
         self.fileId = fileId
@@ -360,13 +447,22 @@ class DocumentDetailsModel(DocumentBaseModel) :
 
     @property
     def is_plain_text(self):
+        """(:obj:`bool`): Return True if the content type is plain/text."""
         return self.contentType == "plain/text"
 
     def __str__(self) :
+        """(:obj:`str`): String representation of the document: 'Document '{name}' [{contentType}] {fileId}'."""
         return f"Document '{self.name}' [{self.contentType}] {self.fileId}"
 
 
 class DocumentUploadModel(DocumentBaseModel) :
+    """
+    Document model used to upload/post documents in the chain.
+
+    Attributes:
+        contentType (:obj:`str`): Document content type (mime-type).
+    """
+
     def __init__(self, cipher = CipherAlgorithms.NONE.value, keyId = None, name = None, previousVersion = None, contentType = None, **kwargs) :
         if name is None or name.strip().isspace() :
             raise ValueError('Document must have a name')
@@ -378,6 +474,7 @@ class DocumentUploadModel(DocumentBaseModel) :
         self.contentType = contentType
 
     def to_query_string(self) :
+        """(:obj:`str`): Request query representation."""
         sb = f"?cipher={self.cipher}&name={self.name}"
         if self.keyId :
             sb += f"&keyId={self.keyId}"
@@ -486,6 +583,8 @@ class NewRecordModelAsJson(NewRecordModelBase) :
         self.json = kwargs.get('json', rec_json)
         self.payloadTagId = payloadTagId
 
+    def to_query_string(self) :
+        return f"?applicationId={self.applicationId}&payloadTagId={self.payloadTagId}&type={self.type}"
 
 class NewRecordModel(NewRecordModelBase) :
     def __init__(self, applicationId = None, rec_type = RecordType.Data.value, payloadBytes = None, **kwargs) :

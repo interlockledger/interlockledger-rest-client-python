@@ -119,7 +119,7 @@ class RestChain :
             cur_url = f"/records@{self.id}/with?applicationId={applicationId}&payloadTagId={payloadTagId}&type={rec_type}"
             return RecordModel.from_json(self.__rest.post_raw(cur_url, rec_bytes, "application/interlockledger"))
         else :
-            print(json.dumps(BaseModel.json(model), indent = 4))
+            print(model.to_json())
 
             return RecordModel.from_json(self.__rest.post(f"/records@{self.id}", model))
 
@@ -127,7 +127,7 @@ class RestChain :
     def add_record_as_json(self, model) :
         if type(model) is not NewRecordModelAsJson :
             raise TypeError('model must be NewRecordModelAsJson')
-        RecordModelAsJson.from_json(self.__rest.post(f"/records@{self.id}/asJson", model))
+        RecordModelAsJson.from_json(self.__rest.post(f"/records@{self.id}/asJson{model.to_query_string()}", model.json))
 
     
     def document_as_plain(self, fileId) :
@@ -324,11 +324,18 @@ class RestNode :
     def prepare_post_request(self, url, body, accept) :
         cur_uri = uri.URI(self.base_uri, path = url)
         
-        json_data = BaseModel.json(body)
+        #json_data = BaseModel.json(body)
+        if issubclass(type(body) ,BaseModel) :
+            json_data = body.to_json()
+        else :
+            json_data = body
         headers = {'Accept': accept,
                    'Content-type' : "application/json; charset=utf-8"}
 
-        print('@@@@@@',json_data)
+        print('@URI:  ',cur_uri)
+        print('@headers: ', headers)
+        print('@JSON: ',json_data)
+
 
         with self.__pfx_to_pem() as cert :
             response = requests.post(url = cur_uri, headers=headers,

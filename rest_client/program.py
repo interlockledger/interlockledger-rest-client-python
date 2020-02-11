@@ -42,6 +42,7 @@ import traceback
 sys.path.append('../')
 
 from interlockledger_rest.client import RestNode
+from interlockledger_rest.models import BaseModel
 from interlockledger_rest.models import CustomEncoder
 from interlockledger_rest.models import KeyPermitModel
 from interlockledger_rest.models import NewRecordModel
@@ -51,6 +52,11 @@ from interlockledger_rest.enumerations import KeyStrength
 from interlockledger_rest.enumerations import KeyPurpose
 from interlockledger_rest.enumerations import Algorithms
 from interlockledger_rest.enumerations import HashAlgorithms
+from interlockledger_rest.enumerations import NetworkPredefinedPorts
+
+from enum import EnumMeta
+from enum import IntEnum
+
 
 def main() :
     parser = argparse.ArgumentParser(description = 'Testing the python\'s REST client implementation.')
@@ -126,7 +132,7 @@ def exercise_chain(node, chain, transact = False) :
     print(chain)
 
     summary = chain.summary
-    print(json.dumps(summary, cls=CustomEncoder))
+    print(json.dumps(summary.to_json(), indent = 4))
     print(f"  summary.activeApps: {', '.join(str(i) for i in summary.activeApps)}")
     print(f"  summary.description: {summary.description}")
     print(f"  summary.isClosedForNewTransactions: {summary.isClosedForNewTransactions}")
@@ -163,11 +169,7 @@ def exercise_chain(node, chain, transact = False) :
         print(f"    {record}")
     
     if transact :
-        #model = NewRecordModelAsJson(applicationId = 1, payloadTagId = 300, rec_json= {'tagId': 300,'version' : 0, 'apps': [0,1,2,3,4]})
-        #print(NewRecordModelAsJson.json(model))
-        #chain.add_record_as_json(model)
-        #exit()
-        
+        try_to_add_nice_record_as_json(chain)
         #try_to_add_nice_unpacked_record(chain)
         #try_to_add_nice_record(chain)
         #try_to_add_badly_encoded_unpacked_record(chain)
@@ -179,7 +181,20 @@ def exercise_chain(node, chain, transact = False) :
         #try_to_force_interlock(chain)
         #try_to_permit_key(chain)
         exit()
+        
     print()
+
+def try_to_add_nice_record_as_json(chain) :
+    try :
+        print()
+        print("  Trying to add a nice record as JSON:")
+        model = NewRecordModelAsJson(applicationId = 1, payloadTagId = 300, rec_json= {'tagId': 300,'version' : 0, 'apps': [0,1,2,3,4]})
+        record = chain.add_record_as_json(model)
+        print(f"    {record}")
+    except :
+        print(traceback.format_exc())
+
+
 
 
 def try_to_add_badly_encoded_unpacked_record(chain) :
@@ -267,9 +282,6 @@ def try_to_store_nice_document(chain) :
         print(f"    {document}")
     except :
         print(traceback.format_exc())
-
-
-
 
     
 if __name__ == '__main__':

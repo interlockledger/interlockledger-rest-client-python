@@ -36,6 +36,7 @@ import json
 import datetime
 import base64
 
+from enum import Enum
 from packaging import version
 from colour import Color
 
@@ -149,6 +150,8 @@ class CustomEncoder(json.JSONEncoder) :
             return str(obj)
         elif isinstance(obj, bytes) :
             return base64.b64encode(obj).decode('utf-8')
+        elif issubclass(type(obj), Enum) :
+            return obj.value
         else :
             return obj.__dict__
 
