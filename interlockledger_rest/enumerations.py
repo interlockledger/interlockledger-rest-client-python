@@ -52,6 +52,16 @@ class Algorithms(AutoName) :
     EcDSA = auto()
     EdDSA = auto()
 
+
+class DataFieldCast(AutoName) :
+    """
+    Enumeration of casting options for DataField
+    """
+    NONE = 'None'
+    DateTime = auto()
+    Integer = auto()
+    TimeSpan = auto()
+
 class CipherAlgorithms(AutoName) :
     """
     Enumeration of the cipher algorithms available in IL2.

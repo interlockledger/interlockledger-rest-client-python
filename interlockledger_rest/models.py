@@ -42,6 +42,7 @@ from packaging import version
 from colour import Color
 
 
+from .enumerations import DataFieldCast
 from .enumerations import KeyPurpose
 from .enumerations import KeyStrength
 from .enumerations import Algorithms
@@ -221,7 +222,7 @@ class DataModel(BaseModel) :
         Data field
 
         Attributes:
-            cast (:obj:`str`): TODO - *** ENUM***
+            cast (:obj:`DataFieldCast`): TODO
             elementTagId (:obj:`int`): TODO
             isOpaque (:obj:`bool`): TODO
             isOptional (:obj:`bool`): TODO
@@ -235,8 +236,10 @@ class DataModel(BaseModel) :
         def __init__(self, cast = None, elementTagId = None, isOpaque = None, isOptional = None, description = None, Enumeration = None, enumerationAsFlags = None, name = None, serializationVersion = None, subDataFields = None, tagId = None, version = None, **kwargs) :
             
 
-
-            self.cast = cast
+            if cast :
+                self.cast = cast if type(cast) is DataFieldCast else DataFieldCast(cast)
+            else :
+                self.cast = None
             self.elementTagId = elementTagId
             self.isOpaque = isOpaque
             self.isOptional = isOptional
