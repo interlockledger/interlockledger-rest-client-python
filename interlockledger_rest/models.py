@@ -463,7 +463,7 @@ class DocumentUploadModel(DocumentBaseModel) :
         contentType (:obj:`str`): Document content type (mime-type).
     """
 
-    def __init__(self, cipher = CipherAlgorithms.NONE.value, keyId = None, name = None, previousVersion = None, contentType = None, **kwargs) :
+    def __init__(self, cipher = CipherAlgorithms.NONE, keyId = None, name = None, previousVersion = None, contentType = None, **kwargs) :
         if name is None or name.strip().isspace() :
             raise ValueError('Document must have a name')
             
@@ -483,13 +483,68 @@ class DocumentUploadModel(DocumentBaseModel) :
         return sb
 
 
+
+class RawDocumentModel(BaseModel) :
+    """
+    Document as raw data.
+    
+    Args:
+        contentType (:obj:`str`): Document content type (mime-type).
+        content (:obj:`bytes`/:obj:`bytes`): Content of the document in raw bytes. If loaded from JSON, can be input as a base64 string which will be decoded to bytes.
+        name (:obj:`str`): Document name, may be a file name with an extension.
+
+    Attributes:
+        contentType (:obj:`str`): Document content type (mime-type).
+        content (:obj:`bytes`): Content of the document in raw bytes.
+        name (:obj:`str`): Document name, may be a file name with an extension.
+    """
+
+    def __init__(self, contentType = None, content = None, name = None, **kwargs) :
+        if contentType is None :
+            raise TypeError('contentType is None')
+        if content is None :
+            raise TypeError('content is None')
+        if name is None :
+            raise TypeError('name is None')
+
+        if kwargs.get('from_json') :
+            content = base64.b64decode(content)
+
+
+        self.contentType = contentType
+        self.content = to_bytes(content)
+        self.name = name
+
+    def __str__(self) :
+        return f"Document '{self.name}' [{self.contentType}]{os.linesep}{self.__partialContentAsBase64}"
+
+    def __partialContentAsBase64(self) :
+        if not self.content :
+            return "?"
+        else :
+            converted = base64.b64encode(self.content).decode('utf-8')
+            return converted[:256]+"..." if len(converted) > 256 else converted
+
+
+
 class ForceInterlockModel(BaseModel) :
-    def __init__(self, hashAlgorithm = HashAlgorithms.SHA256.value, minSerial = 0, targetChain = None, **kwargs) :
-        self.hashAlgorithm = hashAlgorithm
+    """
+    Force interlock command details.
+
+    Attributes:
+        hashAlgorithm (:obj:`HashAlgorithms`):  Hash algorithm to use.
+        minSerial (:obj:`int`): Required minimum of the serial of the last record in target chain whose hash will be pulled.
+        targetChain (:obj:`str`): Id of chain to be interlocked.
+
+    """
+
+    def __init__(self, hashAlgorithm = HashAlgorithms.SHA256, minSerial = 0, targetChain = None, **kwargs) :
+        self.hashAlgorithm = hashAlgorithm if type(hashAlgorithm) is HashAlgorithms else HashAlgorithms(hashAlgorithm)
         self.minSerial = minSerial
         self.targetChain = targetChain
 
     def __str__(self) :
+        """(:obj:`str`): String representation of the interlock."""
         return f"force interlock on {self.targetChain} @{self.minSerial}+ using {self.hashAlgorithm}"
 
 
@@ -497,16 +552,37 @@ class ForceInterlockModel(BaseModel) :
 
 
 class KeyModel(BaseModel) :
-    def __init__(self, app = None, appActions = None, key_id = None, name = None, publicKey = None, purposes = None, **kwargs) :
+    """
+    Key model
+
+    Args:
+        app (:obj:`int`): App to be permitted (by number).
+        appActions (:obj:`list` of :obj:`int`): App actions to be permitted by number.
+        key_id (:obj:`str`): Unique key id.
+        publicKey (:obj:`str`): Key public key.
+        purposes (:obj:`list` of :obj:`KeyPurpose`/:obj:`str`): Key valid purposes.
+        name (:obj:`str`): Key name.
+        **kwargs: Arbitrary keyword arguments.
+
+    Attributes:
+        app (:obj:`int`): App to be permitted (by number).
+        appActions (:obj:`list` of :obj:`int`): App actions to be permitted by number.
+        id (:obj:`str`): Unique key id.
+        name (:obj:`str`): Key name.
+        publicKey (:obj:`str`): Key public key.
+        purposes (:obj:`list` of :obj:`KeyPurpose`): Key valid purposes.
+    """
+    def __init__(self, app, appActions, key_id, publicKey, purposes, name = None, **kwargs) :
         self.app = app
         self.appActions = appActions
         self.id = kwargs.get('id', key_id)
         self.name = name
         self.publicKey = publicKey
-        self.purposes = purposes
+        self.purposes = [item if type(item) is KeyPurpose else KeyPurpose(item) for item in purposes]
 
     @property
     def actionable(self) :
+        """(:obj:`bool`): Return True if 'Action' is in the list of purposes."""
         return 'Action' in self.purposes
 
     @property
@@ -522,10 +598,31 @@ class KeyModel(BaseModel) :
         return f"App #{self.app} {f'Action{plural} {str_actions}'}"
 
     def __str__(self) :
+        """(:obj:`str`): String representation of the key details."""
         return f"Key '{self.name}' {self.id} purposes [{', '.join(sorted(self.purposes))}]  {self.__actions_for.lower()}"
 
 
 class KeyPermitModel(BaseModel) :
+    """
+    Key to permit.
+
+    Args:
+        app (:obj:`int`): App to be permitted (by number).
+        appActions (:obj:`list` of :obj:`int`): App actions to be permitted by number.
+        key_id (:obj:`str`): Unique key id.
+        publicKey (:obj:`str`): Key public key.
+        purposes (:obj:`list` of :obj:`KeyPurpose`/:obj:`str`): Key valid purposes.
+        name (:obj:`str`): Key name.
+        **kwargs: Arbitrary keyword arguments.
+
+    Attributes:
+        app (:obj:`int`): App to be permitted (by number).
+        appActions (:obj:`list` of :obj:`int`): App actions to be permitted by number.
+        id (:obj:`str`): Unique key id.
+        name (:obj:`str`): Key name.
+        publicKey (:obj:`str`): Key public key.
+        purposes (:obj:`list` of :obj:`KeyPurpose`): Key valid purposes.
+    """
     def __init__(self, app = None, appActions = [], key_id = None, name = None, 
                 publicKey = None, purposes = [], **kwargs) :
         key_id = kwargs.get("id", key_id)
@@ -543,13 +640,15 @@ class KeyPermitModel(BaseModel) :
             raise TypeError('purposes is None')
         elif KeyPurpose.Action.value not in purposes and KeyPurpose.Protocol.value not in purposes :
             raise ValueError("This key doesn't have the required purposes to be permitted")
+        elif KeyPurpose.Action not in purposes and KeyPurpose.Protocol not in purposes :
+            raise ValueError("This key doesn't have the required purposes to be permitted")
 
         self.app = app
         self.appActions = appActions
         self.id = key_id
         self.name = name
         self.publicKey = publicKey
-        self.purposes = purposes
+        self.purposes = [item if type(item) is KeyPurpose else KeyPurpose(item) for item in purposes]
 
 
 class MessageModel(BaseModel) :
@@ -571,23 +670,46 @@ class MessageModel(BaseModel) :
 
 
 class NewRecordModelBase(BaseModel) :
-    def __init__(self, applicationId = None, rec_type = RecordType.Data.value, **kwargs) :
+    """
+    Base model for new Record.
+
+    Attributes:
+        applicationId (:obj:`int`): Application id this record is associated with.
+        rec_type (:obj:`RecordType`): Block type. Most records are of the type 'Data'. Corresponds to the 'type' field in the JSON.
+    """
+    def __init__(self, applicationId = None, rec_type = RecordType.Data, **kwargs) :
         self.applicationId = applicationId
-        self.type = kwargs.get('type', rec_type)
+
+        rec_type = kwargs.get('type', rec_type)
+        self.type = rec_type if type(rec_type) is RecordType else RecordType(rec_type)
 
 
 class NewRecordModelAsJson(NewRecordModelBase) :
-    def __init__(self, applicationId = None, rec_type = RecordType.Data.value, rec_json = None, payloadTagId = None, **kwargs) :
+    """
+    New record model to be added to the chain as a JSON.
+
+    Attributes:
+        json (:obj:`dict`): The payload data matching the metadata for PayloadTagId.
+        payloadTagId (:obj:`RecordType`): The tag id for the payload, as registered for the application.
+    """
+    def __init__(self, applicationId = None, rec_type = RecordType.Data, rec_json = None, payloadTagId = None, **kwargs) :
         rec_type = kwargs.get('type', rec_type)
         super().__init__(applicationId, rec_type, **kwargs)
         self.json = kwargs.get('json', rec_json)
         self.payloadTagId = payloadTagId
 
     def to_query_string(self) :
+        """(:obj:`str`): Request query representation."""
         return f"?applicationId={self.applicationId}&payloadTagId={self.payloadTagId}&type={self.type}"
 
 class NewRecordModel(NewRecordModelBase) :
-    def __init__(self, applicationId = None, rec_type = RecordType.Data.value, payloadBytes = None, **kwargs) :
+    """
+    New record model to be added to the chain as raw bytes.
+
+    Attributes:
+        payloadBytes (:obj:`dict`): The payload in bytes. Must match the bytes schema of the application Id.
+    """
+    def __init__(self, applicationId = None, rec_type = RecordType.Data, payloadBytes = None, **kwargs) :
         rec_type = kwargs.get('type', rec_type)
         super().__init__(applicationId, rec_type, **kwargs)
 
@@ -636,6 +758,7 @@ class NodeCommonModel(BaseModel) :
 
     @property
     def fancy_color(self) :
+        """(:obj:`str`): Return the color as its name or the corresponding hexadecimal values."""
         return self.color.web if self.color is not None else None
 
     @property
@@ -662,13 +785,21 @@ class NodeDetailsModel(NodeCommonModel) :
 
 
 class PeerModel(NodeCommonModel) :
+    """
+    Peer details.
+
+    Attributes:
+        address (:obj:`str`): Network address to contact the peer.
+        port (:obj:`int`): Port the peer is listening.
+        protocol (:obj:`NetworkProtocol`):  Network protocol the peer is listening.
+    """
     def __init__(self, color = None, node_id = None, name = None, network = None, ownerId = None, ownerName = None, roles = None, softwareVersions = None, address = None, port = None, protocol = None, **kwargs) :
         node_id = kwargs.get('id', node_id)
         super().__init__(color, node_id, name, network, ownerId, ownerName, roles, softwareVersions, **kwargs)
 
         self.address = address
         self.port = port
-        self.protocol = protocol
+        self.protocol = protocol if type(protocol) is NetworkProtocol else NetworkProtocol(protocol)
 
     def __lt__(self, other) :
         return self.name < other.name
@@ -678,31 +809,32 @@ class PeerModel(NodeCommonModel) :
         return f'P2P listening at {self.address}:{self.port}'
 
 
-class RawDocumentModel(BaseModel) :
-    def __init__(self, contentType = None, content = None, name = None, **kwargs) :
-        if contentType is None :
-            raise TypeError('contentType is None')
-        if content is None :
-            raise TypeError('content is None')
-        if name is None :
-            raise TypeError('name is None')
-
-        self.contentType = contentType
-        self.content = to_bytes(content)
-        self.name = name
-
-    def __str__(self) :
-        return f"Document '{self.name}' [{self.contentType}]{os.linesep}{self.__partialContentAsBase64}"
-
-    def __partialContentAsBase64(self) :
-        if not self.content :
-            return "?"
-        else :
-            converted = base64.b64encode(self.content).decode('utf-8')
-            return converted[:256]+"..." if len(converted) > 256 else converted
-
 
 class RecordModelBase(BaseModel) :
+    """
+    Base model for records.
+    
+    Args:
+        applicationId (:obj:`int`): Application id this record is associated with.
+        chainId (:obj:`str`): Chain id that owns this record.
+        createdAt (:obj:`datetime.datetime`): Time of record creation.
+        rec_hash (:obj:`str`): Hash of the full encoded bytes of the record.
+        payloadTagId (:obj:`int`): The payload's TagId.
+        serial (:obj:`int`): Block serial number. For the first record this value is zero (0).
+        rec_type (:obj:`RecordType`): Block type. Most records are of the type 'Data'. Corresponds to the 'type' field in the JSON.
+        version (:obj:`int`): Version of this record structure.
+
+    Attributes:
+        applicationId (:obj:`int`): Application id this record is associated with.
+        chainId (:obj:`str`): Chain id that owns this record.
+        createdAt (:obj:`datetime.datetime`): Time of record creation.
+        hash (:obj:`str`): Hash of the full encoded bytes of the record.
+        payloadTagId (:obj:`int`): The payload's TagId.
+        serial (:obj:`int`): Block serial number. For the first record this value is zero (0).
+        type (:obj:`RecordType`): Block type. Most records are of the type 'Data'. Corresponds to the 'type' field in the JSON.
+        version (:obj:`int`): Version of this record structure.
+    """
+
     def __init__(self, applicationId = None, chainId = None, createdAt = None, rec_hash = None, 
                  payloadTagId = None, serial = None, rec_type = None, version = None, **kwargs) :
         rec_hash = kwargs.get('hash', rec_hash)
@@ -710,7 +842,7 @@ class RecordModelBase(BaseModel) :
 
         self.applicationId = applicationId
         self.chainId = chainId
-        self.createdAt = createdAt
+        self.createdAt = createdAt if type(createdAt) is datetime.datetime else string2datetime(createdAt)
         self.hash = rec_hash
         self.payloadTagId = payloadTagId
         self.serial = serial
@@ -718,10 +850,21 @@ class RecordModelBase(BaseModel) :
         self.version = version
 
     def __str__(self) :
+        """(:obj:`str`): JSON representation of the record as string."""
         return json.dumps(self, indent=4, cls=CustomEncoder)
 
 
 class RecordModel(RecordModelBase) :
+    """
+    Generic opaque record.
+
+    Args:
+        payloadBytes (:obj:`bytes`/:obj:`str`): The payload's bytes. If loaded from JSON, can be input as a base64 string which will be decoded to bytes.
+
+    Attributes:
+        payloadBytes (:obj:`bytes`): The payload's bytes.
+    """
+
     def __init__(self, applicationId = None, chainId = None, createdAt = None, rec_hash = None, 
                  payloadTagId = None, serial = None, rec_type = None, version = None, 
                  payloadBytes = None, **kwargs) :
@@ -737,6 +880,13 @@ class RecordModel(RecordModelBase) :
 
 
 class RecordModelAsJson(RecordModelBase) :
+    """
+    Record model as JSON.
+
+    Attributes:
+        payload (): Payload bytes.
+    """
+
     def __init__(self, applicationId = None, chainId = None, createdAt = None, rec_hash = None, 
                  payloadTagId = None, serial = None, rec_type = None, version = None, 
                  payload = None, **kwargs) :
@@ -748,6 +898,16 @@ class RecordModelAsJson(RecordModelBase) :
 
 
 class InterlockingRecordModel(RecordModel) :
+    """
+    Interlocking details.
+
+    Attributes:
+        interlockedChainId (:obj:`str`): Interlocked Chain.
+        interlockedRecordHash (:obj:`str`): Interlock Record Hash.
+        interlockedRecordOffset (:obj:`int`): Interlocked Record Offset.
+        interlockedRecordSerial (:obj:`int`): Interlocked Record Serial.
+    """
+
     def __init__(self, applicationId = None, chainId = None, createdAt = None, rec_hash = None, 
                  payloadTagId = None, serial = None, rec_type = None, version = None, 
                  payloadBytes = None, interlockedChainId = None, interlockedRecordHash = None, 
@@ -761,6 +921,7 @@ class InterlockingRecordModel(RecordModel) :
         self.interlockedRecordSerial = interlockedRecordSerial
 
     def __str__(self) :
+        """(:obj:`str`): String representation."""
         return f"Interlocked chain {self.interlockedChainId} at record #{self.interlockedRecordSerial} (offset: {self.interlockedRecordOffset}) with hash {self.interlockedRecordHash}{os.linesep}{super().__str__()}"
 
 

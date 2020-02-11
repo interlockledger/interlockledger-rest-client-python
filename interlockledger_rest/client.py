@@ -127,14 +127,14 @@ class RestChain :
     def add_record_as_json(self, model) :
         if type(model) is not NewRecordModelAsJson :
             raise TypeError('model must be NewRecordModelAsJson')
-        RecordModelAsJson.from_json(self.__rest.post(f"/records@{self.id}/asJson{model.to_query_string()}", model.json))
+        return RecordModelAsJson.from_json(self.__rest.post(f"/records@{self.id}/asJson{model.to_query_string()}", model.json))
 
     
     def document_as_plain(self, fileId) :
         return self.__rest.call_api_plain_doc(f"/documents@{self.id}/{fileId}", "GET")
 
     def document_as_raw(self, fileId) :
-        return self.__rest.call_api_raw_doc(f"/documents@{self.id}/{fileId}", "GET")
+        return RawDocumentModel.from_json(self.__rest.call_api_raw_doc(f"/documents@{self.id}/{fileId}", "GET"))
 
 
     def force_interlock(self, model) : 

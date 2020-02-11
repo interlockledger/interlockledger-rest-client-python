@@ -80,6 +80,8 @@ class KeyPurpose(AutoName) :
     ForceInterlock = auto()
     KeyManagement = auto()
     Protocol = auto()
+    InvalidKey = auto()
+    ClaimSigner = auto()
 
 
 class KeyStrength(AutoName) :
@@ -105,6 +107,16 @@ class KeyStrength(AutoName) :
     SuperStrong = auto()   # RSA 6144
     HyperStrong = auto()   # RSA 7172
     UltraStrong = auto()   # RSA 8192
+
+
+class NetworkProtocol(AutoName) :
+    """
+    Enumeration of the network protocols.
+    """
+    TCP_Direct = auto()
+    TCP_Proxied, = auto()
+    HTTPS_Proxied = auto()
+    Originator_Only = auto()
 
 
 class NetworkPredefinedPorts(IntEnum) :
