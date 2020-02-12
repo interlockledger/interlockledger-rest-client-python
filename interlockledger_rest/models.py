@@ -72,11 +72,11 @@ class BaseModel :
         Convert a BaseModel class to a dict (JSON like).
 
         Args:
-            obj (:obj:`BaseModel`): BaseModel object to be converted.
             hide_null (:obj:`bool`, optional): If True, discards every item (key, value) where value is None.
+            return_as_str (:obj:`bool`, optional): If True, return the JSON as a string instead of a dict.
 
         Returns:
-            :obj:`dict` : return obj as a JSON
+            :obj:`dict`/:obj:`str` : return obj as a JSON
         """   
         ret_json = json.loads(json.dumps(self, cls = CustomEncoder))
         if hide_null :
@@ -95,11 +95,10 @@ class BaseModel :
         Convert a dict (JSON like) to a :obj:`BaseModel` object.
 
         Args:
-            obj (:obj:`BaseModel`): :obj:`BaseModel` object to be converted.
-            hide_null (:obj:`bool`, optional): If True, discards every item (key, value) where value is None.
+            json_data (:obj:`dict`): JSON object to be converted.
 
         Returns:
-            :obj:`dict` : return obj as a dict (JSON like)
+            :obj:`BaseModel`: return an instance of the JSON model.
         """   
 
         if type(json_data) is dict :
@@ -140,7 +139,7 @@ class AppsModel(BaseModel) :
             name (:obj:`str`):  Application name.
             publisherId (:obj:`str`): Publisher id, which is the identifier for the key the publisher uses to sign the workflow requests in its own chain. It should match the PublisherName
             publisherName (:obj:`str`): Publisher name as registered in the Genesis chain of the network.
-            reservedILTagIds (:obj:`list` of :obj:`LimitedRange`): The list of ranges of ILTagIds to reserve for the application.
+            reservedILTagIds (:obj:`list` of :obj:`interlockledger_rest.util.LimitedRange`): The list of ranges of ILTagIds to reserve for the application.
             simplifiedHashCode (:obj:`int`): The start date for the validity of the app, but if prior to the effective publication of the app will be overridden with the publication date and time.
             start (:obj:`datetime.datetime`): The start date for the validity of the app, but if prior to the effective publication of the app will be overridden with the publication date and time.
             version (:obj:`int`): 
@@ -206,8 +205,8 @@ class DataModel(BaseModel) :
     
     Attributes:
         description(:obj:`str`): TODO
-        dataFields(:obj:`list` of :obj:`DataModel.DataField`): TODO
-        indexes(:obj:`list` of :obj:`DataModel.DataIndex`): TODO
+        dataFields(:obj:`list` of :obj:`DataModel.DataFieldModel`): TODO
+        indexes(:obj:`list` of :obj:`DataModel.DataIndexModel`): TODO
         payloadName(:obj:`str`): TODO
         payloadTagId(:obj:`int`): TODO      
         version (:obj:`int`) : TODO
@@ -225,13 +224,13 @@ class DataModel(BaseModel) :
         Data field
 
         Attributes:
-            cast (:obj:`DataFieldCast`): TODO
+            cast (:obj:`interlockledger_rest.enumerations.DataFieldCast`): TODO
             elementTagId (:obj:`int`): TODO
             isOpaque (:obj:`bool`): TODO
             isOptional (:obj:`bool`): TODO
             name (:obj:`str`): TODO
             serializationVersion (:obj:`int`): TODO    
-            subDataFields (:obj:`list` of :obj:`DataModel.DataField`): TODO
+            subDataFields (:obj:`list` of :obj:`DataModel.DataFieldModel`): TODO
             tagId (:obj:`int`): TODO
             version (:obj:`int`): TODO            
         """
@@ -263,7 +262,7 @@ class DataModel(BaseModel) :
         Data index
 
         Attributes:
-            elements (:obj:`list` of :obj:`DataIndex.DataIndexElement`): TODO
+            elements (:obj:`list` of :obj:`DataModel.DataIndexModel.DataIndexElementModel`): TODO
             isUnique (:obj:`bool`): TODO
             name (:obj:`str`): TODO
         """
@@ -364,13 +363,13 @@ class ChainCreationModel(BaseModel) :
         additionalApps (:obj:`list` of :obj:`int`): List of additional apps (only numeric ids).
         description (:obj:`str`): Description (perhaps intended primary usage).
         emergencyClosingKeyPassword (:obj:`str`): Emergency closing key password.
-        emergencyClosingKeyStrength (:obj:`KeyStrength`):  Emergency closing key strength of key.
+        emergencyClosingKeyStrength (:obj:`interlockledger_rest.enumerations.KeyStrength`):  Emergency closing key strength of key.
         keyManagementKeyPassword (:obj:`str`): Key management key password.
-        keyManagementKeyStrength (:obj:`KeyStrength`): Key management strength of key.
-        keysAlgorithm (:obj:`Algorithms`): Keys algorithm.
+        keyManagementKeyStrength (:obj:`interlockledger_rest.enumerations.KeyStrength`): Key management strength of key.
+        keysAlgorithm (:obj:`interlockledger_rest.enumerations.Algorithms`): Keys algorithm.
         appManagementKeyPassword (:obj:`str`):  App management key password.
         name (:obj:`str`): Name of the chain.
-        operatingKeyStrength (:obj:`KeyStrength`): Operating key strength of key.
+        operatingKeyStrength (:obj:`interlockledger_rest.enumerations.KeyStrength`): Operating key strength of key.
         parent (:obj:`str`): Parent record Id.
     """
     def __init__(self, name, emergencyClosingKeyPassword, keyManagementKeyPassword, appManagementKeyPassword,
@@ -418,7 +417,7 @@ class DocumentBaseModel(BaseModel) :
     Document base model.
 
     Attributes:
-        cipher (:obj:`CipherAlgorithms`): Cipher algorithm used to cipher the document.
+        cipher (:obj:`interlockledger_rest.enumerations.CipherAlgorithms`): Cipher algorithm used to cipher the document.
         keyId (:obj:`str`): Unique id of key that ciphers this document.
         name (:obj:`str`):  Document name, may be a file name with an extension.
         previousVersion (:obj:`str`): A reference to a previous version of this document (ChainId and RecordNumber).
@@ -542,7 +541,7 @@ class ForceInterlockModel(BaseModel) :
     Force interlock command details.
 
     Attributes:
-        hashAlgorithm (:obj:`HashAlgorithms`):  Hash algorithm to use.
+        hashAlgorithm (:obj:`interlockledger_rest.enumerations.HashAlgorithms`):  Hash algorithm to use.
         minSerial (:obj:`int`): Required minimum of the serial of the last record in target chain whose hash will be pulled.
         targetChain (:obj:`str`): Id of chain to be interlocked.
 
@@ -570,7 +569,7 @@ class KeyModel(BaseModel) :
         appActions (:obj:`list` of :obj:`int`): App actions to be permitted by number.
         key_id (:obj:`str`): Unique key id.
         publicKey (:obj:`str`): Key public key.
-        purposes (:obj:`list` of :obj:`KeyPurpose`/:obj:`str`): Key valid purposes.
+        purposes (:obj:`list` of :obj:`interlockledger_rest.enumerations.KeyPurpose`/:obj:`str`): Key valid purposes.
         name (:obj:`str`): Key name.
         **kwargs: Arbitrary keyword arguments.
 
@@ -580,7 +579,7 @@ class KeyModel(BaseModel) :
         id (:obj:`str`): Unique key id.
         name (:obj:`str`): Key name.
         publicKey (:obj:`str`): Key public key.
-        purposes (:obj:`list` of :obj:`KeyPurpose`): Key valid purposes.
+        purposes (:obj:`list` of :obj:`interlockledger_rest.enumerations.KeyPurpose`): Key valid purposes.
     """
     def __init__(self, app, appActions, publicKey, purposes, key_id = None, name = None, **kwargs) :
         self.app = app
@@ -622,7 +621,7 @@ class KeyPermitModel(BaseModel) :
         appActions (:obj:`list` of :obj:`int`): App actions to be permitted by number.
         key_id (:obj:`str`): Unique key id.
         publicKey (:obj:`str`): Key public key.
-        purposes (:obj:`list` of :obj:`KeyPurpose`/:obj:`str`): Key valid purposes.
+        purposes (:obj:`list` of :obj:`interlockledger_rest.enumerations.KeyPurpose`/:obj:`str`): Key valid purposes.
         name (:obj:`str`): Key name.
         **kwargs: Arbitrary keyword arguments.
 
@@ -632,7 +631,7 @@ class KeyPermitModel(BaseModel) :
         id (:obj:`str`): Unique key id.
         name (:obj:`str`): Key name.
         publicKey (:obj:`str`): Key public key.
-        purposes (:obj:`list` of :obj:`KeyPurpose`): Key valid purposes.
+        purposes (:obj:`list` of :obj:`interlockledger_rest.enumerations.KeyPurpose`): Key valid purposes.
     """
     def __init__(self, app = None, appActions = [], key_id = None, name = None, 
                 publicKey = None, purposes = [], **kwargs) :
@@ -686,7 +685,7 @@ class NewRecordModelBase(BaseModel) :
 
     Attributes:
         applicationId (:obj:`int`): Application id this record is associated with.
-        rec_type (:obj:`RecordType`): Block type. Most records are of the type 'Data'. Corresponds to the 'type' field in the JSON.
+        rec_type (:obj:`interlockledger_rest.enumerations.RecordType`): Block type. Most records are of the type 'Data'. Corresponds to the 'type' field in the JSON.
     """
     def __init__(self, applicationId = None, rec_type = RecordType.Data, **kwargs) :
         self.applicationId = applicationId
@@ -701,7 +700,7 @@ class NewRecordModelAsJson(NewRecordModelBase) :
 
     Attributes:
         json (:obj:`dict`): The payload data matching the metadata for PayloadTagId.
-        payloadTagId (:obj:`RecordType`): The tag id for the payload, as registered for the application.
+        payloadTagId (:obj:`interlockledger_rest.enumerations.RecordType`): The tag id for the payload, as registered for the application.
     """
     def __init__(self, applicationId = None, rec_type = RecordType.Data, rec_json = None, payloadTagId = None, **kwargs) :
         rec_type = kwargs.get('type', rec_type)
@@ -802,7 +801,7 @@ class PeerModel(NodeCommonModel) :
     Attributes:
         address (:obj:`str`): Network address to contact the peer.
         port (:obj:`int`): Port the peer is listening.
-        protocol (:obj:`NetworkProtocol`):  Network protocol the peer is listening.
+        protocol (:obj:`interlockledger_rest.enumerations.NetworkProtocol`):  Network protocol the peer is listening.
     """
     def __init__(self, color = None, node_id = None, name = None, network = None, ownerId = None, ownerName = None, roles = None, softwareVersions = None, address = None, port = None, protocol = None, **kwargs) :
         node_id = kwargs.get('id', node_id)
@@ -835,7 +834,7 @@ class RecordModelBase(BaseModel) :
         rec_hash (:obj:`str`): Hash of the full encoded bytes of the record.
         payloadTagId (:obj:`int`): The payload's TagId.
         serial (:obj:`int`): Block serial number. For the first record this value is zero (0).
-        rec_type (:obj:`RecordType`): Block type. Most records are of the type 'Data'. Corresponds to the 'type' field in the JSON.
+        rec_type (:obj:`interlockledger_rest.enumerations.RecordType`): Block type. Most records are of the type 'Data'. Corresponds to the 'type' field in the JSON.
         version (:obj:`int`): Version of this record structure.
 
     Attributes:
@@ -845,7 +844,7 @@ class RecordModelBase(BaseModel) :
         hash (:obj:`str`): Hash of the full encoded bytes of the record.
         payloadTagId (:obj:`int`): The payload's TagId.
         serial (:obj:`int`): Block serial number. For the first record this value is zero (0).
-        type (:obj:`RecordType`): Block type. Most records are of the type 'Data'. Corresponds to the 'type' field in the JSON.
+        type (:obj:`interlockledger_rest.enumerations.RecordType`): Block type. Most records are of the type 'Data'. Corresponds to the 'type' field in the JSON.
         version (:obj:`int`): Version of this record structure.
     """
 

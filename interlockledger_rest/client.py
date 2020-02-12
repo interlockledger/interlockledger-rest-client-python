@@ -142,7 +142,7 @@ class RestChain :
         content_type = response.headers['Content-type']
         content_disposition = response.headers['Content-Disposition']
         name = re.findall("filename=([^;]+)", content_disposition)[0]
-        
+
         ret = RawDocumentModel(contentType = content_type, name = name, content = content)
 
         return ret
@@ -211,6 +211,13 @@ class RestChain :
 
 
 class RestNetwork :
+    """
+    Informations about the node network.
+
+    Args:
+        rest (:obj:`RestNode`): Node of the network.
+    """
+
     def __init__(self, rest) :
         if rest is None :
             raise TypeError('rest is None')
@@ -218,6 +225,7 @@ class RestNetwork :
 
     @property
     def apps(self) :
+        """(:obj:`AppsModel`): List of valid apps in the network."""
         return AppsModel.from_json(self.__rest.get('/apps'))
 
 
@@ -225,7 +233,27 @@ class RestNetwork :
 
 
 class RestNode :
-    def __init__(self, cert_file, cert_pass, port = None, address = 'localhost') :
+    """
+    REST API client to the InterlockLedger node.
+
+    You’ll try to establish a bi-authenticated https connection with the 
+    configured node API address and port. The client-side certificate used 
+    to connect needs to be configured with the proper layered authorization 
+    role in the node configuration file and imported into a key permitted to 
+    update the chain that will be used. 
+
+    Args:
+        cert_file (:obj:`str`): Path to the .pfx certificate. Please refer to the InterlockLedger manual to see how to create and import the certificate into the node.
+        cert_pass (:obj:`str`): Password of the .pfx certificate.
+        port (:obj:`int`): Port number to connect.
+        address (:obj:`str`): Address of the node.
+
+    Attributes:
+        base_uri (:obj:`uri.URI`): The base URI address of the node.
+        network (:obj:`RestNetwork`): Network information client.
+    """
+
+    def __init__(self, cert_file, cert_pass, port = NetworkPredefinedPorts.MainNet.value, address = 'localhost') :
         if port is None :
             port  = NetworkPredefinedPorts.MainNet.value
         
@@ -253,32 +281,43 @@ class RestNode :
 
     @property
     def certificate_name(self) :
+        """(:obj:`str`): Certificate friendly name."""
         return self.__certificate.get_friendlyname()
     
     @property
     def chains(self):
+        """(:obj:`list` of :obj:`RestChain`): List of chain instances."""
         json_data = self.get('/chain')
         return [RestChain(self, ChainIdModel.from_json(item)) for item in json_data]
 
     @property
     def details(self):
+        """(:obj:`interlockledger_rest.models.NodeDetailsModel`): Get node details."""
         return NodeDetailsModel.from_json(self.get('/'))
     
     @property
     def mirrors(self):
+        """(:obj:`list` of :obj:`RestChain`): Get list of mirrors instances."""
         json_data = self.get('/mirrors')
         return [RestChain(self, ChainIdModel.from_json(item)) for item in json_data]
     
 
     @property
     def peers(self):
+        """(:obj:`list` of :obj:`interlockledger_rest.models.PeerModel`): Get list of known peers."""
         json_data = self.get('/peers')
-        #peers_list = []
-        #for item in json_data :
-        #    peers_list.append(PeerModel.from_json(item))
         return [PeerModel.from_json(item) for item in json_data]
     
     def add_mirrors_of(self, new_mirrors) :
+        """
+        Create new mirrors in this node.
+    
+        Args:
+            new_mirrors (:obj:`list` of :obj:`str`): List of mirrors chain ids.
+
+        Returns:
+            (:obj:`list` of :obj:`interlockledger_rest.models.ChainIdModel`): List of the chain information.
+        """
         json_data = self.post("/mirrors", new_mirrors)
         return [ChainIdModel.from_json(item) for item in json_data]
 
