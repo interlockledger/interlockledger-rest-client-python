@@ -199,6 +199,14 @@ class AppsModel(BaseModel) :
             else :
                 return self.id < other.id
 
+class AppPermissions(BaseModel) :
+    def __init__(self, app = None, appActions = [], **kwargs) :
+        self.app = app
+        self.appActions = appActions
+
+    def __str__(self) :
+        return f"App"
+
 class DataModel(BaseModel) :
     """
     Data model
@@ -383,7 +391,9 @@ class ChainCreationModel(BaseModel) :
         self.description = description 
         self.emergencyClosingKeyPassword = emergencyClosingKeyPassword 
         self.emergencyClosingKeyStrength = emergencyClosingKeyStrength if type(emergencyClosingKeyStrength) is KeyStrength else KeyStrength(emergencyClosingKeyStrength)
+        ## self.managementKeyPassword = managementKeyPassword 
         self.keyManagementKeyPassword = keyManagementKeyPassword 
+        ## self.managementKeyStrength = managementKeyStrength if type(managementKeyStrength) is KeyStrength else KeyStrength(managementKeyStrength)
         self.keyManagementKeyStrength = keyManagementKeyStrength if type(keyManagementKeyStrength) is KeyStrength else KeyStrength(keyManagementKeyStrength)
         self.keysAlgorithm = keysAlgorithm if type(keysAlgorithm) is Algorithms else Algorithms(keysAlgorithm)
         self.appManagementKeyPassword = appManagementKeyPassword
@@ -404,8 +414,8 @@ class ChainSummaryModel(BaseModel) :
         lastRecord (:obj:`int`): Serial number of the last record.
         name (:obj:`str`): Name of the chain.
     """
-    def __init__(self, chain_id = None, activeApps = [], description = None, isClosedForNewTransactions = False, lastRecord = None, name = None, **kwarg) :
-        self.id = kwarg.get('id', chain_id)
+    def __init__(self, chain_id = None, activeApps = [], description = None, isClosedForNewTransactions = False, lastRecord = None, name = None, **kwargs) :
+        self.id = kwargs.get('id', chain_id)
         self.activeApps = activeApps
         self.description = description
         self.isClosedForNewTransactions = isClosedForNewTransactions
@@ -478,9 +488,10 @@ class DocumentUploadModel(DocumentBaseModel) :
         super().__init__(cipher, keyId, name, previousVersion,**kwargs)
         self.contentType = contentType
 
+    @property
     def to_query_string(self) :
         """(:obj:`str`): Request query representation."""
-        sb = f"?cipher={self.cipher}&name={self.name}"
+        sb = f"?cipher={self.cipher.value}&name={self.name}"
         if self.keyId :
             sb += f"&keyId={self.keyId}"
         if self.previousVersion :
@@ -612,6 +623,8 @@ class KeyModel(BaseModel) :
         return f"Key '{self.name}' {self.id} purposes [{', '.join(sorted(purposes_str))}]  {self.__actions_for.lower()}"
 
 
+
+#TODO update when version of the node is 3.5.x
 class KeyPermitModel(BaseModel) :
     """
     Key to permit.
@@ -661,22 +674,22 @@ class KeyPermitModel(BaseModel) :
         self.purposes = [item if type(item) is KeyPurpose else KeyPurpose(item) for item in purposes]
 
 
-class MessageModel(BaseModel) :
-    def __init__(self, applicationId = None, chainId = None, messageType = None,
-                 payload = None, payloadAsText = None, **kwargs) :
-        
-        if kwargs.get('from_json') :
-            payload = base64.b64decode(payload)
-
-
-        self.applicationId = applicationId
-        self.chainId = chainId
-        self.messageType = messageType
-        self.payload = to_bytes(payload)
-        self.payloadAsText = payloadAsText
-
-    def __str__(self) :
-        return f"Message {self.messageType} Chain {self.chainId} App {self.applicationId} : {self.payloadAsText}"
+#class MessageModel(BaseModel) :
+#    def __init__(self, applicationId = None, chainId = None, messageType = None,
+#                 payload = None, payloadAsText = None, **kwargs) :
+#        
+#        if kwargs.get('from_json') :
+#            payload = base64.b64decode(payload)
+#
+#
+#        self.applicationId = applicationId
+#        self.chainId = chainId
+#        self.messageType = messageType
+#        self.payload = to_bytes(payload)
+#        self.payloadAsText = payloadAsText
+#
+#    def __str__(self) :
+#        return f"Message {self.messageType} Chain {self.chainId} App {self.applicationId} : {self.payloadAsText}"
 
 
 class NewRecordModelBase(BaseModel) :
@@ -693,6 +706,7 @@ class NewRecordModelBase(BaseModel) :
         rec_type = kwargs.get('type', rec_type)
         self.type = rec_type if type(rec_type) is RecordType else RecordType(rec_type)
 
+    
 
 class NewRecordModelAsJson(NewRecordModelBase) :
     """
@@ -708,10 +722,12 @@ class NewRecordModelAsJson(NewRecordModelBase) :
         self.json = kwargs.get('json', rec_json)
         self.payloadTagId = payloadTagId
 
+    @property
     def to_query_string(self) :
         """(:obj:`str`): Request query representation."""
-        return f"?applicationId={self.applicationId}&payloadTagId={self.payloadTagId}&type={self.type}"
+        return f"?applicationId={self.applicationId}&payloadTagId={self.payloadTagId}&type={self.type.value}"
 
+    
 class NewRecordModel(NewRecordModelBase) :
     """
     New record model to be added to the chain as raw bytes.
