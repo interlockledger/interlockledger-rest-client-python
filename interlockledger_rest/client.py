@@ -723,6 +723,7 @@ class RestNode :
         print('@URI:  ',cur_uri)
         print('@headers: ', headers)
         print('@JSON: ',json_data)
+        print('@JSON string: ',json.dumps(json_data))
 
 
         with self.__pfx_to_pem() as cert :

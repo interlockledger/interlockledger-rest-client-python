@@ -884,7 +884,6 @@ class RecordModelBase(BaseModel) :
         self.applicationId = applicationId
         self.chainId = chainId
         self.createdAt = createdAt if type(createdAt) is datetime.datetime else string2datetime(createdAt)
-        #self.createdAt = createdAt
         self.hash = rec_hash
         self.payloadTagId = payloadTagId
         self.serial = serial

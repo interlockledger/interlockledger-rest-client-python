@@ -31,7 +31,7 @@
 """
 Utility classes and functions for the InterlockLedger API.
 """
-
+import re
 import json
 import datetime
 import base64
@@ -90,8 +90,9 @@ def string2datetime(time_string) :
     Returns:
         :obj:`datetime.datetime`: date time object.
     """
-
-    time_string = time_string if time_string[-3] != ':' else time_string[:-3] + time_string[-2:]
+    print('@@', time_string)
+    time_string = re.sub('([+-][0-9]{2}):([0-9]{2})', '\\1\\2', time_string)
+    time_string = re.sub('(\.[0-9]{1,6})([0-9]*)', '\\1', time_string)
     if '.' in time_string :
         return datetime.datetime.strptime(time_string,'%Y-%m-%dT%H:%M:%S.%f%z')
     else :
