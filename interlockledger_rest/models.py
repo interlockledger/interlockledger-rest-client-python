@@ -67,7 +67,7 @@ class BaseModel :
     """    
 
     #@classmethod
-    def to_json(self, hide_null = True, return_as_str = False) :
+    def json(self, hide_null = True, return_as_str = False) :
         """
         Convert a BaseModel class to a dict (JSON like).
 
@@ -78,7 +78,22 @@ class BaseModel :
         Returns:
             :obj:`dict`/:obj:`str` : return obj as a JSON
         """   
-        ret_json = json.loads(json.dumps(self, cls = CustomEncoder))
+        return BaseModel.to_json(self, hide_null, return_as_str)
+    
+    @classmethod
+    def to_json(cls, obj, hide_null = True, return_as_str = False) :
+        """
+        Convert an object to a dict (JSON like).
+
+        Args:
+            obj (:obj:`list`/:obj:`dict`/:obj:`BaseModel`): Object to be converted to JSON.
+            hide_null (:obj:`bool`, optional): If True, discards every item (key, value) where value is None.
+            return_as_str (:obj:`bool`, optional): If True, return the JSON as a string instead of a dict.
+
+        Returns:
+            :obj:`dict`/:obj:`str` : return obj as a JSON
+        """   
+        ret_json = json.loads(json.dumps(obj, cls = CustomEncoder))
         if hide_null :
             ret_json = filter_none(ret_json)
         
@@ -86,8 +101,6 @@ class BaseModel :
             return json.dumps(ret_json)
         else :
             return ret_json
-    
-
 
     @classmethod
     def from_json(cls, json_data) :
@@ -661,11 +674,7 @@ class KeyPermitModel(BaseModel) :
             raise TypeError('publicKey is None')
         if purposes is None :
             raise TypeError('purposes is None')
-        elif KeyPurpose.Action.value not in purposes and KeyPurpose.Protocol.value not in purposes :
-            raise ValueError("This key doesn't have the required purposes to be permitted")
-        elif KeyPurpose.Action not in purposes and KeyPurpose.Protocol not in purposes :
-            raise ValueError("This key doesn't have the required purposes to be permitted")
-
+        
         self.app = app
         self.appActions = appActions
         self.id = key_id
@@ -673,6 +682,9 @@ class KeyPermitModel(BaseModel) :
         self.publicKey = publicKey
         self.purposes = [item if type(item) is KeyPurpose else KeyPurpose(item) for item in purposes]
 
+        if KeyPurpose.Action not in self.purposes and KeyPurpose.Protocol not in self.purposes :
+            raise ValueError("This key doesn't have the required purposes to be permitted")
+        
 
 #class MessageModel(BaseModel) :
 #    def __init__(self, applicationId = None, chainId = None, messageType = None,
@@ -872,6 +884,7 @@ class RecordModelBase(BaseModel) :
         self.applicationId = applicationId
         self.chainId = chainId
         self.createdAt = createdAt if type(createdAt) is datetime.datetime else string2datetime(createdAt)
+        #self.createdAt = createdAt
         self.hash = rec_hash
         self.payloadTagId = payloadTagId
         self.serial = serial

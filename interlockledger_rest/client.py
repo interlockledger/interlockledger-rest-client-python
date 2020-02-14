@@ -91,42 +91,42 @@ class RestChain :
 
     @property
     def active_apps(self):
-        """(:obj:`list` of :obj:`int`): Enumerate apps that are currently permitted on this chain."""
+        """:obj:`list` of :obj:`int`: Enumerate apps that are currently permitted on this chain."""
         return self.__rest._get(f'/chain/{self.id}/activeApps')
 
     @property
     def documents(self):
-        """(:obj:`list` of :obj:`interlockledger_rest.models.DocumentDetailsModel`): Enumerate documents that are stored on this chain."""
+        """:obj:`list` of :obj:`interlockledger_rest.models.DocumentDetailsModel`: Enumerate documents that are stored on this chain."""
         json_data = self.__rest._get(f'/documents@{self.id}')
         return [DocumentDetailsModel.from_json(item) for item in json_data]
     
     @property
     def interlocks(self):
-        """(:obj:`list` of :obj:`interlockledger_rest.models.InterlockingRecordModel`): List of interlocks registered in the chain."""
+        """:obj:`list` of :obj:`interlockledger_rest.models.InterlockingRecordModel`: List of interlocks registered in the chain."""
         json_data = self.__rest._get(f'/chain/{self.id}/interlockings')
         return [InterlockingRecordModel.from_json(item) for item in json_data]
     
     @property
     def permitted_keys(self):
-        """(:obj:`list` of :obj:`interlockledger_rest.models.KeyModel`): Enumerate keys that are currently permitted on chain."""
+        """:obj:`list` of :obj:`interlockledger_rest.models.KeyModel`: Enumerate keys that are currently permitted on chain."""
         json_data = self.__rest._get(f'/chain/{self.id}/key')
         return [KeyModel.from_json(item) for item in json_data]
     
     @property
     def records(self):
-        """(:obj:`list` of :obj:`interlockledger_rest.models.RecordModel`): List of records in the chain."""
+        """:obj:`list` of :obj:`interlockledger_rest.models.RecordModel`: List of records in the chain."""
         json_data = self.__rest._get(f'/records@{self.id}')
         return [RecordModel.from_json(item) for item in json_data]
     
     @property
     def records_as_json(self):
-        """(:obj:`list` of :obj:`interlockledger_rest.models.RecordModelAsJson`): List of records in the chain with payload mapped to JSON."""
+        """:obj:`list` of :obj:`interlockledger_rest.models.RecordModelAsJson`: List of records in the chain with payload mapped to JSON."""
         json_data = self.__rest._get(f'/records@{self.id}/asJson')
         return [RecordModelAsJson.from_json(item) for item in json_data]
     
     @property
     def summary(self):
-        """(:obj:`interlockledger_rest.models.ChainSummaryModel`): Chain details"""
+        """:obj:`interlockledger_rest.models.ChainSummaryModel`: Chain details"""
         return ChainSummaryModel.from_json(self.__rest._get(f'/chain/{self.id}'))
     
 
@@ -138,10 +138,28 @@ class RestChain :
             model (:obj:`interlockledger_rest.models.NewRecordModel`): Model with the description of the new record.
 
         Returns:
-            (:obj:`interlockledger_rest.models.RecordModel`): Added record information.
+            :obj:`interlockledger_rest.models.RecordModel`: Added record information.
+        
+        Example: 
+            >>> node = RestNode(cert_file = 'recorder.pfx', cert_pass = 'password', port = 32020)
+            >>> chain = node.chains[0] 
+            >>> model = NewRecordModel(applicationId = 1, payloadTagId = 300, payloadBytes = bytes([248, 52, 7, 5, 0, 0, 20, 2, 1, 4]))
+            >>> record = chain.add_record(model)
+            >>> print(record)
+            {
+                "applicationId": 1,
+                "chainId": "cRPeHOITV_t1ZQS9CIL7Yi3djJ33ynZCdSRsEnOvX40",
+                "createdAt": "2020-02-13T18:59:50.9033962-03:00",
+                "hash": "mAwaJCPH1c369GZLLXWsd_E7WkkZ2tdLS3LsZWBcPnw#SHA256",
+                "payloadTagId": 300,
+                "serial": 4,
+                "type": "Data",
+                "version": 2,
+                "payloadBytes": "+DQHBQAAFAIBBA=="
+            }
         """
     
-        print(model.to_json())
+        print(model.json())
 
         return RecordModel.from_json(self.__rest._post(f"/records@{self.id}", model))
 
@@ -158,7 +176,24 @@ class RestChain :
             rec_bytes (:obj:`bytes`): Payload bytes.
             
         Returns:
-            (:obj:`interlockledger_rest.models.RecordModel`): Added record information.
+            :obj:`interlockledger_rest.models.RecordModel`: Added record information.
+
+        Example: 
+            >>> node = RestNode(cert_file = 'recorder.pfx', cert_pass = 'password', port = 32020)
+            >>> chain = node.chains[0] 
+            >>> record = chain.add_record_unpacked(applicationId = 1, payloadTagId = 300, rec_bytes = bytes([5, 0, 0, 20, 2, 1, 4]))
+            >>> print(record)
+            {
+                "applicationId": 1,
+                "chainId": "VzCJczfgBeIiIBlnTRbmtsPriqwrkHqtF2yt8nhTcjM",
+                "createdAt": "2020-02-13T19:01:37.5175345-03:00",
+                "hash": "cY7krS7BSJcBi7Ickq-u4iI6V6lYoKULfQtEZGJ-mC0#SHA256",
+                "payloadTagId": 300,
+                "serial": 4,
+                "type": "Data",
+                "version": 2,
+                "payloadBytes": "+DQHBQAAFAIBBA=="
+            }
         """
         cur_url = f"/records@{self.id}/with?applicationId={applicationId}&payloadTagId={payloadTagId}&type={rec_type.value}"
         return RecordModel.from_json(self.__rest._post_raw(cur_url, rec_bytes, "application/interlockledger"))
@@ -177,7 +212,31 @@ class RestChain :
             model (:obj:`interlockledger_rest.models.NewRecordModelAsJson`): Model with the description of the new record as JSON. **NOTE:**  if model is not None, the other arguments will be ignored.
 
         Returns:
-            (:obj:`interlockledger_rest.models.RecordModel`): Added record information.
+            :obj:`interlockledger_rest.models.RecordModel`: Added record information.
+
+        Example: 
+            >>> node = RestNode(cert_file = 'recorder.pfx', cert_pass = 'password', port = 32020)
+            >>> chain = node.chains[0] 
+            >>> model = NewRecordModelAsJson(applicationId = 1, payloadTagId = 300, rec_json= {'tagId': 300,'version' : 0, 'apps': [4]})
+            >>> record = chain.add_record_as_json(model = model)
+            >>> print(record)
+            {
+                "applicationId": 1,
+                "chainId": "tdiy2HnWv-4a_h5T4Xy8l93CQ0lVkIeu2r5qgSlALMY",
+                "createdAt": "2020-02-13T18:56:44.3002447-03:00",
+                "hash": "Y8Xb9FpTkgxj38xlwzcaZXm8fUq-NYxODVcyOQtzJ3c#SHA256",
+                "payloadTagId": 300,
+                "serial": 4,
+                "type": "Data",
+                "version": 2,
+                "payload": {
+                    "tagId": 300,
+                    "version": 0,
+                    "apps": [
+                        4
+                    ]
+                }
+            }
         """
         if model :
             if not isinstance(model, NewRecordModelAsJson) :
@@ -201,7 +260,7 @@ class RestChain :
             fileId (:obj:`str`): Unique id of the document file.
 
         Returns:
-            (:obj:`str`): Document content as a UTF-8 string.
+            :obj:`str`: Document content as a UTF-8 string.
         """
         return self.__rest._call_api_plain_doc(f"/documents@{self.id}/{fileId}", "GET")
 
@@ -213,7 +272,7 @@ class RestChain :
             fileId (:obj:`str`): Unique id of the document file.
 
         Returns:
-            (:obj:`interlockledger_rest.models.RawDocumentModel`): Document model with content as raw bytes.
+            :obj:`interlockledger_rest.models.RawDocumentModel`: Document model with content as raw bytes.
         """
         response = self.__rest._call_api_raw_doc(f"/documents@{self.id}/{fileId}", "GET")
 
@@ -235,7 +294,7 @@ class RestChain :
             model (:obj:`interlockledger_rest.models.ForceInterlockModel`): Force interlock command details.
 
         Returns:
-            (:obj:`interlockledger_rest.models.InterlockingRecordModel`): Interlocking details.
+            :obj:`interlockledger_rest.models.InterlockingRecordModel`: Interlocking details.
         """
         return InterlockingRecordModel.from_json(self.__rest._post(f"/chain/{self.id}/interlockings", model))
 
@@ -248,7 +307,14 @@ class RestChain :
             apps_to_permit (:obj:`list` of :obj:`int`): List of apps (by number) to be permitted.
 
         Returns:
-            (:obj:`list` of :obj:`int`): Enumerate apps that are currently permitted on this chain.
+            :obj:`list` of :obj:`int`: Enumerate apps that are currently permitted on this chain.
+
+        Example:
+            >>> node = RestNode(cert_file = 'recorder.pfx', cert_pass = 'password', port = 32020)
+            >>> chain = node.chains[0]
+            >>> apps = chain.permit_apps([4])
+            >>> print(apps)
+            [4]
         """
         return self.__rest._post(f"/chain/{self.id}/activeApps", apps_to_permit)
 
@@ -261,7 +327,7 @@ class RestChain :
             keys_to_permit (:obj:`list` of :obj:`interlockledger_rest.models.KeyPermitModel`): List of keys to permitted.
 
         Returns:
-            (:obj:`list` of :obj:`interlockledger_rest.models.KeyModel`): Enumerate keys that are currently permitted on chain.
+            :obj:`list` of :obj:`interlockledger_rest.models.KeyModel`: Enumerate keys that are currently permitted on chain.
         """
         json_data = self.__rest._post(f"/chain/{self.id}/key", keys_to_permit)
         return [KeyModel.from_json(item) for item in json_data]
@@ -276,7 +342,7 @@ class RestChain :
             lastSerial (:obj:`int`, optional): Last serial number.
 
         Returns:
-            (:obj:`list` of :obj:`interlockledger_rest.models.RecordModel`): List of records in the given interval.
+            :obj:`list` of :obj:`interlockledger_rest.models.RecordModel`: List of records in the given interval.
         """
         cur_curl = f"/records@{self.id}?firstSerial={firstSerial}"
         if lastSerial :
@@ -293,7 +359,7 @@ class RestChain :
             lastSerial (:obj:`int`, optional): Last serial number.
 
         Returns:
-            (:obj:`list` of :obj:`interlockledger_rest.models.RecordModelAsJson`): List of records mapped to JSON in the given interval.
+            :obj:`list` of :obj:`interlockledger_rest.models.RecordModelAsJson`: List of records mapped to JSON in the given interval.
         """
         cur_curl = f"/records@{self.id}/asJson?firstSerial={firstSerial}"
         if lastSerial :
@@ -309,7 +375,7 @@ class RestChain :
             serial (:obj:`int`): Record serial number.
 
         Returns:
-            (:obj:`interlockledger_rest.models.RecordModel`): Record with the specific serial number.
+            :obj:`interlockledger_rest.models.RecordModel`: Record with the specific serial number.
         """
         return RecordModel.from_json(self.__rest._get(f"/records@{self.id}/{serial}"))
 
@@ -321,7 +387,7 @@ class RestChain :
             serial (:obj:`int`): Record serial number.
 
         Returns:
-            (:obj:`interlockledger_rest.models.RecordModelAsJson`): Record mapped to JSON with the specific serial number.
+            :obj:`interlockledger_rest.models.RecordModelAsJson`: Record mapped to JSON with the specific serial number.
         """
         return RecordModelAsJson.from_json(self.__rest._get(f"/records@{self.id}/{serial}/asJson"))
 
@@ -338,7 +404,26 @@ class RestChain :
             model (:obj:`interlockledger_rest.models.DocumentUploadModel`): Model with the description of the new document. **NOTE:**  if model is not None, the other arguments will be ignored.
 
         Returns:
-            (:obj:`interlockledger_rest.models.DocumentDetailsModel`): Added document details.
+            :obj:`interlockledger_rest.models.DocumentDetailsModel`: Added document details.
+
+        Examples:
+            Adding a file document without specifying the name.
+            The file name in the file_path will be used as the name of the document.
+
+            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> chain = node.chains[0]
+            >>> new_document = chain.store_document_from_bytes(doc_bytes = b'Bytes message!', name = 'bytes_file.txt', content_type = 'plain/text')
+            >>> print(new_document)
+            Document 'bytes_file.txt' [plain/text] ZegBNUskzzJRqKvIuOiuhyhJvXJ5YxMJL99ONvqkcXs#SHA256
+
+            Using the model to specify the description of the document.
+
+            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> chain = node.chains[0]
+            >>> model = DocumentUploadModel(name = 'other_bytes_file.txt', contentType = 'plain/text')
+            >>> new_document = chain.store_document_from_bytes(doc_bytes = b'Other bytes message!', model = model)
+            >>> print(new_document)
+            Document 'other_bytes_file.txt' [plain/text] wLQypXsHLV0H7RdNrrM3NvViA7W1-9pcClPgWGMmF6Q#SHA256
         """
         if not model :
             if name is None:
@@ -361,7 +446,26 @@ class RestChain :
             model (:obj:`interlockledger_rest.models.DocumentUploadModel`): Model with the description of the new document. **NOTE:**  if model is not None, the other arguments will be ignored.
 
         Returns:
-            (:obj:`interlockledger_rest.models.DocumentDetailsModel`): Added document details.
+            :obj:`interlockledger_rest.models.DocumentDetailsModel`: Added document details.
+
+        Examples:
+            Adding a file document without specifying the name.
+            The file name in the file_path will be used as the name of the document.
+
+            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> chain = node.chains[0]
+            >>> new_document = chain.store_document_from_file(file_path = './test.pdf', content_type = 'application/pdf')
+            >>> print(new_document)
+            Document 'test.pdf' [application/pdf] tZpQvucMOi-FYHNQvI9UaOampVCUPtw3m0Z5TXwuF20#SHA256
+
+            Using the model to specify the description of the document.
+
+            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> chain = node.chains[0]
+            >>> model = DocumentUploadModel(name = 'my_test.txt', contentType = 'plain/text', cipher = CipherAlgorithms.AES256)
+            >>> new_document = chain.store_document_from_file(file_path = './test.txt', model = model)
+            >>> print(new_document)
+            Document 'my_test.txt' [plain/text] FukEkll0cTDSp4k4zJehM--5ZzjMz-LVeAsSeaMIeeg#SHA256
         """
         if not os.path.isfile(file_path) :
             raise FileNotFoundError(f"No file '{file_path}' to store as a document!")
@@ -389,7 +493,14 @@ class RestChain :
             model (:obj:`interlockledger_rest.models.DocumentUploadModel`): Model with the description of the new document. **NOTE:**  if model is not None, the other arguments will be ignored.
 
         Returns:
-            (:obj:`interlockledger_rest.models.DocumentDetailsModel`): Added document details.
+            :obj:`interlockledger_rest.models.DocumentDetailsModel`: Added document details.
+
+        Example:
+            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> chain = node.chains[0]
+            >>> new_document = chain.store_document_from_text(content = 'Simple text', name = 'document.txt')
+            >>> print(new_document)
+            Document 'document.txt' [plain/text] d_G2-zQ05L5QZ-omHi7cfyJW1Ses4xovJuFoOUNnxNo#SHA256
         """
         return self.store_document_from_bytes(doc_bytes = content.encode('utf-8'), name = name, content_type = content_type)
 
@@ -419,7 +530,7 @@ class RestNetwork :
 
     @property
     def apps(self) :
-        """(:obj:`AppsModel`): List of valid apps in the network."""
+        """:obj:`AppsModel`: List of valid apps in the network."""
         return AppsModel.from_json(self.__rest._get('/apps'))
 
 
@@ -475,30 +586,30 @@ class RestNode :
 
     @property
     def certificate_name(self) :
-        """(:obj:`str`): Certificate friendly name."""
+        """:obj:`str`: Certificate friendly name."""
         return self.__certificate.get_friendlyname()
     
     @property
     def chains(self):
-        """(:obj:`list` of :obj:`RestChain`): List of chain instances."""
+        """:obj:`list` of :obj:`RestChain`: List of chain instances."""
         json_data = self._get('/chain')
         return [RestChain(self, ChainIdModel.from_json(item)) for item in json_data]
 
     @property
     def details(self):
-        """(:obj:`interlockledger_rest.models.NodeDetailsModel`): Get node details."""
+        """:obj:`interlockledger_rest.models.NodeDetailsModel`: Get node details."""
         return NodeDetailsModel.from_json(self._get('/'))
     
     @property
     def mirrors(self):
-        """(:obj:`list` of :obj:`RestChain`): Get list of mirrors instances."""
+        """:obj:`list` of :obj:`RestChain`: Get list of mirrors instances."""
         json_data = self._get('/mirrors')
         return [RestChain(self, ChainIdModel.from_json(item)) for item in json_data]
     
 
     @property
     def peers(self):
-        """(:obj:`list` of :obj:`interlockledger_rest.models.PeerModel`): Get list of known peers."""
+        """:obj:`list` of :obj:`interlockledger_rest.models.PeerModel`: Get list of known peers."""
         json_data = self._get('/peers')
         return [PeerModel.from_json(item) for item in json_data]
     
@@ -510,7 +621,7 @@ class RestNode :
             new_mirrors (:obj:`list` of :obj:`str`): List of mirrors chain ids.
 
         Returns:
-            (:obj:`list` of :obj:`interlockledger_rest.models.ChainIdModel`): List of the chain information.
+            :obj:`list` of :obj:`interlockledger_rest.models.ChainIdModel`: List of the chain information.
         """
         json_data = self._post("/mirrors", new_mirrors)
         return [ChainIdModel.from_json(item) for item in json_data]
@@ -523,7 +634,7 @@ class RestNode :
             model (:obj:`interlockledger_rest.models.ChainCreationModel`): Model with the new chain attrbutes.
 
         Returns:
-            (:obj:`interlockledger_rest.models.ChainCreatedModel`): Chain created model.
+            :obj:`interlockledger_rest.models.ChainCreatedModel`: Chain created model.
 
         Example:
             >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
@@ -543,7 +654,7 @@ class RestNode :
             chain (:obj:`str`): Chain id.
 
         Returns:
-            (:obj:`list` of :obj:`interlockledger_rest.models.InterlockingRecordModel`): List of interlockings.
+            :obj:`list` of :obj:`interlockledger_rest.models.InterlockingRecordModel`: List of interlockings.
 
         Example:
             >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
@@ -603,9 +714,9 @@ class RestNode :
         
         #json_data = BaseModel.json(body)
         if issubclass(type(body) ,BaseModel) :
-            json_data = body.to_json()
+            json_data = body.json()
         else :
-            json_data = body
+            json_data = BaseModel.to_json(body)
         headers = {'Accept': accept,
                    'Content-type' : "application/json; charset=utf-8"}
 
@@ -629,10 +740,14 @@ class RestNode :
         headers = {'Accept': accept,
                    'Content-type' : contentType}
         
+        print('@URI:  ',cur_uri)
+        print('@headers: ', headers)
+        print('@body: ',body)
+
         with self.__pfx_to_pem() as cert :
             response = requests.post(url = cur_uri, data = body, headers=headers, 
                         cert = cert, verify = False)
-        
+        print(response.text)
         response.raise_for_status()
         return response
 
@@ -641,11 +756,13 @@ class RestNode :
         headers = {'Accept': accept,
                    'Content-type' : contentType}
         
+        print(headers)
+
         with self.__pfx_to_pem() as cert :
             with open(file_path, 'rb') as f :
                 response = requests.post(url = cur_uri, data = f, headers=headers, 
                             cert = cert, verify = False)
-        
+        print(response.text)
         response.raise_for_status()
         return response
 
