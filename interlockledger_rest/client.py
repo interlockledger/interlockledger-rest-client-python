@@ -689,6 +689,16 @@ class RestNode :
     def _call_api(self, url, method, accept = "application/json") :
         return self._prepare_request(url, method, accept)
 
+    def __treat_response_error(self, response) :
+        if 400<= response.status_code and response.status_code < 600 :
+            if response.text :
+                msg = f"{response.status_code} {response.reason}: ({response.json()['exceptionType']}) {response.json()['message']}"
+                raise requests.HTTPError(msg)
+            else :
+                response.raise_for_status()
+        
+        return
+
     def _get_raw_response(self, url, method, accept) :
         cur_uri = uri.URI(self.base_uri, path = url)
         
@@ -696,7 +706,8 @@ class RestNode :
             response = requests.request(method = method, url = cur_uri, stream = True,
                                 headers={'Accept': accept}, cert = cert, verify = False)
         
-        response.raise_for_status()
+        #response.raise_for_status()
+        self.__treat_response_error(response)
         return response
 
     def _prepare_request(self, url, method, accept) :
@@ -706,7 +717,8 @@ class RestNode :
             response = requests.request(method = method, url = cur_uri, stream = True,
                                 headers={'Accept': accept}, cert = cert, verify = False)
         
-        response.raise_for_status()
+        #response.raise_for_status()
+        self.__treat_response_error(response)
         return response
 
     def _prepare_post_request(self, url, body, accept) :
@@ -732,7 +744,8 @@ class RestNode :
         
         print(response.text)
 
-        response.raise_for_status()
+        #response.raise_for_status()
+        self.__treat_response_error(response)
         return response
         
 
@@ -749,7 +762,8 @@ class RestNode :
             response = requests.post(url = cur_uri, data = body, headers=headers, 
                         cert = cert, verify = False)
         print(response.text)
-        response.raise_for_status()
+        #response.raise_for_status()
+        self.__treat_response_error(response)
         return response
 
     def _prepare_post_file_request(self, url, file_path, accept, contentType) :
@@ -764,7 +778,8 @@ class RestNode :
                 response = requests.post(url = cur_uri, data = f, headers=headers, 
                             cert = cert, verify = False)
         print(response.text)
-        response.raise_for_status()
+        #response.raise_for_status()
+        self.__treat_response_error(response)
         return response
 
 

@@ -28,7 +28,7 @@
 
 
 """
-Resource models available in the IL2 REST API.
+Resource models available in the IL2 REST API (v3.5.0).
 """
 
 import os
