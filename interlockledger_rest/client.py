@@ -158,9 +158,6 @@ class RestChain :
                 "payloadBytes": "+DQHBQAAFAIBBA=="
             }
         """
-    
-        print(model.json())
-
         return RecordModel.from_json(self.__rest._post(f"/records@{self.id}", model))
 
     def add_record_unpacked(self, applicationId, payloadTagId, rec_bytes, rec_type = RecordType.Data) :
@@ -706,7 +703,6 @@ class RestNode :
             response = requests.request(method = method, url = cur_uri, stream = True,
                                 headers={'Accept': accept}, cert = cert, verify = False)
         
-        #response.raise_for_status()
         self.__treat_response_error(response)
         return response
 
@@ -717,7 +713,6 @@ class RestNode :
             response = requests.request(method = method, url = cur_uri, stream = True,
                                 headers={'Accept': accept}, cert = cert, verify = False)
         
-        #response.raise_for_status()
         self.__treat_response_error(response)
         return response
 
@@ -732,19 +727,10 @@ class RestNode :
         headers = {'Accept': accept,
                    'Content-type' : "application/json; charset=utf-8"}
 
-        print('@URI:  ',cur_uri)
-        print('@headers: ', headers)
-        print('@JSON: ',json_data)
-        print('@JSON string: ',json.dumps(json_data))
-
-
         with self.__pfx_to_pem() as cert :
             response = requests.post(url = cur_uri, headers=headers,
                                     json = json_data, cert = cert, verify = False)
         
-        print(response.text)
-
-        #response.raise_for_status()
         self.__treat_response_error(response)
         return response
         
@@ -754,15 +740,11 @@ class RestNode :
         headers = {'Accept': accept,
                    'Content-type' : contentType}
         
-        print('@URI:  ',cur_uri)
-        print('@headers: ', headers)
-        print('@body: ',body)
-
+        
         with self.__pfx_to_pem() as cert :
             response = requests.post(url = cur_uri, data = body, headers=headers, 
                         cert = cert, verify = False)
-        print(response.text)
-        #response.raise_for_status()
+        
         self.__treat_response_error(response)
         return response
 
@@ -771,14 +753,11 @@ class RestNode :
         headers = {'Accept': accept,
                    'Content-type' : contentType}
         
-        print(headers)
-
         with self.__pfx_to_pem() as cert :
             with open(file_path, 'rb') as f :
                 response = requests.post(url = cur_uri, data = f, headers=headers, 
                             cert = cert, verify = False)
-        print(response.text)
-        #response.raise_for_status()
+        
         self.__treat_response_error(response)
         return response
 
