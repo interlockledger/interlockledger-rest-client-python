@@ -257,6 +257,15 @@ class AppPermissions(BaseModel) :
 
     @classmethod
     def from_str(cls, permissions) :
+        """
+        Parse a string into an :obj:`AppPermissions` object.
+
+        Args:
+            permissions (:obj:`str`): App permissions in the format used by the JSON response ('#<appId>,<actionId_1>,...,<actionId_n>').
+
+        Returns:
+            :obj:`AppPermissions`: return an :obj:`AppPermissions` instance.
+        """
         permissions = permissions.replace('#','').strip()
         p = permissions.split(',')
         appId = int(p[0])
@@ -264,6 +273,7 @@ class AppPermissions(BaseModel) :
         return cls(appId = appId, actionIds = actionIds)
 
     def to_str(self) :
+        """ :obj:`str`: String representation of app permissions in the JSON format ('#<appId>,<actionId_1>,...,<actionId_n>')."""
         return f"#{self.appId},{','.join([str(item) for item in self.actionIds])}"
 
 
