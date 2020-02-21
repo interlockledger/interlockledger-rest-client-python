@@ -292,6 +292,29 @@ class RestChain :
 
         Returns:
             :obj:`interlockledger_rest.models.InterlockingRecordModel`: Interlocking details.
+        Example:
+            >>> node = RestNode(cert_file = 'mykeymanager.pfx', cert_pass = 'password', port = 32020)
+            >>> chain = node.chains[0]
+            >>> model = ForceInterlockModel(targetChain = '8fox30W54ZkzM-shfUeU5C7ad-_fsf5nICwNpkCUk5w')
+            >>> interlocks = chain.force_interlock(model)
+            >>> for il in interlocks :
+            >>>     print(il)
+            Interlocked chain 8fox30W54ZkzM-shfUeU5C7ad-_fsf5nICwNpkCUk5w at record #14 (offset: 13671) with hash RyvOZIjnoUG4QX7FwQs3f6BqDfnOPb3txgXJNxLxtDo#SHA256
+            {
+                "applicationId": 3,
+                "chainId": "VzCJczfgBeIiIBlnTRbmtsPriqwrkHqtF2yt8nhTcjM",
+                "createdAt": "2020-02-19T22:22:02.924546-03:46",
+                "hash": "pGNSXOoI822Y_7F1ZNXw-xO02ufXXbrQjNXpTMkZJpQ#SHA256",
+                "payloadTagId": 600,
+                "serial": 7,
+                "type": "Data",
+                "version": 2,
+                "payloadBytes": "+QFgUgUBACsjAAEA8fox30W54ZkzM+shfUeU5C7ad+/fsf5nICwNpkCUk5wKDgr5NG8nIgEARyvOZIjnoUG4QX7FwQs3f6BqDfnOPb3txgXJNxLxtDo=",
+                "interlockedChainId": "8fox30W54ZkzM-shfUeU5C7ad-_fsf5nICwNpkCUk5w",
+                "interlockedRecordHash": "RyvOZIjnoUG4QX7FwQs3f6BqDfnOPb3txgXJNxLxtDo#SHA256",
+                "interlockedRecordOffset": 13671,
+                "interlockedRecordSerial": 14
+            }            
         """
         return InterlockingRecordModel.from_json(self.__rest._post(f"/chain/{self.id}/interlockings", model))
 
@@ -325,6 +348,41 @@ class RestChain :
 
         Returns:
             :obj:`list` of :obj:`interlockledger_rest.models.KeyModel`: Enumerate keys that are currently permitted on chain.
+        
+        Example:
+            >>> node = RestNode(cert_file = 'mykeymanager.pfx', cert_pass = 'password', port = 32020)
+            >>> chain = node.chains[0]
+            >>> model_1 = KeyPermitModel(app = 4, appActions = [1000, 1001], key_id = 'Key!MJ0kidltB324mfkiOG0aBlEocPA#SHA1',
+            >>>               name = 'documenter', publicKey = 'PubKey!KPgQEPgItqh<...REDACTED...>BZk4axWhFbTDrxADAQAB#RSA',
+            >>>               purposes = [KeyPurpose.Action, KeyPurpose.Protocol])
+            >>> model_2 = KeyPermitModel(key_id = 'Key!aWJWFHYDmUXCTCPIW2Ugih5l4XQ#SHA1', name = 'recorder',
+            >>>               publicKey = 'PubKey!KPgQEPgItxD<...REDACTED...>t1RvQCHPYtRADAQAB#RSA',
+            >>>               purposes = [KeyPurpose.Action, KeyPurpose.Protocol],
+            >>>               permissions = [AppPermissions(appId = 1, actionIds = [300,301,306,302,304,303,305,307])])
+            >>> keys = chain.permit_keys([model_1, model_2])
+            >>> for key in keys :
+            >>>     print(keys)
+            Key 'documenter' Key!MJ0kidltB324mfkiOG0aBlEocPA#SHA1
+                Purposes: [Action,Protocol]
+                Actions permitted:
+                  App #4 Actions 1000,1001
+            Key 'recorder' Key!aWJWFHYDmUXCTCPIW2Ugih5l4XQ#SHA1
+                Purposes: [Action,Protocol]
+                Actions permitted:
+                  App #1 Actions 300,301,306,302,304,303,305,307 
+            Key 'mykeymanager' Key!-u07iGMWlkUm3WVBqS867AI-Lbw#SHA1
+                Purposes: [KeyManagement,Action,Protocol]
+                Actions permitted:
+                  App #2 Actions 500,501
+            Key 'emergency!20ic_KPTCIDfrlwQPKBHdKKp1a6ADaFtBvBjvFmf_fc' Key!vckqYtMYIcetbunEJc4w-whbnqtZc9a9qlNp5PePm2E
+                Purposes: [Protocol,Action]
+                Actions permitted:
+                  App #0 Action 131
+            Key 'manager!20ic_KPTCIDfrlwQPKBHdKKp1a6ADaFtBvBjvFmf_fc' Key!hLZkEjBRofw1U-JRkXfFdtBWfyM4sZNx8L3R5acakb4
+                Purposes: [Protocol,Action,KeyManagement]
+                Actions permitted:
+                  App #2 Actions 500,501
+                  App #1 Actions 300,301       
         """
         json_data = self.__rest._post(f"/chain/{self.id}/key", keys_to_permit)
         return [KeyModel.from_json(item) for item in json_data]

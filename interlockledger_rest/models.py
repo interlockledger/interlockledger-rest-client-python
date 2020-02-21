@@ -40,7 +40,7 @@ import base64
 
 from packaging import version
 from colour import Color
-
+from enum import Enum
 
 from .enumerations import DataFieldCast
 from .enumerations import KeyPurpose
@@ -55,9 +55,39 @@ from .util import null_condition_attribute
 from .util import filter_none
 from .util import string2datetime
 from .util import to_bytes
-from .util import CustomEncoder
+#from .util import CustomEncoder
 
 
+class CustomEncoder(json.JSONEncoder) :
+    """
+    Custom JSON encoder for the IL2 REST API models.
+    """
+
+    def default(self, obj) :
+        """
+        Set the behavior of the encoder depending on the type of obj.
+
+        """
+        if isinstance(obj, datetime.datetime) :
+            t = obj.strftime('%Y-%m-%dT%H:%M:%S.%f')
+            z = obj.strftime('%z')
+            if len(z) >=5 :
+                z = z[:-2] + ':' + t[-2:]
+            return t + z
+        elif isinstance(obj, Color) :
+            return obj.web
+        elif isinstance(obj, version.Version) :
+            return str(obj)
+        elif isinstance(obj, LimitedRange) :
+            return str(obj)
+        elif isinstance(obj, bytes) :
+            return base64.b64encode(obj).decode('utf-8')
+        elif issubclass(type(obj), Enum) :
+            return obj.value
+        elif issubclass(type(obj), AppPermissions) :
+            return obj.to_str()
+        else :
+            return obj.__dict__
 
 
 
@@ -223,6 +253,20 @@ class AppPermissions(BaseModel) :
     def __init__(self, appId = None, actionIds = [], **kwargs) :
         self.appId = appId
         self.actionIds = actionIds if actionIds else []
+
+
+    @classmethod
+    def from_str(cls, permissions) :
+        permissions = permissions.replace('#','').strip()
+        p = permissions.split(',')
+        appId = int(p[0])
+        actionIds = [int(item) for item in p[1:]]
+        return cls(appId = appId, actionIds = actionIds)
+
+    def to_str(self) :
+        return f"#{self.appId},{','.join([str(item) for item in self.actionIds])}"
+
+
 
     def __str__(self) :
         """ :obj:`str`: String representation of app permissions."""
@@ -612,7 +656,7 @@ class KeyModel(BaseModel) :
         self.id = kwargs.get('id', key_id)
         self.name = name
         if isinstance(permissions, list) :
-            self.permissions = [item if isinstance(item, AppPermissions) else AppPermissions.from_json(item) for item in permissions]
+            self.permissions = [item if isinstance(item, AppPermissions) else AppPermissions.from_str(item) for item in permissions]
         else :
             self.permissions = permissions
         self.publicKey = publicKey
@@ -690,7 +734,7 @@ class KeyPermitModel(BaseModel) :
         
         self.id = kwargs.get('id', key_id)
         self.name = name
-        self.permissions = [item if isinstance(item, AppPermissions) else AppPermissions.from_json(item) for item in permissions]
+        self.permissions = [item if isinstance(item, AppPermissions) else AppPermissions.from_str(item) for item in permissions]
         self.publicKey = publicKey
         self.purposes = [item if isinstance(item, KeyPurpose) else KeyPurpose(item) for item in purposes]
 

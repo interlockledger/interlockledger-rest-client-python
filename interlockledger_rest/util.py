@@ -90,7 +90,6 @@ def string2datetime(time_string) :
     Returns:
         :obj:`datetime.datetime`: date time object.
     """
-    print('@@', time_string)
     time_string = re.sub('([+-][0-9]{2}):([0-9]{2})', '\\1\\2', time_string)
     time_string = re.sub('(\.[0-9]{1,6})([0-9]*)', '\\1', time_string)
     if '.' in time_string :
@@ -126,35 +125,6 @@ def to_bytes(value) :
 
 
 
-class CustomEncoder(json.JSONEncoder) :
-    """
-    Custom JSON encoder for the IL2 REST API models.
-    """
-
-    def default(self, obj) :
-        """
-        Set the behavior of the encoder depending on the type of obj.
-
-        """
-
-        if isinstance(obj, datetime.datetime) :
-            t = obj.strftime('%Y-%m-%dT%H:%M:%S.%f')
-            z = obj.strftime('%z')
-            if len(z) >=5 :
-                z = z[:-2] + ':' + t[-2:]
-            return t + z
-        elif isinstance(obj, Color) :
-            return obj.web
-        elif isinstance(obj, version.Version) :
-            return str(obj)
-        elif isinstance(obj, LimitedRange) :
-            return str(obj)
-        elif isinstance(obj, bytes) :
-            return base64.b64encode(obj).decode('utf-8')
-        elif issubclass(type(obj), Enum) :
-            return obj.value
-        else :
-            return obj.__dict__
 
 
 class LimitedRange :
