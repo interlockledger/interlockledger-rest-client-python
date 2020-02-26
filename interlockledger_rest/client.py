@@ -34,9 +34,8 @@ import requests
 import json
 import base64
 import re
-from urllib3.exceptions import InsecureRequestWarning
 from OpenSSL import crypto
-from cryptography.hazmat.primitives.serialization import Encoding
+#from cryptography.hazmat.primitives.serialization import Encoding
 
 
 from .enumerations import NetworkPredefinedPorts
@@ -59,7 +58,6 @@ from .models import NewRecordModelAsJson
 from .models import DocumentUploadModel
 
 
-requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
 class RestChain :
     """
@@ -92,7 +90,7 @@ class RestChain :
     @property
     def active_apps(self):
         """:obj:`list` of :obj:`int`: Enumerate apps that are currently permitted on this chain."""
-        return self.__rest._get(f'/chain/{self.id}/activeApps')
+        return self.__rest._get(f"/chain/{self.id}/activeApps")
 
     @property
     def documents(self):
