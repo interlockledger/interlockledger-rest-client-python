@@ -16,17 +16,22 @@ importantly, any external logic can validate the multiple dimensions of validity
 
 To use the `interlockledger_rest` package, you can add the interlockledger_rest folder to your project.
 
+### Dependencies
+
+* Python 3.6.9:
+    * colour (0.1.5)
+    * packaging (19.2)
+    * pyOpenSSL (19.1.0)
+    * requests (2.22.0)
+    * uri (2.0.1)
+* InterlockLedger Node Server 3.6.2
+
+### Installation
+
 The package can also be installed by running the following command on the `setup.py` folder:
 ```
 pip3 install .
 ```
-
-### Dependencies
-* colour (0.1.5)
-* packaging (19.2)
-* pyOpenSSL (19.1.0)
-* requests (2.22.0)
-* uri (2.0.1)
 
 ## Example
 How to use the interlockledger rest client to store a text document:

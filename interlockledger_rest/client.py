@@ -690,11 +690,11 @@ class RestNode :
             :obj:`interlockledger_rest.models.ChainCreatedModel`: Chain created model.
 
         Example:
-            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> node = RestNode(cert_file = 'admin.pfx', cert_pass = 'password', port = 32020)
             >>> new_chain = ChainCreationModel(name = 'New chain name', description = 'New chain', 
-            >>>         keyManagementKeyPassword = 'keyPassword', emergencyClosingKeyPassword = 'closingPassword',
-            >>>         appManagementKeyPassword= 'appPassword')            
+            >>>         managementKeyPassword = 'keyPassword', emergencyClosingKeyPassword = 'closingPassword')
             >>> resp = node.create_chain(new_chain)
+            >>> print(resp)
             Chain 'New chain name' #cRPeHOITV_t1ZQS9CIL7Yi3djJ33ynZCdSRsEnOvX40
         """
         return ChainCreatedModel.from_json(self._post("/chain", model))
@@ -711,8 +711,27 @@ class RestNode :
 
         Example:
             >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
-            >>> node.interlocks_of('cA7CTUJxkcpGMpuGtg59kB9z5BllR-gQ4k4xBn8VAuo')
-            []
+            >>> interlocks = node.interlocks_of('8fox30W54ZkzM-shfUeU5C7ad-_fsf5nICwNpkCUk5w')
+            >>> for interlock in interlocks :
+            >>>     print(interlock)
+            Interlocked chain 8fox30W54ZkzM-shfUeU5C7ad-_fsf5nICwNpkCUk5w at record #14 (offset: 13671) with hash RyvOZIjnoUG4QX7FwQs3f6BqDfnOPb3txgXJNxLxtDo#SHA256
+            {
+                "applicationId": 3,
+                "chainId": "A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE",
+                "createdAt": "2020-02-26T23:17:03.018975-03:75",
+                "hash": "0QjOJ-WQjauOF7qXeOxXabHxUgBR_KBNDZVDECbsszw#SHA256",
+                "payloadTagId": 600,
+                "serial": 9,
+                "type": "Data",
+                "version": 2,
+                "payloadBytes": "+QFgUgUBACsjAAEA8fox30W54ZkzM+shfUeU5C7ad+/fsf5nICwNpkCUk5wKDgr5NG8nIgEARyvOZIjnoUG4QX7FwQs3f6BqDfnOPb3txgXJNxLxtDo=",
+                "interlockedChainId": "8fox30W54ZkzM-shfUeU5C7ad-_fsf5nICwNpkCUk5w",
+                "interlockedRecordHash": "RyvOZIjnoUG4QX7FwQs3f6BqDfnOPb3txgXJNxLxtDo#SHA256",
+                "interlockedRecordOffset": 13671,
+                "interlockedRecordSerial": 14
+            }
+
+
         """
         json_data = self._get(f"/interlockings/{chain}")
         return [InterlockingRecordModel.from_json(item) for item in json_data]
