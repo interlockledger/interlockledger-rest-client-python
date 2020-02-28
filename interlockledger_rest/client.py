@@ -140,8 +140,9 @@ class RestChain :
         
         Example: 
             >>> node = RestNode(cert_file = 'recorder.pfx', cert_pass = 'password', port = 32020)
-            >>> chain = node.chains[0] 
-            >>> model = NewRecordModel(applicationId = 1, payloadTagId = 300, payloadBytes = bytes([248, 52, 7, 5, 0, 0, 20, 2, 1, 4]))
+            >>> chain = node.chain_by_id('cRPeHOITV_t1ZQS9CIL7Yi3djJ33ynZCdSRsEnOvX40')
+            >>> model = NewRecordModel(applicationId = 1, payloadTagId = 300, 
+            ...               payloadBytes = bytes([248, 52, 7, 5, 0, 0, 20, 2, 1, 4]))
             >>> record = chain.add_record(model)
             >>> print(record)
             {
@@ -175,7 +176,7 @@ class RestChain :
 
         Example: 
             >>> node = RestNode(cert_file = 'recorder.pfx', cert_pass = 'password', port = 32020)
-            >>> chain = node.chains[0] 
+            >>> chain = node.chain_by_id('VzCJczfgBeIiIBlnTRbmtsPriqwrkHqtF2yt8nhTcjM')
             >>> record = chain.add_record_unpacked(applicationId = 1, payloadTagId = 300, rec_bytes = bytes([5, 0, 0, 20, 2, 1, 4]))
             >>> print(record)
             {
@@ -211,7 +212,7 @@ class RestChain :
 
         Example: 
             >>> node = RestNode(cert_file = 'recorder.pfx', cert_pass = 'password', port = 32020)
-            >>> chain = node.chains[0] 
+            >>> chain = node.chain_by_id('tdiy2HnWv-4a_h5T4Xy8l93CQ0lVkIeu2r5qgSlALMY')
             >>> model = NewRecordModelAsJson(applicationId = 1, payloadTagId = 300, rec_json= {'tagId': 300,'version' : 0, 'apps': [4]})
             >>> record = chain.add_record_as_json(model = model)
             >>> print(record)
@@ -292,11 +293,11 @@ class RestChain :
             :obj:`interlockledger_rest.models.InterlockingRecordModel`: Interlocking details.
         Example:
             >>> node = RestNode(cert_file = 'mykeymanager.pfx', cert_pass = 'password', port = 32020)
-            >>> chain = node.chains[0]
+            >>> chain = node.chain_by_id('VzCJczfgBeIiIBlnTRbmtsPriqwrkHqtF2yt8nhTcjM')
             >>> model = ForceInterlockModel(targetChain = '8fox30W54ZkzM-shfUeU5C7ad-_fsf5nICwNpkCUk5w')
             >>> interlocks = chain.force_interlock(model)
             >>> for il in interlocks :
-            >>>     print(il)
+            ...     print(il)
             Interlocked chain 8fox30W54ZkzM-shfUeU5C7ad-_fsf5nICwNpkCUk5w at record #14 (offset: 13671) with hash RyvOZIjnoUG4QX7FwQs3f6BqDfnOPb3txgXJNxLxtDo#SHA256
             {
                 "applicationId": 3,
@@ -329,7 +330,7 @@ class RestChain :
 
         Example:
             >>> node = RestNode(cert_file = 'recorder.pfx', cert_pass = 'password', port = 32020)
-            >>> chain = node.chains[0]
+            >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
             >>> apps = chain.permit_apps([4])
             >>> print(apps)
             [4]
@@ -349,17 +350,17 @@ class RestChain :
         
         Example:
             >>> node = RestNode(cert_file = 'mykeymanager.pfx', cert_pass = 'password', port = 32020)
-            >>> chain = node.chains[0]
+            >>> chain = node.chain_by_id('20ic_KPTCIDfrlwQPKBHdKKp1a6ADaFtBvBjvFmf_fc')
             >>> model_1 = KeyPermitModel(app = 4, appActions = [1000, 1001], key_id = 'Key!MJ0kidltB324mfkiOG0aBlEocPA#SHA1',
-            >>>               name = 'documenter', publicKey = 'PubKey!KPgQEPgItqh<...REDACTED...>BZk4axWhFbTDrxADAQAB#RSA',
-            >>>               purposes = [KeyPurpose.Action, KeyPurpose.Protocol])
+            ...               name = 'documenter', publicKey = 'PubKey!KPgQEPgItqh<...REDACTED...>BZk4axWhFbTDrxADAQAB#RSA',
+            ...               purposes = [KeyPurpose.Action, KeyPurpose.Protocol])
             >>> model_2 = KeyPermitModel(key_id = 'Key!aWJWFHYDmUXCTCPIW2Ugih5l4XQ#SHA1', name = 'recorder',
-            >>>               publicKey = 'PubKey!KPgQEPgItxD<...REDACTED...>t1RvQCHPYtRADAQAB#RSA',
-            >>>               purposes = [KeyPurpose.Action, KeyPurpose.Protocol],
-            >>>               permissions = [AppPermissions(appId = 1, actionIds = [300,301,306,302,304,303,305,307])])
+            ...               publicKey = 'PubKey!KPgQEPgItxD<...REDACTED...>t1RvQCHPYtRADAQAB#RSA',
+            ...               purposes = [KeyPurpose.Action, KeyPurpose.Protocol],
+            ...               permissions = [AppPermissions(appId = 1, actionIds = [300,301,306,302,304,303,305,307])])
             >>> keys = chain.permit_keys([model_1, model_2])
             >>> for key in keys :
-            >>>     print(keys)
+            ...     print(keys)
             Key 'documenter' Key!MJ0kidltB324mfkiOG0aBlEocPA#SHA1
                 Purposes: [Action,Protocol]
                 Actions permitted:
@@ -464,7 +465,7 @@ class RestChain :
             The file name in the file_path will be used as the name of the document.
 
             >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
-            >>> chain = node.chains[0]
+            >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
             >>> new_document = chain.store_document_from_bytes(doc_bytes = b'Bytes message!', name = 'bytes_file.txt', content_type = 'plain/text')
             >>> print(new_document)
             Document 'bytes_file.txt' [plain/text] ZegBNUskzzJRqKvIuOiuhyhJvXJ5YxMJL99ONvqkcXs#SHA256
@@ -472,7 +473,7 @@ class RestChain :
             Using the model to specify the description of the document.
 
             >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
-            >>> chain = node.chains[0]
+            >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
             >>> model = DocumentUploadModel(name = 'other_bytes_file.txt', contentType = 'plain/text')
             >>> new_document = chain.store_document_from_bytes(doc_bytes = b'Other bytes message!', model = model)
             >>> print(new_document)
@@ -506,7 +507,7 @@ class RestChain :
             The file name in the file_path will be used as the name of the document.
 
             >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
-            >>> chain = node.chains[0]
+            >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
             >>> new_document = chain.store_document_from_file(file_path = './test.pdf', content_type = 'application/pdf')
             >>> print(new_document)
             Document 'test.pdf' [application/pdf] tZpQvucMOi-FYHNQvI9UaOampVCUPtw3m0Z5TXwuF20#SHA256
@@ -514,7 +515,7 @@ class RestChain :
             Using the model to specify the description of the document.
 
             >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
-            >>> chain = node.chains[0]
+            >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
             >>> model = DocumentUploadModel(name = 'my_test.txt', contentType = 'plain/text', cipher = CipherAlgorithms.AES256)
             >>> new_document = chain.store_document_from_file(file_path = './test.txt', model = model)
             >>> print(new_document)
@@ -550,7 +551,7 @@ class RestChain :
 
         Example:
             >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
-            >>> chain = node.chains[0]
+            >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
             >>> new_document = chain.store_document_from_text(content = 'Simple text', name = 'document.txt')
             >>> print(new_document)
             Document 'document.txt' [plain/text] d_G2-zQ05L5QZ-omHi7cfyJW1Ses4xovJuFoOUNnxNo#SHA256
@@ -679,6 +680,28 @@ class RestNode :
         json_data = self._post("/mirrors", new_mirrors)
         return [ChainIdModel.from_json(item) for item in json_data]
 
+    def chain_by_id(self, chain_id) :
+        """
+        Get a chain by id.
+    
+        Args:
+            chain_id (:obj:`str`): Chain id.
+
+        Returns:
+            :obj:`RestChain`: Chain instance with the corresponding id.
+
+        Example:
+            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password', port = 32020)
+            >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
+            >>> print(chain)
+            Chain '3.6.2 chain name' #A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE
+        """
+        chains = self.chains
+        for chain in chains :
+            if chain.id == chain_id :
+                return chain
+        return None
+
     def create_chain(self, model) :
         """
         Create a new chain.
@@ -692,7 +715,7 @@ class RestNode :
         Example:
             >>> node = RestNode(cert_file = 'admin.pfx', cert_pass = 'password', port = 32020)
             >>> new_chain = ChainCreationModel(name = 'New chain name', description = 'New chain', 
-            >>>         managementKeyPassword = 'keyPassword', emergencyClosingKeyPassword = 'closingPassword')
+            ...         managementKeyPassword = 'keyPassword', emergencyClosingKeyPassword = 'closingPassword')
             >>> resp = node.create_chain(new_chain)
             >>> print(resp)
             Chain 'New chain name' #cRPeHOITV_t1ZQS9CIL7Yi3djJ33ynZCdSRsEnOvX40
@@ -713,7 +736,7 @@ class RestNode :
             >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
             >>> interlocks = node.interlocks_of('8fox30W54ZkzM-shfUeU5C7ad-_fsf5nICwNpkCUk5w')
             >>> for interlock in interlocks :
-            >>>     print(interlock)
+            ...     print(interlock)
             Interlocked chain 8fox30W54ZkzM-shfUeU5C7ad-_fsf5nICwNpkCUk5w at record #14 (offset: 13671) with hash RyvOZIjnoUG4QX7FwQs3f6BqDfnOPb3txgXJNxLxtDo#SHA256
             {
                 "applicationId": 3,
@@ -738,8 +761,6 @@ class RestNode :
 
 
     def _call_api_plain_doc(self, url, method, accept = "plain/text") :
-        """
-        """
         return self._prepare_request(url, method, accept).text
 
     def _call_api_raw_doc(self, url, method, accept = "*") :

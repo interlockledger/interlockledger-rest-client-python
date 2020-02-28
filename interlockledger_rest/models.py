@@ -700,7 +700,6 @@ class KeyModel(BaseModel) :
 
 
 
-#TODO update when version of the node is 3.5.x
 class KeyPermitModel(BaseModel) :
     """
     Key to permit.

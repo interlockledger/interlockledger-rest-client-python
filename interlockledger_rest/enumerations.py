@@ -97,9 +97,6 @@ class KeyStrength(AutoName) :
     """
     Enumeration of the strength of keys.
     """
-
-    #The algorithm used by each key strength is as follows:
-    #
     #Attributes:
     #    Normal : RSA 2048
     #    Strong : RSA 3072
@@ -108,14 +105,21 @@ class KeyStrength(AutoName) :
     #    SuperStrong : RSA 6144
     #    HyperStrong : RSA 7172
     #    UltraStrong : RSA 8192
-
+    
     Normal = auto()        # RSA 2048
+    """ RSA 2048 """
     Strong = auto()        # RSA 3072
+    """ RSA 3072 """
     ExtraStrong = auto()   # RSA 4096
+    """ RSA 4096 """
     MegaStrong = auto()    # RSA 5120
+    """ RSA 5120 """
     SuperStrong = auto()   # RSA 6144
+    """ RSA 6144 """
     HyperStrong = auto()   # RSA 7172
+    """ RSA 7172 """
     UltraStrong = auto()   # RSA 8192
+    """ RSA 8192 """
 
 
 class NetworkProtocol(AutoName) :
