@@ -289,12 +289,12 @@ class DataModel(BaseModel) :
     Data model
     
     Attributes:
-        description(:obj:`str`): TODO
+        description(:obj:`str`): Description of the data model.
         dataFields(:obj:`list` of :obj:`DataModel.DataFieldModel`): TODO
-        indexes(:obj:`list` of :obj:`DataModel.DataIndexModel`): TODO
-        payloadName(:obj:`str`): TODO
-        payloadTagId(:obj:`int`): TODO      
-        version (:obj:`int`) : TODO
+        indexes(:obj:`list` of :obj:`DataModel.DataIndexModel`): List of indexes for records of this type.
+        payloadName(:obj:`str`): Name of the record model.
+        payloadTagId(:obj:`int`): Tag id for this payload type. It must be a number in the reserved ranges.      
+        version (:obj:`int`) : Version of this data model, should start from 1.
     """
     def __init__(self, description = None, dataFields = None, indexes = None, payloadName = None, payloadTagId = None, version = None, **kwargs) :
         self.description = description
