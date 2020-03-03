@@ -33,7 +33,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="interlockledger_rest", # Replace with your own username
+    name="il2_rest", # Replace with your own username
     version="1.0.0",
     author="Daniel Chino",
     author_email="dchino@interlockledger.network",

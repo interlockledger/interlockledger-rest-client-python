@@ -5,7 +5,7 @@ Utility classes and functions for the InterlockLedger REST API v3.6.2.
 
 LimitedRange
 -------------
-.. autoclass:: interlockledger_rest.models.LimitedRange
+.. autoclass:: il2_rest.models.LimitedRange
     :members:
     :undoc-members:
     :show-inheritance:
@@ -13,17 +13,17 @@ LimitedRange
 
 null_condition_attribute
 ------------------------
-.. autofunction:: interlockledger_rest.models.null_condition_attribute
+.. autofunction:: il2_rest.models.null_condition_attribute
 
 filter_none
 -----------
-.. autofunction:: interlockledger_rest.models.filter_none
+.. autofunction:: il2_rest.models.filter_none
 
 string2datetime
 ---------------
-.. autofunction:: interlockledger_rest.models.string2datetime
+.. autofunction:: il2_rest.models.string2datetime
 
 to_bytes
 --------
-.. autofunction:: interlockledger_rest.models.to_bytes
+.. autofunction:: il2_rest.models.to_bytes
 

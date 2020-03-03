@@ -4,7 +4,7 @@ Using the InterlockLedger API client
 How to use and/or install
 -------------------------
 
-To use the `interlockledger_rest` package, you can add the interlockledger_rest folder to your project.
+To use the `il2_rest` package, you can add the il2_rest folder to your project.
 
 The package can also be installed by running the following command on the ``setup.py`` folder:
 
@@ -15,7 +15,7 @@ The package can also be installed by running the following command on the ``setu
 Dependencies
 ------------
 
-The `interlockledger_rest` package has the following dependencies:
+The `il2_rest` package has the following dependencies:
 
 * Python 3.6.9:
     * colour (0.1.5)
@@ -29,7 +29,7 @@ The `interlockledger_rest` package has the following dependencies:
 Example
 -------
 
-To use the `interlockledger_rest` client, you need to create an instance of the ``RestNode`` by passing a certificate file and the address of the node (default value is `localhost`). 
+To use the `il2_rest` client, you need to create an instance of the ``RestNode`` by passing a certificate file and the address of the node (default value is `localhost`). 
 
 .. note::
     The certificate must be already imported to the InterlockLedger node and be permissioned on the desired chain. See the InterlockLedger node manual.
@@ -38,7 +38,7 @@ To store a text document you can use the following script:
 
 .. code-block:: python3
 
-    >>> import interlockledger_rest as il2
+    >>> import il2_rest as il2
     
     >>> node = il2.RestNode(cert_file = 'documenter.pfx', cert_pass='password', port = 32020)
     >>> print(node.details)

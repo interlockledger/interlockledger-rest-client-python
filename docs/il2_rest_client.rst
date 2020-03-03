@@ -5,7 +5,7 @@ This module has the classes needed to connect and communicate with the Interlock
 
 RestChain
 ---------
-.. autoclass:: interlockledger_rest.client.RestChain
+.. autoclass:: il2_rest.client.RestChain
     :members:
     :undoc-members:
     :show-inheritance:
@@ -13,7 +13,7 @@ RestChain
 
 RestNetwork
 -----------
-.. autoclass:: interlockledger_rest.client.RestNetwork
+.. autoclass:: il2_rest.client.RestNetwork
     :members:
     :undoc-members:
     :show-inheritance:
@@ -21,7 +21,7 @@ RestNetwork
 
 RestNode
 --------
-.. autoclass:: interlockledger_rest.client.RestNode
+.. autoclass:: il2_rest.client.RestNode
     :members:
     :undoc-members:
     :show-inheritance:

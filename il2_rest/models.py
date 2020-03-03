@@ -28,7 +28,7 @@
 
 
 """
-Resource models available in the IL2 REST API (v3.4.7).
+Resource models available in the IL2 REST API (v3.5.0).
 """
 
 import os
@@ -40,7 +40,7 @@ import base64
 
 from packaging import version
 from colour import Color
-
+from enum import Enum
 
 from .enumerations import DataFieldCast
 from .enumerations import KeyPurpose
@@ -55,9 +55,39 @@ from .util import null_condition_attribute
 from .util import filter_none
 from .util import string2datetime
 from .util import to_bytes
-from .util import CustomEncoder
+#from .util import CustomEncoder
 
 
+class CustomEncoder(json.JSONEncoder) :
+    """
+    Custom JSON encoder for the IL2 REST API models.
+    """
+
+    def default(self, obj) :
+        """
+        Set the behavior of the encoder depending on the type of obj.
+
+        """
+        if isinstance(obj, datetime.datetime) :
+            t = obj.strftime('%Y-%m-%dT%H:%M:%S.%f')
+            z = obj.strftime('%z')
+            if len(z) >=5 :
+                z = z[:-2] + ':' + t[-2:]
+            return t + z
+        elif isinstance(obj, Color) :
+            return obj.web
+        elif isinstance(obj, version.Version) :
+            return str(obj)
+        elif isinstance(obj, LimitedRange) :
+            return str(obj)
+        elif isinstance(obj, bytes) :
+            return base64.b64encode(obj).decode('utf-8')
+        elif issubclass(type(obj), Enum) :
+            return obj.value
+        elif issubclass(type(obj), AppPermissions) :
+            return obj.to_str()
+        else :
+            return obj.__dict__
 
 
 
@@ -94,6 +124,7 @@ class BaseModel :
             :obj:`dict`/:obj:`str` : return obj as a JSON
         """   
         ret_json = json.loads(json.dumps(obj, cls = CustomEncoder))
+        
         if hide_null :
             ret_json = filter_none(ret_json)
         
@@ -113,8 +144,7 @@ class BaseModel :
         Returns:
             :obj:`BaseModel`: return an instance of the JSON model.
         """   
-
-        if type(json_data) is dict :
+        if isinstance(json_data, dict) :
             json_data['from_json'] = True
         return cls(**json_data)
 
@@ -137,7 +167,7 @@ class AppsModel(BaseModel) :
         self.network = network
         self.validApps = []
         for item in validApps :
-            self.validApps.append(item if type(item) is self.PublishedApp else self.PublishedApp.from_json(item))
+            self.validApps.append(item if isinstance(item, self.PublishedApp) else self.PublishedApp.from_json(item))
         
     @functools.total_ordering
     class PublishedApp(BaseModel) :
@@ -145,37 +175,38 @@ class AppsModel(BaseModel) :
         InterlockApp permitted in the chain.
 
         Attributes:
-            alternativeId (:obj:`int`): 
+            alternativeId (:obj:`int`): Alternative id for the application.
             appVersion (:obj:`version`): Application semantic version, with four numeric parts.
             description (:obj:`str`): Description of the application.
             id (:obj:`int`): Unique id for the application.
-            name (:obj:`str`):  Application name.
+            name (:obj:`str`): Application name.
             publisherId (:obj:`str`): Publisher id, which is the identifier for the key the publisher uses to sign the workflow requests in its own chain. It should match the PublisherName
             publisherName (:obj:`str`): Publisher name as registered in the Genesis chain of the network.
-            reservedILTagIds (:obj:`list` of :obj:`interlockledger_rest.util.LimitedRange`): The list of ranges of ILTagIds to reserve for the application.
+            dataModels (:obj:`list` of :obj:`DataModel`): The list of data models for the payloads of the records stored in the chains.
+            reservedILTagIds (:obj:`list` of :obj:`il2_rest.util.LimitedRange`): The list of ranges of ILTagIds to reserve for the application.
             simplifiedHashCode (:obj:`int`): The start date for the validity of the app, but if prior to the effective publication of the app will be overridden with the publication date and time.
             start (:obj:`datetime.datetime`): The start date for the validity of the app, but if prior to the effective publication of the app will be overridden with the publication date and time.
-            version (:obj:`int`): 
+            version (:obj:`int`): Version of the application.
         """
 
         def __init__(self, alternativeId = None, appVersion = None, description = None, app_id = None, name = None, publisherId = None, dataModels = None, publisherName = None, reservedILTagIds = None, simplifiedHashCode = None, start = None, version_ = None, **kwargs) :
 
 
             self.alternativeId = alternativeId
-            self.appVersion = appVersion if type(appVersion) is version.Version else version.parse(appVersion)
+            self.appVersion = appVersion if isinstance(appVersion, version.Version) else version.parse(appVersion)
             self.description = description
             self.id = kwargs.get('id', app_id)
             self.name = name
             self.publisherId = publisherId
             self.publisherName = publisherName
 
-            self.dataModels = [item if type(item) is DataModel else DataModel.from_json(item) for item in dataModels]
+            self.dataModels = [item if isinstance(item, DataModel) else DataModel.from_json(item) for item in dataModels]
 
-            self.reservedILTagIds = [item if type(item) is LimitedRange else LimitedRange.resolve(item) for item in reservedILTagIds]
+            self.reservedILTagIds = [item if isinstance(item, LimitedRange) else LimitedRange.resolve(item) for item in reservedILTagIds]
             #for item in reservedILTagIds :
             #    self.reservedILTagIds.append(item if type(item) is LimitedRange else LimitedRange.resolve(item))
             self.simplifiedHashCode = simplifiedHashCode
-            self.start = start if type(start) is datetime.datetime else string2datetime(start)
+            self.start = start if isinstance(start, datetime.datetime) else string2datetime(start)
             self.version = kwargs.get('version', version_)
 
 
@@ -213,54 +244,88 @@ class AppsModel(BaseModel) :
                 return self.id < other.id
 
 class AppPermissions(BaseModel) :
-    def __init__(self, app = None, appActions = [], **kwargs) :
-        self.app = app
-        self.appActions = appActions
+    """
+    App permissions
+    
+    Attributes:
+        appId(:obj:`int`): App to be permitted (by number)
+        actionIds(:obj:`list` of :obj:`int`): App actions to be permitted by number.
+    """
+    def __init__(self, appId = None, actionIds = [], **kwargs) :
+        self.appId = appId
+        self.actionIds = actionIds if actionIds else []
+
+
+    @classmethod
+    def from_str(cls, permissions) :
+        """
+        Parse a string into an :obj:`AppPermissions` object.
+
+        Args:
+            permissions (:obj:`str`): App permissions in the format used by the JSON response ('#<appId>,<actionId_1>,...,<actionId_n>').
+
+        Returns:
+            :obj:`AppPermissions`: return an :obj:`AppPermissions` instance.
+        """
+        permissions = permissions.replace('#','').strip()
+        p = permissions.split(',')
+        appId = int(p[0])
+        actionIds = [int(item) for item in p[1:]]
+        return cls(appId = appId, actionIds = actionIds)
+
+    def to_str(self) :
+        """ :obj:`str`: String representation of app permissions in the JSON format ('#<appId>,<actionId_1>,...,<actionId_n>')."""
+        return f"#{self.appId},{','.join([str(item) for item in self.actionIds])}"
+
+
 
     def __str__(self) :
-        return f"App"
+        """ :obj:`str`: String representation of app permissions."""
+        plural = 's' if len(self.actionIds) > 1 else ''
+        actions = f"Action{plural} {','.join(str(i) for i in self.actionIds)}" if self.actionIds else "All Actions"
+        return f"App #{self.appId} {actions}"
 
 class DataModel(BaseModel) :
     """
-    Data model
+    Data model for the payloads and actions for the records the application stores in the chains.
     
     Attributes:
-        description(:obj:`str`): TODO
-        dataFields(:obj:`list` of :obj:`DataModel.DataFieldModel`): TODO
-        indexes(:obj:`list` of :obj:`DataModel.DataIndexModel`): TODO
-        payloadName(:obj:`str`): TODO
-        payloadTagId(:obj:`int`): TODO      
-        version (:obj:`int`) : TODO
+        description(:obj:`str`): Description of the data model.
+        dataFields(:obj:`list` of :obj:`DataModel.DataFieldModel`): The list of data fields.
+        indexes(:obj:`list` of :obj:`DataModel.DataIndexModel`): List of indexes for records of this type.
+        payloadName(:obj:`str`): Name of the record model.
+        payloadTagId(:obj:`int`): Tag id for this payload type. It must be a number in the reserved ranges.      
+        version (:obj:`int`) : Version of this data model, should start from 1.
     """
     def __init__(self, description = None, dataFields = None, indexes = None, payloadName = None, payloadTagId = None, version = None, **kwargs) :
         self.description = description
-        self.dataFields = [item if type(item) is self.DataFieldModel else self.DataFieldModel.from_json(item) for item in dataFields]
-        self.indexes = [item if type(item) is self.DataIndexModel else self.DataIndexModel.from_json(item) for item in indexes]
+        self.dataFields = [item if isinstance(item, self.DataFieldModel) else self.DataFieldModel.from_json(item) for item in dataFields]
+        self.indexes = [item if isinstance(item, self.DataIndexModel) else self.DataIndexModel.from_json(item) for item in indexes]
         self.payloadName = payloadName
         self.payloadTagId = payloadTagId
         self.version = version
 
     class DataFieldModel(BaseModel) :
         """
-        Data field
+        Metadata for field definition.
 
         Attributes:
-            cast (:obj:`interlockledger_rest.enumerations.DataFieldCast`): TODO
-            elementTagId (:obj:`int`): TODO
-            isOpaque (:obj:`bool`): TODO
-            isOptional (:obj:`bool`): TODO
-            name (:obj:`str`): TODO
-            serializationVersion (:obj:`int`): TODO    
-            subDataFields (:obj:`list` of :obj:`DataModel.DataFieldModel`): TODO
-            tagId (:obj:`int`): TODO
-            version (:obj:`int`): TODO            
+            cast (:obj:`il2_rest.enumerations.DataFieldCast`): Type of the data field.
+            elementTagId (:obj:`int`): The type of the field in case it is an array.
+            isOpaque (:obj:`bool`): If ``True`` the field is stored in raw bytes.
+            isOptional (:obj:`bool`): Indicate if data field is optional.
+            name (:obj:`str`): Name of the data  field.
+            serializationVersion (:obj:`int`): Data field definition version.
+            subDataFields (:obj:`list` of :obj:`DataModel.DataFieldModel`): If the data field in composed of more fields, indicates the metadata of the subdata fields.
+            tagId (:obj:`int`): Type of the field. (see tags in the InterlockLedger node documentation)
+            version (:obj:`int`): Version of the data field.
         """
 
         def __init__(self, cast = None, elementTagId = None, isOpaque = None, isOptional = None, description = None, Enumeration = None, enumerationAsFlags = None, name = None, serializationVersion = None, subDataFields = None, tagId = None, version = None, **kwargs) :
             
 
             if cast :
-                self.cast = cast if type(cast) is DataFieldCast else DataFieldCast(cast)
+                self.cast = cast if isinstance(cast, DataFieldCast) else DataFieldCast(cast)
             else :
                 self.cast = None
             self.elementTagId = elementTagId
@@ -272,7 +337,7 @@ class DataModel(BaseModel) :
             self.name = name
             self.serializationVersion = serializationVersion
             if subDataFields :
-                self.subDataFields = [item if type(item) is DataModel.DataFieldModel else DataModel.DataFieldModel.from_json(item) for item in subDataFields]
+                self.subDataFields = [item if isinstance(item, DataModel.DataFieldModel) else DataModel.DataFieldModel.from_json(item) for item in subDataFields]
             else:
                 self.subDataFields = subDataFields
             self.tagId = tagId
@@ -280,27 +345,27 @@ class DataModel(BaseModel) :
 
     class DataIndexModel(BaseModel) :
         """
-        Data index
+        Index of the data model.
 
         Attributes:
-            elements (:obj:`list` of :obj:`DataModel.DataIndexModel.DataIndexElementModel`): TODO
-            isUnique (:obj:`bool`): TODO
-            name (:obj:`str`): TODO
+            elements (:obj:`list` of :obj:`DataModel.DataIndexModel.DataIndexElementModel`): Elements of the index.
+            isUnique (:obj:`bool`): Indicate if the data field is unique.
+            name (:obj:`str`): Name of the index.
         """
 
         def __init__(self, elements = None, isUnique = None, name = None, **kwargs) :
-            self.elements = [item if type(item) is self.DataIndexElementModel else self.DataIndexElementModel.from_json(item) for item in elements]
+            self.elements = [item if isinstance(item, self.DataIndexElementModel) else self.DataIndexElementModel.from_json(item) for item in elements]
             self.isUnique = isUnique
             self.name = name
 
         class DataIndexElementModel(BaseModel) :
             """
-            Data index element
+            Data index element.
 
             Attributes:
-                descendingOrder (:obj:`bool`): TODO
-                fieldPath (:obj:`str`): TODO
-                function (:obj:`str`): TODO
+                descendingOrder (:obj:`bool`): Indicate if the field is ordered in descending order.
+                fieldPath (:obj:`str`): Path of the data field to be indexed.
+                function (:obj:`str`): To be defined.
             """
             def __init__(self, descendingOrder = None, fieldPath = None, function = None, **kwargs) :
                 self.descendingOrder = descendingOrder
@@ -313,9 +378,9 @@ class ExportedKeyFile(BaseModel) :
     Key file info.
 
     Attributes:
-        keyFileBytes (:obj:`byte`): TODO
-        keyFileName (:obj:`str`): TODO
-        keyName (:obj:`str`): TODO
+        keyFileBytes (:obj:`bytes`): Key file in bytes.
+        keyFileName (:obj:`str`): Filename of the key.
+        keyName (:obj:`str`): Name of the key.
     """
 
     def __init__(self, keyFileBytes = None, keyFileName = None, keyName = None, **kwargs) :
@@ -373,7 +438,7 @@ class ChainCreatedModel(ChainIdModel) :
     def __init__(self, chain_id=None, name=None, keyFiles = [], **kwargs) :
         chain_id = kwargs.get('id', chain_id)
         super().__init__(chain_id, name)
-        self.keyFiles = [item if type(item) is ExportedKeyFile else ExportedKeyFile.from_json(item) for item in keyFiles]
+        self.keyFiles = [item if isinstance(item, ExportedKeyFile) else ExportedKeyFile.from_json(item) for item in keyFiles]
 
 
 class ChainCreationModel(BaseModel) :
@@ -384,51 +449,46 @@ class ChainCreationModel(BaseModel) :
         additionalApps (:obj:`list` of :obj:`int`): List of additional apps (only numeric ids).
         description (:obj:`str`): Description (perhaps intended primary usage).
         emergencyClosingKeyPassword (:obj:`str`): Emergency closing key password.
-        emergencyClosingKeyStrength (:obj:`interlockledger_rest.enumerations.KeyStrength`):  Emergency closing key strength of key.
-        keyManagementKeyPassword (:obj:`str`): Key management key password.
-        keyManagementKeyStrength (:obj:`interlockledger_rest.enumerations.KeyStrength`): Key management strength of key.
-        keysAlgorithm (:obj:`interlockledger_rest.enumerations.Algorithms`): Keys algorithm.
-        appManagementKeyPassword (:obj:`str`):  App management key password.
+        emergencyClosingKeyStrength (:obj:`il2_rest.enumerations.KeyStrength`):  Emergency closing key strength of key.
+        managementKeyPassword (:obj:`str`): Key management key password.
+        managementKeyStrength (:obj:`il2_rest.enumerations.KeyStrength`): Key management strength of key.
+        keysAlgorithm (:obj:`il2_rest.enumerations.Algorithms`): Keys algorithm.
         name (:obj:`str`): Name of the chain.
-        operatingKeyStrength (:obj:`interlockledger_rest.enumerations.KeyStrength`): Operating key strength of key.
+        operatingKeyStrength (:obj:`il2_rest.enumerations.KeyStrength`): Operating key strength of key.
         parent (:obj:`str`): Parent record Id.
     """
-    def __init__(self, name, emergencyClosingKeyPassword, keyManagementKeyPassword, appManagementKeyPassword,
+    def __init__(self, name, emergencyClosingKeyPassword, managementKeyPassword,
                 additionalApps = None, description = None, emergencyClosingKeyStrength = KeyStrength.ExtraStrong,
-                keyManagementKeyStrength = KeyStrength.Strong, keysAlgorithm = Algorithms.RSA,
+                managementKeyStrength = KeyStrength.Strong, keysAlgorithm = Algorithms.RSA,
                 operatingKeyStrength = KeyStrength.Normal, parent = None, **kwargs) :
         if additionalApps is None :
             self.additionalApps = None
         else :
-            self.additionalApps = [item if type(item) is int else int(item) for item in additionalApps]
+            self.additionalApps = [item if isinstance(item, int) else int(item) for item in additionalApps]
         self.description = description 
         self.emergencyClosingKeyPassword = emergencyClosingKeyPassword 
-        self.emergencyClosingKeyStrength = emergencyClosingKeyStrength if type(emergencyClosingKeyStrength) is KeyStrength else KeyStrength(emergencyClosingKeyStrength)
-        ## self.managementKeyPassword = managementKeyPassword 
-        self.keyManagementKeyPassword = keyManagementKeyPassword 
-        ## self.managementKeyStrength = managementKeyStrength if type(managementKeyStrength) is KeyStrength else KeyStrength(managementKeyStrength)
-        self.keyManagementKeyStrength = keyManagementKeyStrength if type(keyManagementKeyStrength) is KeyStrength else KeyStrength(keyManagementKeyStrength)
-        self.keysAlgorithm = keysAlgorithm if type(keysAlgorithm) is Algorithms else Algorithms(keysAlgorithm)
-        self.appManagementKeyPassword = appManagementKeyPassword
+        self.emergencyClosingKeyStrength = emergencyClosingKeyStrength if isinstance(emergencyClosingKeyStrength, KeyStrength) else KeyStrength(emergencyClosingKeyStrength)
+        self.managementKeyPassword = managementKeyPassword 
+        self.managementKeyStrength = managementKeyStrength if isinstance(managementKeyStrength, KeyStrength) else KeyStrength(managementKeyStrength)
+        self.keysAlgorithm = keysAlgorithm if isinstance(keysAlgorithm, Algorithms) else Algorithms(keysAlgorithm)
         self.name = name 
-        self.operatingKeyStrength = operatingKeyStrength if type(operatingKeyStrength) is KeyStrength else KeyStrength(operatingKeyStrength)
+        self.operatingKeyStrength = operatingKeyStrength if isinstance(operatingKeyStrength, KeyStrength) else KeyStrength(operatingKeyStrength)
         self.parent = parent
 
 
-class ChainSummaryModel(BaseModel) :
+class ChainSummaryModel(ChainIdModel) :
     """
     Chain summary.
 
     Attributes:
-        id (:obj:`str`): Unique record id.
         activeApps (:obj:`list` of :obj:`int`): List of active apps (only the numeric ids).
         description (:obj:`str`): Description (perhaps intended primary usage).
         isClosedForNewTransactions (:obj:`bool`): Indicates if the chain accepts new records.
         lastRecord (:obj:`int`): Serial number of the last record.
-        name (:obj:`str`): Name of the chain.
     """
-    def __init__(self, chain_id = None, activeApps = [], description = None, isClosedForNewTransactions = False, lastRecord = None, name = None, **kwargs) :
-        self.id = kwargs.get('id', chain_id)
+    def __init__(self, chain_id=None, name=None, activeApps = [], description = None, isClosedForNewTransactions = False, lastRecord = None, **kwargs) :
+        chain_id = kwargs.get('id', chain_id)
+        super().__init__(chain_id, name)
         self.activeApps = activeApps
         self.description = description
         self.isClosedForNewTransactions = isClosedForNewTransactions
@@ -440,13 +500,13 @@ class DocumentBaseModel(BaseModel) :
     Document base model.
 
     Attributes:
-        cipher (:obj:`interlockledger_rest.enumerations.CipherAlgorithms`): Cipher algorithm used to cipher the document.
+        cipher (:obj:`il2_rest.enumerations.CipherAlgorithms`): Cipher algorithm used to cipher the document.
         keyId (:obj:`str`): Unique id of key that ciphers this document.
         name (:obj:`str`):  Document name, may be a file name with an extension.
         previousVersion (:obj:`str`): A reference to a previous version of this document (ChainId and RecordNumber).
     """
     def __init__(self, cipher = CipherAlgorithms.NONE, keyId = None, name = None, previousVersion = None, **kwargs) :
-        self.cipher = cipher if type(cipher) is CipherAlgorithms else CipherAlgorithms(cipher)
+        self.cipher = cipher if isinstance(cipher, CipherAlgorithms) else CipherAlgorithms(cipher)
         self.keyId = keyId
         self.name = name
         self.previousVersion = previousVersion
@@ -492,10 +552,10 @@ class DocumentUploadModel(DocumentBaseModel) :
     """
 
     def __init__(self, cipher = CipherAlgorithms.NONE, keyId = None, name = None, previousVersion = None, contentType = None, **kwargs) :
-        if name is None or name.strip().isspace() :
+        if name is None or not name.strip() :
             raise ValueError('Document must have a name')
             
-        if contentType is None or contentType.strip().isspace() :
+        if contentType is None or not contentType.strip() :
             raise ValueError('Document must have a contentType')
             
         super().__init__(cipher, keyId, name, previousVersion,**kwargs)
@@ -565,20 +625,20 @@ class ForceInterlockModel(BaseModel) :
     Force interlock command details.
 
     Attributes:
-        hashAlgorithm (:obj:`interlockledger_rest.enumerations.HashAlgorithms`):  Hash algorithm to use.
+        hashAlgorithm (:obj:`il2_rest.enumerations.HashAlgorithms`):  Hash algorithm to use.
         minSerial (:obj:`int`): Required minimum of the serial of the last record in target chain whose hash will be pulled.
         targetChain (:obj:`str`): Id of chain to be interlocked.
 
     """
 
     def __init__(self, hashAlgorithm = HashAlgorithms.SHA256, minSerial = 0, targetChain = None, **kwargs) :
-        self.hashAlgorithm = hashAlgorithm if type(hashAlgorithm) is HashAlgorithms else HashAlgorithms(hashAlgorithm)
+        self.hashAlgorithm = hashAlgorithm if isinstance(hashAlgorithm, HashAlgorithms) else HashAlgorithms(hashAlgorithm)
         self.minSerial = minSerial
         self.targetChain = targetChain
 
     def __str__(self) :
         """(:obj:`str`): String representation of the interlock."""
-        return f"force interlock on {self.targetChain} @{self.minSerial}+ using {self.hashAlgorithm}"
+        return f"force interlock on {self.targetChain} @{self.minSerial}+ using {self.hashAlgorithm.value}"
 
 
 
@@ -589,82 +649,89 @@ class KeyModel(BaseModel) :
     Key model
 
     Args:
-        app (:obj:`int`): App to be permitted (by number).
-        appActions (:obj:`list` of :obj:`int`): App actions to be permitted by number.
         key_id (:obj:`str`): Unique key id.
-        publicKey (:obj:`str`): Key public key.
-        purposes (:obj:`list` of :obj:`interlockledger_rest.enumerations.KeyPurpose`/:obj:`str`): Key valid purposes.
         name (:obj:`str`): Key name.
+        permissions (:obj:`list` of :obj:`AppPermissions`): List of Apps and Corresponding Actions to be permitted by numbers.
+        publicKey (:obj:`str`): Key public key.
+        purposes (:obj:`list` of :obj:`il2_rest.enumerations.KeyPurpose`/:obj:`str`): Key valid purposes.
         **kwargs: Arbitrary keyword arguments.
 
     Attributes:
-        app (:obj:`int`): App to be permitted (by number).
-        appActions (:obj:`list` of :obj:`int`): App actions to be permitted by number.
         id (:obj:`str`): Unique key id.
         name (:obj:`str`): Key name.
+        permissions (:obj:`list` of :obj:`AppPermissions`): List of Apps and Corresponding Actions to be permitted by numbers.
         publicKey (:obj:`str`): Key public key.
-        purposes (:obj:`list` of :obj:`interlockledger_rest.enumerations.KeyPurpose`): Key valid purposes.
+        purposes (:obj:`list` of :obj:`il2_rest.enumerations.KeyPurpose`/:obj:`str`): Key valid purposes.
     """
-    def __init__(self, app, appActions, publicKey, purposes, key_id = None, name = None, **kwargs) :
-        self.app = app
-        self.appActions = appActions
+    def __init__(self, key_id = None, name = None, permissions = None, publicKey = None, purposes = None, **kwargs) :
         self.id = kwargs.get('id', key_id)
         self.name = name
+        if isinstance(permissions, list) :
+            self.permissions = [item if isinstance(item, AppPermissions) else AppPermissions.from_str(item) for item in permissions]
+        else :
+            self.permissions = permissions
         self.publicKey = publicKey
-        self.purposes = [item if type(item) is KeyPurpose else KeyPurpose(item) for item in purposes]
+        self.purposes = [item if isinstance(item, KeyPurpose) else KeyPurpose(item) for item in purposes]
+
 
     @property
     def actionable(self) :
         """(:obj:`bool`): Return True if 'Action' is in the list of purposes."""
-        return 'Action' in self.purposes
+        return KeyPurpose.Action in self.purposes
+
+    __indent = f"{os.linesep}\t"
+    __indent2 = f"{__indent}  "
 
     @property
     def __actions_for(self):
-        return self.__app_and_actions() if self.actionable else ''
-    
-    def __app_and_actions(self) :
-        actions = self.appActions if self.appActions is not None else []
-        if self.app == 0 and not actions :
-            return "All Apps & Actions"
-        plural = "" if len(actions) == 1 else "s"
-        str_actions = ",".join(str(item) for item in actions) if actions else "All Actions"
-        return f"App #{self.app} {f'Action{plural} {str_actions}'}"
+        if self.permissions:
+            return f"Actions permitted:{KeyModel.__indent2}{KeyModel.__indent2.join(str(item) for item in self.permissions)}"
+        else:
+            return "No actions permitted!"
 
+    @property
+    def __displayablePurposes(self) :
+        
+        str_purposes = [item.value for item in self.purposes]
+        return ','.join(str_purposes)
+    
     def __str__(self) :
         """(:obj:`str`): String representation of the key details."""
-        purposes_str = [item.value for item in self.purposes]
-        return f"Key '{self.name}' {self.id} purposes [{', '.join(sorted(purposes_str))}]  {self.__actions_for.lower()}"
+        return f"Key '{self.name}' {self.id}{KeyModel.__indent}Purposes: [{self.__displayablePurposes}]{KeyModel.__indent}{self.__actions_for}";
 
 
 
-#TODO update when version of the node is 3.5.x
 class KeyPermitModel(BaseModel) :
     """
     Key to permit.
 
     Args:
-        app (:obj:`int`): App to be permitted (by number).
-        appActions (:obj:`list` of :obj:`int`): App actions to be permitted by number.
         key_id (:obj:`str`): Unique key id.
-        publicKey (:obj:`str`): Key public key.
-        purposes (:obj:`list` of :obj:`interlockledger_rest.enumerations.KeyPurpose`/:obj:`str`): Key valid purposes.
         name (:obj:`str`): Key name.
+        permissions (:obj:`list` of :obj:`AppPermissions`): List of Apps and Corresponding Actions to be permitted by numbers.
+        publicKey (:obj:`str`): Key public key.
+        purposes (:obj:`list` of :obj:`il2_rest.enumerations.KeyPurpose`/:obj:`str`): Key valid purposes.
+        app (:obj:`int`): App to be permitted (by number). *Note*: If app and appActions is passed as parameter, permissions parameter will be ignored.
+        appActions (:obj:`list` of :obj:`int`): App actions to be permitted by number. *Note*: If app and appActions is passed as parameter, permissions parameter will be ignored.
         **kwargs: Arbitrary keyword arguments.
 
     Attributes:
-        app (:obj:`int`): App to be permitted (by number).
-        appActions (:obj:`list` of :obj:`int`): App actions to be permitted by number.
         id (:obj:`str`): Unique key id.
         name (:obj:`str`): Key name.
+        permissions (:obj:`list` of :obj:`AppPermissions`): List of Apps and Corresponding Actions to be permitted by numbers.
         publicKey (:obj:`str`): Key public key.
-        purposes (:obj:`list` of :obj:`interlockledger_rest.enumerations.KeyPurpose`): Key valid purposes.
+        purposes (:obj:`list` of :obj:`il2_rest.enumerations.KeyPurpose`/:obj:`str`): Key valid purposes.
     """
-    def __init__(self, app = None, appActions = [], key_id = None, name = None, 
-                publicKey = None, purposes = [], **kwargs) :
+    def __init__(self, key_id = None, name = None, permissions = None, publicKey = None,
+                 purposes = [], app = None, appActions = None, **kwargs) :
         key_id = kwargs.get("id", key_id)
-        if appActions is None :
-            raise TypeError('appAction is None')
-        elif not appActions :
+        
+        if app is not None and appActions is not None :
+            permissions = [AppPermissions(app, appActions)]
+
+        if permissions is None :
+            raise TypeError('permissions is None')
+        elif not permissions :
             raise ValueError("This key doesn't have at least one action to be permitted")
         if key_id is None :
             raise TypeError('key_id is None')
@@ -675,12 +742,11 @@ class KeyPermitModel(BaseModel) :
         if purposes is None :
             raise TypeError('purposes is None')
         
-        self.app = app
-        self.appActions = appActions
-        self.id = key_id
+        self.id = kwargs.get('id', key_id)
         self.name = name
+        self.permissions = [item if isinstance(item, AppPermissions) else AppPermissions.from_str(item) for item in permissions]
         self.publicKey = publicKey
-        self.purposes = [item if type(item) is KeyPurpose else KeyPurpose(item) for item in purposes]
+        self.purposes = [item if isinstance(item, KeyPurpose) else KeyPurpose(item) for item in purposes]
 
         if KeyPurpose.Action not in self.purposes and KeyPurpose.Protocol not in self.purposes :
             raise ValueError("This key doesn't have the required purposes to be permitted")
@@ -710,13 +776,13 @@ class NewRecordModelBase(BaseModel) :
 
     Attributes:
         applicationId (:obj:`int`): Application id this record is associated with.
-        rec_type (:obj:`interlockledger_rest.enumerations.RecordType`): Block type. Most records are of the type 'Data'. Corresponds to the 'type' field in the JSON.
+        rec_type (:obj:`il2_rest.enumerations.RecordType`): Block type. Most records are of the type 'Data'. Corresponds to the 'type' field in the JSON.
     """
     def __init__(self, applicationId = None, rec_type = RecordType.Data, **kwargs) :
         self.applicationId = applicationId
 
         rec_type = kwargs.get('type', rec_type)
-        self.type = rec_type if type(rec_type) is RecordType else RecordType(rec_type)
+        self.type = rec_type if isinstance(rec_type, RecordType) else RecordType(rec_type)
 
     
 
@@ -726,7 +792,7 @@ class NewRecordModelAsJson(NewRecordModelBase) :
 
     Attributes:
         json (:obj:`dict`): The payload data matching the metadata for PayloadTagId.
-        payloadTagId (:obj:`interlockledger_rest.enumerations.RecordType`): The tag id for the payload, as registered for the application.
+        payloadTagId (:obj:`il2_rest.enumerations.RecordType`): The tag id for the payload, as registered for the application.
     """
     def __init__(self, applicationId = None, rec_type = RecordType.Data, rec_json = None, payloadTagId = None, **kwargs) :
         rec_type = kwargs.get('type', rec_type)
@@ -781,7 +847,7 @@ class NodeCommonModel(BaseModel) :
         self.ownerId = ownerId
         self.ownerName = ownerName
         self.roles = roles
-        self.softwareVersions = softwareVersions if type(softwareVersions) is Versions else Versions(**softwareVersions)
+        self.softwareVersions = softwareVersions if isinstance(softwareVersions, Versions) else Versions(**softwareVersions)
 
     def __str__(self) :
         ret = f"Node '{self.name}' {self.id}"
@@ -829,7 +895,7 @@ class PeerModel(NodeCommonModel) :
     Attributes:
         address (:obj:`str`): Network address to contact the peer.
         port (:obj:`int`): Port the peer is listening.
-        protocol (:obj:`interlockledger_rest.enumerations.NetworkProtocol`):  Network protocol the peer is listening.
+        protocol (:obj:`il2_rest.enumerations.NetworkProtocol`):  Network protocol the peer is listening.
     """
     def __init__(self, color = None, node_id = None, name = None, network = None, ownerId = None, ownerName = None, roles = None, softwareVersions = None, address = None, port = None, protocol = None, **kwargs) :
         node_id = kwargs.get('id', node_id)
@@ -838,7 +904,7 @@ class PeerModel(NodeCommonModel) :
         self.address = address
         self.port = port
         if protocol :
-            self.protocol = protocol if type(protocol) is NetworkProtocol else NetworkProtocol(protocol)
+            self.protocol = protocol if isinstance(protocol, NetworkProtocol) else NetworkProtocol(protocol)
         else:
             self.protocol = None
 
@@ -862,7 +928,7 @@ class RecordModelBase(BaseModel) :
         rec_hash (:obj:`str`): Hash of the full encoded bytes of the record.
         payloadTagId (:obj:`int`): The payload's TagId.
         serial (:obj:`int`): Block serial number. For the first record this value is zero (0).
-        rec_type (:obj:`interlockledger_rest.enumerations.RecordType`): Block type. Most records are of the type 'Data'. Corresponds to the 'type' field in the JSON.
+        rec_type (:obj:`il2_rest.enumerations.RecordType`): Block type. Most records are of the type 'Data'. Corresponds to the 'type' field in the JSON.
         version (:obj:`int`): Version of this record structure.
 
     Attributes:
@@ -872,7 +938,7 @@ class RecordModelBase(BaseModel) :
         hash (:obj:`str`): Hash of the full encoded bytes of the record.
         payloadTagId (:obj:`int`): The payload's TagId.
         serial (:obj:`int`): Block serial number. For the first record this value is zero (0).
-        type (:obj:`interlockledger_rest.enumerations.RecordType`): Block type. Most records are of the type 'Data'. Corresponds to the 'type' field in the JSON.
+        type (:obj:`il2_rest.enumerations.RecordType`): Block type. Most records are of the type 'Data'. Corresponds to the 'type' field in the JSON.
         version (:obj:`int`): Version of this record structure.
     """
 
@@ -883,7 +949,7 @@ class RecordModelBase(BaseModel) :
 
         self.applicationId = applicationId
         self.chainId = chainId
-        self.createdAt = createdAt if type(createdAt) is datetime.datetime else string2datetime(createdAt)
+        self.createdAt = createdAt if isinstance(createdAt, datetime.datetime) else string2datetime(createdAt)
         self.hash = rec_hash
         self.payloadTagId = payloadTagId
         self.serial = serial

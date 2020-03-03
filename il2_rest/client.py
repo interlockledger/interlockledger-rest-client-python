@@ -67,7 +67,7 @@ class RestChain :
 
     Args:
         rest (:obj:`RestNode`): Instance of the node.
-        rest (:obj:`interlockledger_rest.models.ChainIdModel`): Chain model.
+        rest (:obj:`il2_rest.models.ChainIdModel`): Chain model.
     
     Attributes:
         id (:obj:`str`): Chain id.
@@ -94,37 +94,37 @@ class RestChain :
 
     @property
     def documents(self):
-        """:obj:`list` of :obj:`interlockledger_rest.models.DocumentDetailsModel`: Enumerate documents that are stored on this chain."""
+        """:obj:`list` of :obj:`il2_rest.models.DocumentDetailsModel`: Enumerate documents that are stored on this chain."""
         json_data = self.__rest._get(f'/documents@{self.id}')
         return [DocumentDetailsModel.from_json(item) for item in json_data]
     
     @property
     def interlocks(self):
-        """:obj:`list` of :obj:`interlockledger_rest.models.InterlockingRecordModel`: List of interlocks registered in the chain."""
+        """:obj:`list` of :obj:`il2_rest.models.InterlockingRecordModel`: List of interlocks registered in the chain."""
         json_data = self.__rest._get(f'/chain/{self.id}/interlockings')
         return [InterlockingRecordModel.from_json(item) for item in json_data]
     
     @property
     def permitted_keys(self):
-        """:obj:`list` of :obj:`interlockledger_rest.models.KeyModel`: Enumerate keys that are currently permitted on chain."""
+        """:obj:`list` of :obj:`il2_rest.models.KeyModel`: Enumerate keys that are currently permitted on chain."""
         json_data = self.__rest._get(f'/chain/{self.id}/key')
         return [KeyModel.from_json(item) for item in json_data]
     
     @property
     def records(self):
-        """:obj:`list` of :obj:`interlockledger_rest.models.RecordModel`: List of records in the chain."""
+        """:obj:`list` of :obj:`il2_rest.models.RecordModel`: List of records in the chain."""
         json_data = self.__rest._get(f'/records@{self.id}')
         return [RecordModel.from_json(item) for item in json_data]
     
     @property
     def records_as_json(self):
-        """:obj:`list` of :obj:`interlockledger_rest.models.RecordModelAsJson`: List of records in the chain with payload mapped to JSON."""
+        """:obj:`list` of :obj:`il2_rest.models.RecordModelAsJson`: List of records in the chain with payload mapped to JSON."""
         json_data = self.__rest._get(f'/records@{self.id}/asJson')
         return [RecordModelAsJson.from_json(item) for item in json_data]
     
     @property
     def summary(self):
-        """:obj:`interlockledger_rest.models.ChainSummaryModel`: Chain details"""
+        """:obj:`il2_rest.models.ChainSummaryModel`: Chain details"""
         return ChainSummaryModel.from_json(self.__rest._get(f'/chain/{self.id}'))
     
 
@@ -133,10 +133,10 @@ class RestChain :
         Add a new record.
 
         Args:
-            model (:obj:`interlockledger_rest.models.NewRecordModel`): Model with the description of the new record.
+            model (:obj:`il2_rest.models.NewRecordModel`): Model with the description of the new record.
 
         Returns:
-            :obj:`interlockledger_rest.models.RecordModel`: Added record information.
+            :obj:`il2_rest.models.RecordModel`: Added record information.
         
         Example: 
             >>> node = RestNode(cert_file = 'recorder.pfx', cert_pass = 'password', port = 32020)
@@ -168,11 +168,11 @@ class RestChain :
         Args:
             applicationId (:obj:`int`): Application id of the record.
             payloadTagId (:obj:`int`): Payload tag id of the record.
-            rec_type (:obj:`interlockledger_rest.enumerations.RecordType`): Type of record.
+            rec_type (:obj:`il2_rest.enumerations.RecordType`): Type of record.
             rec_bytes (:obj:`bytes`): Payload bytes.
             
         Returns:
-            :obj:`interlockledger_rest.models.RecordModel`: Added record information.
+            :obj:`il2_rest.models.RecordModel`: Added record information.
 
         Example: 
             >>> node = RestNode(cert_file = 'recorder.pfx', cert_pass = 'password', port = 32020)
@@ -204,11 +204,11 @@ class RestChain :
             applicationId (:obj:`int`): Application id of the record.
             payloadTagId (:obj:`int`): Payload tag id of the record.
             payload (:obj:`int`): Payload data encoded as json
-            rec_type (:obj:`interlockledger_rest.enumerations.RecordType`): Type of record.
-            model (:obj:`interlockledger_rest.models.NewRecordModelAsJson`): Model with the description of the new record as JSON. **NOTE:**  if model is not None, the other arguments will be ignored.
+            rec_type (:obj:`il2_rest.enumerations.RecordType`): Type of record.
+            model (:obj:`il2_rest.models.NewRecordModelAsJson`): Model with the description of the new record as JSON. **NOTE:**  if model is not None, the other arguments will be ignored.
 
         Returns:
-            :obj:`interlockledger_rest.models.RecordModel`: Added record information.
+            :obj:`il2_rest.models.RecordModel`: Added record information.
 
         Example: 
             >>> node = RestNode(cert_file = 'recorder.pfx', cert_pass = 'password', port = 32020)
@@ -268,7 +268,7 @@ class RestChain :
             fileId (:obj:`str`): Unique id of the document file.
 
         Returns:
-            :obj:`interlockledger_rest.models.RawDocumentModel`: Document model with content as raw bytes.
+            :obj:`il2_rest.models.RawDocumentModel`: Document model with content as raw bytes.
         """
         response = self.__rest._call_api_raw_doc(f"/documents@{self.id}/{fileId}", "GET")
 
@@ -287,10 +287,10 @@ class RestChain :
         Forces an interlock on a target chain.
 
         Args:
-            model (:obj:`interlockledger_rest.models.ForceInterlockModel`): Force interlock command details.
+            model (:obj:`il2_rest.models.ForceInterlockModel`): Force interlock command details.
 
         Returns:
-            :obj:`interlockledger_rest.models.InterlockingRecordModel`: Interlocking details.
+            :obj:`il2_rest.models.InterlockingRecordModel`: Interlocking details.
         Example:
             >>> node = RestNode(cert_file = 'mykeymanager.pfx', cert_pass = 'password', port = 32020)
             >>> chain = node.chain_by_id('VzCJczfgBeIiIBlnTRbmtsPriqwrkHqtF2yt8nhTcjM')
@@ -343,10 +343,10 @@ class RestChain :
         Add keys to the permitted list for the chain.
 
         Args:
-            keys_to_permit (:obj:`list` of :obj:`interlockledger_rest.models.KeyPermitModel`): List of keys to permitted.
+            keys_to_permit (:obj:`list` of :obj:`il2_rest.models.KeyPermitModel`): List of keys to permitted.
 
         Returns:
-            :obj:`list` of :obj:`interlockledger_rest.models.KeyModel`: Enumerate keys that are currently permitted on chain.
+            :obj:`list` of :obj:`il2_rest.models.KeyModel`: Enumerate keys that are currently permitted on chain.
         
         Example:
             >>> node = RestNode(cert_file = 'mykeymanager.pfx', cert_pass = 'password', port = 32020)
@@ -396,7 +396,7 @@ class RestChain :
             lastSerial (:obj:`int`, optional): Last serial number.
 
         Returns:
-            :obj:`list` of :obj:`interlockledger_rest.models.RecordModel`: List of records in the given interval.
+            :obj:`list` of :obj:`il2_rest.models.RecordModel`: List of records in the given interval.
         """
         cur_curl = f"/records@{self.id}?firstSerial={firstSerial}"
         if lastSerial :
@@ -413,7 +413,7 @@ class RestChain :
             lastSerial (:obj:`int`, optional): Last serial number.
 
         Returns:
-            :obj:`list` of :obj:`interlockledger_rest.models.RecordModelAsJson`: List of records mapped to JSON in the given interval.
+            :obj:`list` of :obj:`il2_rest.models.RecordModelAsJson`: List of records mapped to JSON in the given interval.
         """
         cur_curl = f"/records@{self.id}/asJson?firstSerial={firstSerial}"
         if lastSerial :
@@ -429,7 +429,7 @@ class RestChain :
             serial (:obj:`int`): Record serial number.
 
         Returns:
-            :obj:`interlockledger_rest.models.RecordModel`: Record with the specific serial number.
+            :obj:`il2_rest.models.RecordModel`: Record with the specific serial number.
         """
         return RecordModel.from_json(self.__rest._get(f"/records@{self.id}/{serial}"))
 
@@ -441,7 +441,7 @@ class RestChain :
             serial (:obj:`int`): Record serial number.
 
         Returns:
-            :obj:`interlockledger_rest.models.RecordModelAsJson`: Record mapped to JSON with the specific serial number.
+            :obj:`il2_rest.models.RecordModelAsJson`: Record mapped to JSON with the specific serial number.
         """
         return RecordModelAsJson.from_json(self.__rest._get(f"/records@{self.id}/{serial}/asJson"))
 
@@ -449,16 +449,16 @@ class RestChain :
         """
         Store document on chain using bytes.
 
-        If more details is needed to upload the document, please use a :obj:`interlockledger_rest.models.DocumentUploadModel` model.
+        If more details is needed to upload the document, please use a :obj:`il2_rest.models.DocumentUploadModel` model.
 
         Args:
             doc_bytes (:obj:`bytes`): Document bytes.
             name (:obj:`str`): Document name (may be a file name with an extension).
             content_type (:obj:`str`): Document content type (mime-type).
-            model (:obj:`interlockledger_rest.models.DocumentUploadModel`): Model with the description of the new document. **NOTE:**  if model is not None, the other arguments will be ignored.
+            model (:obj:`il2_rest.models.DocumentUploadModel`): Model with the description of the new document. **NOTE:**  if model is not None, the other arguments will be ignored.
 
         Returns:
-            :obj:`interlockledger_rest.models.DocumentDetailsModel`: Added document details.
+            :obj:`il2_rest.models.DocumentDetailsModel`: Added document details.
 
         Examples:
             Adding a file document without specifying the name.
@@ -491,16 +491,16 @@ class RestChain :
         """
         Store document on chain using a file.
 
-        If more details is needed to upload the document, please use a :obj:`interlockledger_rest.models.DocumentUploadModel` model.
+        If more details is needed to upload the document, please use a :obj:`il2_rest.models.DocumentUploadModel` model.
 
         Args:
             file_path (:obj:`bytes`): Filepath of the document file.
             content_type (:obj:`str`): Document content type (mime-type).
             name (:obj:`str`, optional): Document name (may be a file name with an extension). Can be derived from the file_path.
-            model (:obj:`interlockledger_rest.models.DocumentUploadModel`): Model with the description of the new document. **NOTE:**  if model is not None, the other arguments will be ignored.
+            model (:obj:`il2_rest.models.DocumentUploadModel`): Model with the description of the new document. **NOTE:**  if model is not None, the other arguments will be ignored.
 
         Returns:
-            :obj:`interlockledger_rest.models.DocumentDetailsModel`: Added document details.
+            :obj:`il2_rest.models.DocumentDetailsModel`: Added document details.
 
         Examples:
             Adding a file document without specifying the name.
@@ -538,16 +538,16 @@ class RestChain :
         """
         Store document on chain using bytes.
 
-        If more details is needed to upload the document, please use a :obj:`interlockledger_rest.models.DocumentUploadModel` model.
+        If more details is needed to upload the document, please use a :obj:`il2_rest.models.DocumentUploadModel` model.
 
         Args:
             doc_bytes (:obj:`bytes`): Document bytes.
             content_type (:obj:`str`): Document content type (mime-type).
             name (:obj:`str`, optional): Document name (may be a file name with an extension). Can be derived from the file_path.
-            model (:obj:`interlockledger_rest.models.DocumentUploadModel`): Model with the description of the new document. **NOTE:**  if model is not None, the other arguments will be ignored.
+            model (:obj:`il2_rest.models.DocumentUploadModel`): Model with the description of the new document. **NOTE:**  if model is not None, the other arguments will be ignored.
 
         Returns:
-            :obj:`interlockledger_rest.models.DocumentDetailsModel`: Added document details.
+            :obj:`il2_rest.models.DocumentDetailsModel`: Added document details.
 
         Example:
             >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
@@ -651,7 +651,7 @@ class RestNode :
 
     @property
     def details(self):
-        """:obj:`interlockledger_rest.models.NodeDetailsModel`: Get node details."""
+        """:obj:`il2_rest.models.NodeDetailsModel`: Get node details."""
         return NodeDetailsModel.from_json(self._get('/'))
     
     @property
@@ -663,7 +663,7 @@ class RestNode :
 
     @property
     def peers(self):
-        """:obj:`list` of :obj:`interlockledger_rest.models.PeerModel`: Get list of known peers."""
+        """:obj:`list` of :obj:`il2_rest.models.PeerModel`: Get list of known peers."""
         json_data = self._get('/peers')
         return [PeerModel.from_json(item) for item in json_data]
     
@@ -675,7 +675,7 @@ class RestNode :
             new_mirrors (:obj:`list` of :obj:`str`): List of mirrors chain ids.
 
         Returns:
-            :obj:`list` of :obj:`interlockledger_rest.models.ChainIdModel`: List of the chain information.
+            :obj:`list` of :obj:`il2_rest.models.ChainIdModel`: List of the chain information.
         """
         json_data = self._post("/mirrors", new_mirrors)
         return [ChainIdModel.from_json(item) for item in json_data]
@@ -707,10 +707,10 @@ class RestNode :
         Create a new chain.
 
         Args:
-            model (:obj:`interlockledger_rest.models.ChainCreationModel`): Model with the new chain attrbutes.
+            model (:obj:`il2_rest.models.ChainCreationModel`): Model with the new chain attrbutes.
 
         Returns:
-            :obj:`interlockledger_rest.models.ChainCreatedModel`: Chain created model.
+            :obj:`il2_rest.models.ChainCreatedModel`: Chain created model.
 
         Example:
             >>> node = RestNode(cert_file = 'admin.pfx', cert_pass = 'password', port = 32020)
@@ -730,7 +730,7 @@ class RestNode :
             chain (:obj:`str`): Chain id.
 
         Returns:
-            :obj:`list` of :obj:`interlockledger_rest.models.InterlockingRecordModel`: List of interlockings.
+            :obj:`list` of :obj:`il2_rest.models.InterlockingRecordModel`: List of interlockings.
 
         Example:
             >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')

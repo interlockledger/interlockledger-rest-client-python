@@ -21,11 +21,11 @@ A chain is a sequential list of records, back chained with signatures/hashes to 
 importantly, any external logic can validate the multiple dimensions of validity for records/chains/interlockings/the ledger.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
    
    usage
-   interlockledger_rest
+   il2_rest
    
 
 About this documentation
