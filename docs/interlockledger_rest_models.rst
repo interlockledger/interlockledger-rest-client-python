@@ -1,5 +1,7 @@
-interlockledger\_rest\.models module
-====================================
+Models module
+=============
+
+Resource models available in the InterlockLedger REST API v3.6.2.
 
 CustomEncoder
 -------------

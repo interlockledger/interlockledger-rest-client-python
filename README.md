@@ -49,7 +49,7 @@ Owner il2tester #Owner!yj...<REDACTED>...zk
 Roles: Interlocking,Mirror,PeerRegistry,Relay,User
 Chains: 20i...<REDACTED>..._fc, 5rA...<REDACTED>...Pso
 
->>> chain = node.chains[0]
+>>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
 >>> doc_resp = chain.store_document_from_text(content = 'Plain text', name = 'text_file.txt')
 >>> print(doc_resp)
 Document 'text_file.txt' [plain/text] z0F...<REDACTED>...CKQ#SHA256

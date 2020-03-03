@@ -175,17 +175,18 @@ class AppsModel(BaseModel) :
         InterlockApp permitted in the chain.
 
         Attributes:
-            alternativeId (:obj:`int`): 
+            alternativeId (:obj:`int`): Alternative id for the application.
             appVersion (:obj:`version`): Application semantic version, with four numeric parts.
             description (:obj:`str`): Description of the application.
             id (:obj:`int`): Unique id for the application.
-            name (:obj:`str`):  Application name.
+            name (:obj:`str`): Application name.
             publisherId (:obj:`str`): Publisher id, which is the identifier for the key the publisher uses to sign the workflow requests in its own chain. It should match the PublisherName
             publisherName (:obj:`str`): Publisher name as registered in the Genesis chain of the network.
+            dataModels (:obj:`list` of :obj:`DataModel`): The list of data models for the payloads of the records stored in the chains.
             reservedILTagIds (:obj:`list` of :obj:`interlockledger_rest.util.LimitedRange`): The list of ranges of ILTagIds to reserve for the application.
             simplifiedHashCode (:obj:`int`): The start date for the validity of the app, but if prior to the effective publication of the app will be overridden with the publication date and time.
             start (:obj:`datetime.datetime`): The start date for the validity of the app, but if prior to the effective publication of the app will be overridden with the publication date and time.
-            version (:obj:`int`): 
+            version (:obj:`int`): Version of the application.
         """
 
         def __init__(self, alternativeId = None, appVersion = None, description = None, app_id = None, name = None, publisherId = None, dataModels = None, publisherName = None, reservedILTagIds = None, simplifiedHashCode = None, start = None, version_ = None, **kwargs) :
@@ -286,11 +287,11 @@ class AppPermissions(BaseModel) :
 
 class DataModel(BaseModel) :
     """
-    Data model
+    Data model for the payloads and actions for the records the application stores in the chains.
     
     Attributes:
         description(:obj:`str`): Description of the data model.
-        dataFields(:obj:`list` of :obj:`DataModel.DataFieldModel`): TODO
+        dataFields(:obj:`list` of :obj:`DataModel.DataFieldModel`): The list of data fields.
         indexes(:obj:`list` of :obj:`DataModel.DataIndexModel`): List of indexes for records of this type.
         payloadName(:obj:`str`): Name of the record model.
         payloadTagId(:obj:`int`): Tag id for this payload type. It must be a number in the reserved ranges.      
@@ -306,18 +307,18 @@ class DataModel(BaseModel) :
 
     class DataFieldModel(BaseModel) :
         """
-        Data field
+        Metadata for field definition.
 
         Attributes:
-            cast (:obj:`interlockledger_rest.enumerations.DataFieldCast`): TODO
-            elementTagId (:obj:`int`): TODO
-            isOpaque (:obj:`bool`): TODO
-            isOptional (:obj:`bool`): TODO
-            name (:obj:`str`): TODO
-            serializationVersion (:obj:`int`): TODO    
-            subDataFields (:obj:`list` of :obj:`DataModel.DataFieldModel`): TODO
-            tagId (:obj:`int`): TODO
-            version (:obj:`int`): TODO            
+            cast (:obj:`interlockledger_rest.enumerations.DataFieldCast`): Type of the data field.
+            elementTagId (:obj:`int`): The type of the field in case it is an array.
+            isOpaque (:obj:`bool`): If ``True`` the field is stored in raw bytes.
+            isOptional (:obj:`bool`): Indicate if data field is optional.
+            name (:obj:`str`): Name of the data  field.
+            serializationVersion (:obj:`int`): Data field definition version.
+            subDataFields (:obj:`list` of :obj:`DataModel.DataFieldModel`): If the data field in composed of more fields, indicates the metadata of the subdata fields.
+            tagId (:obj:`int`): Type of the field. (see tags in the InterlockLedger node documentation)
+            version (:obj:`int`): Version of the data field.
         """
 
         def __init__(self, cast = None, elementTagId = None, isOpaque = None, isOptional = None, description = None, Enumeration = None, enumerationAsFlags = None, name = None, serializationVersion = None, subDataFields = None, tagId = None, version = None, **kwargs) :
@@ -344,12 +345,12 @@ class DataModel(BaseModel) :
 
     class DataIndexModel(BaseModel) :
         """
-        Data index
+        Index of the data model.
 
         Attributes:
-            elements (:obj:`list` of :obj:`DataModel.DataIndexModel.DataIndexElementModel`): TODO
-            isUnique (:obj:`bool`): TODO
-            name (:obj:`str`): TODO
+            elements (:obj:`list` of :obj:`DataModel.DataIndexModel.DataIndexElementModel`): Elements of the index.
+            isUnique (:obj:`bool`): Indicate if the data field is unique.
+            name (:obj:`str`): Name of the index.
         """
 
         def __init__(self, elements = None, isUnique = None, name = None, **kwargs) :
@@ -359,12 +360,12 @@ class DataModel(BaseModel) :
 
         class DataIndexElementModel(BaseModel) :
             """
-            Data index element
+            Data index element.
 
             Attributes:
-                descendingOrder (:obj:`bool`): TODO
-                fieldPath (:obj:`str`): TODO
-                function (:obj:`str`): TODO
+                descendingOrder (:obj:`bool`): Indicate if the field is ordered in descending order.
+                fieldPath (:obj:`str`): Path of the data field to be indexed.
+                function (:obj:`str`): To be defined.
             """
             def __init__(self, descendingOrder = None, fieldPath = None, function = None, **kwargs) :
                 self.descendingOrder = descendingOrder
@@ -377,9 +378,9 @@ class ExportedKeyFile(BaseModel) :
     Key file info.
 
     Attributes:
-        keyFileBytes (:obj:`bytes`): TODO
-        keyFileName (:obj:`str`): TODO
-        keyName (:obj:`str`): TODO
+        keyFileBytes (:obj:`bytes`): Key file in bytes.
+        keyFileName (:obj:`str`): Filename of the key.
+        keyName (:obj:`str`): Name of the key.
     """
 
     def __init__(self, keyFileBytes = None, keyFileName = None, keyName = None, **kwargs) :

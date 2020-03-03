@@ -1,5 +1,7 @@
-interlockledger\_rest\.enumerations module
-==========================================
+Enumerations module
+===================
+
+Enumerations used in the InterlockLedger REST API v3.6.2.
 
 Algorithms
 ----------

@@ -28,6 +28,23 @@ importantly, any external logic can validate the multiple dimensions of validity
    interlockledger_rest
    
 
+About this documentation
+========================
+
+This reference manual was created used using Sphinx and Google style docstrings. If you need/want to create this manual in another format (HTML, man, etc), you will need to install Sphinx and Sphinx-Napoleon extension:
+
+.. code-block:: console
+
+	$ pip3 install --user sphinx sphinxcontrib-napoleon2
+
+To create an HTML version you can use the following instructions:
+
+.. code-block:: console
+
+	$ cd docs/
+	$ make html
+
+
 Indices and tables
 ==================
 
