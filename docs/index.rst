@@ -8,7 +8,8 @@ Welcome to InterlockLedgerAPI's documentation!
 
 .. image:: /images/full-logo-dark.png
 
-This package is a python client to the InterlockLedger Node REST API. It connects to InterlockLedger nodes, allowing the creation of chains, interlocks, and storage of records and documents.
+This package is a python client to the InterlockLedger Node REST API. It connects to InterlockLedger nodes, allowing the creation of chains, interlocks, and storage of records and documents. This client requires the InterlockLedger Node Server version 3.6.2.
+
 
 The InterlockLedger
 -------------------
@@ -24,7 +25,8 @@ importantly, any external logic can validate the multiple dimensions of validity
    :maxdepth: 3
    :caption: Contents:
    
-   usage
+   settingup
+   quickstart
    il2_rest
    
 
@@ -49,5 +51,4 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`

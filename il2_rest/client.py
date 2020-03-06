@@ -298,6 +298,7 @@ class RestChain :
             >>> interlocks = chain.force_interlock(model)
             >>> for il in interlocks :
             ...     print(il)
+            ...
             Interlocked chain 8fox30W54ZkzM-shfUeU5C7ad-_fsf5nICwNpkCUk5w at record #14 (offset: 13671) with hash RyvOZIjnoUG4QX7FwQs3f6BqDfnOPb3txgXJNxLxtDo#SHA256
             {
                 "applicationId": 3,
@@ -361,6 +362,7 @@ class RestChain :
             >>> keys = chain.permit_keys([model_1, model_2])
             >>> for key in keys :
             ...     print(keys)
+            ...
             Key 'documenter' Key!MJ0kidltB324mfkiOG0aBlEocPA#SHA1
                 Purposes: [Action,Protocol]
                 Actions permitted:
@@ -737,6 +739,7 @@ class RestNode :
             >>> interlocks = node.interlocks_of('8fox30W54ZkzM-shfUeU5C7ad-_fsf5nICwNpkCUk5w')
             >>> for interlock in interlocks :
             ...     print(interlock)
+            ...
             Interlocked chain 8fox30W54ZkzM-shfUeU5C7ad-_fsf5nICwNpkCUk5w at record #14 (offset: 13671) with hash RyvOZIjnoUG4QX7FwQs3f6BqDfnOPb3txgXJNxLxtDo#SHA256
             {
                 "applicationId": 3,
