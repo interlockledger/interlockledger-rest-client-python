@@ -128,6 +128,10 @@ class BaseModel :
         if hide_null :
             ret_json = filter_none(ret_json)
         
+        if isinstance(ret_json,dict) and 'JSON' in ret_json.keys() :
+            ret_json['json'] = ret_json['JSON']
+            del ret_json['JSON']
+
         if return_as_str :
             return json.dumps(ret_json)
         else :
@@ -797,7 +801,7 @@ class NewRecordModelAsJson(NewRecordModelBase) :
     def __init__(self, applicationId = None, rec_type = RecordType.Data, rec_json = None, payloadTagId = None, **kwargs) :
         rec_type = kwargs.get('type', rec_type)
         super().__init__(applicationId, rec_type, **kwargs)
-        self.json = kwargs.get('json', rec_json)
+        self.JSON = kwargs.get('json', rec_json)
         self.payloadTagId = payloadTagId
 
     @property
