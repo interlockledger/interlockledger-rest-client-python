@@ -8,7 +8,7 @@ Welcome to InterlockLedgerAPI's documentation!
 
 .. image:: /images/full-logo-dark.png
 
-This package is a python client to the InterlockLedger Node REST API. It connects to InterlockLedger nodes, allowing the creation of chains, interlocks, and storage of records and documents. This client requires the InterlockLedger Node Server version 3.6.2.
+This package is a python client to the InterlockLedger Node REST API. It connects to InterlockLedger nodes, allowing the creation of chains, interlocks, and storage of records and documents. This client requires the InterlockLedger Node Server version 4.0.4.
 
 
 The InterlockLedger
@@ -46,6 +46,15 @@ To create an HTML version you can use the following instructions:
 	$ cd docs/
 	$ make html
 
+To create the PDF version you can use the following instructions:
+
+.. code-block:: console
+
+    $ cd docs/
+    $ make latexpdf
+
+.. note::
+    To create the PDF version, you must have a LaTeX builder (default is ``pdflatex``) installed.
 
 Indices and tables
 ==================

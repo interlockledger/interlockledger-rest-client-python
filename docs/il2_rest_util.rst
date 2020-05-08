@@ -1,7 +1,7 @@
 Util module
 ===========
 
-Utility classes and functions for the InterlockLedger REST API v3.6.2.
+Utility classes and functions for the InterlockLedger REST API.
 
 LimitedRange
 -------------

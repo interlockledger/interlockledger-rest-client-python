@@ -1,7 +1,7 @@
 Enumerations module
 ===================
 
-Enumerations used in the InterlockLedger REST API v3.6.2.
+Enumerations used in the InterlockLedger REST API.
 
 Algorithms
 ----------

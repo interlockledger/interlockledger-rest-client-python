@@ -1,7 +1,7 @@
 Client module
 =============
 
-This module has the classes needed to connect and communicate with the InterlockLedger REST API v3.6.2.
+This module has the classes needed to connect and communicate with the InterlockLedger REST API.
 
 RestChain
 ---------

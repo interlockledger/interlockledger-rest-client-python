@@ -795,7 +795,7 @@ class NewRecordModelAsJson(NewRecordModelBase) :
     New record model to be added to the chain as a JSON.
 
     Attributes:
-        json (:obj:`dict`): The payload data matching the metadata for PayloadTagId.
+        JSON (:obj:`dict`): The payload data matching the metadata for PayloadTagId.
         payloadTagId (:obj:`il2_rest.enumerations.RecordType`): The tag id for the payload, as registered for the application.
     """
     def __init__(self, applicationId = None, rec_type = RecordType.Data, rec_json = None, payloadTagId = None, **kwargs) :
