@@ -67,7 +67,7 @@ You can see the list of keys permitted in the chain by using the following scrip
           App #1 Actions 300,301
 
 
-If you are using a certificate allowed to permit keys, you can permit others key in the chain:
+If you are using a certificate allowed to permit keys, you can permit other key in the chain:
 
 .. note::
     To permit other keys, the certificate must be already imported to the Interlockledger node with actions for App #2 and actions 500,501.
