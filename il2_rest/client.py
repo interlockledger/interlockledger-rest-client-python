@@ -237,7 +237,7 @@ class RestChain :
         if model :
             if not isinstance(model, NewRecordModelAsJson) :
                 raise TypeError('model must be NewRecordModelAsJson')
-            return RecordModelAsJson.from_json(self.__rest._post(f"/records@{self.id}/asJson{model.to_query_string}", model.json))
+            return RecordModelAsJson.from_json(self.__rest._post(f"/records@{self.id}/asJson{model.to_query_string}", model.JSON))
         else :
             if applicationId is None:
                 raise TypeError('applicationId is None')
@@ -825,7 +825,6 @@ class RestNode :
             json_data = BaseModel.to_json(body)
         headers = {'Accept': accept,
                    'Content-type' : "application/json; charset=utf-8"}
-
         with self.__pfx_to_pem() as cert :
             response = requests.post(url = cur_uri, headers=headers,
                                     json = json_data, cert = cert, verify = False)
