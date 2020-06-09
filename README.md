@@ -14,7 +14,7 @@ importantly, any external logic can validate the multiple dimensions of validity
 
 ## Usage
 
-To use the `interlockledger_rest` package, you can add the interlockledger_rest folder to your project.
+To use the `il2_rest` package, you can add the interlockledger_rest folder to your project.
 
 ### Dependencies
 
