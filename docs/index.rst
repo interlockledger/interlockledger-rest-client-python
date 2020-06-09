@@ -33,7 +33,7 @@ importantly, any external logic can validate the multiple dimensions of validity
 About this documentation
 ========================
 
-This reference manual was created used using Sphinx and Google style docstrings. If you need/want to create this manual in another format (HTML, man, etc), you will need to install Sphinx and Sphinx-Napoleon extension:
+This reference manual was partially created used using Sphinx and Google style docstrings. If you need/want to create this manual in another format (HTML, man, etc), you will need to install Sphinx and Sphinx-Napoleon extension:
 
 .. code-block:: console
 

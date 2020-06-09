@@ -67,7 +67,7 @@ class RestChain :
 
     Args:
         rest (:obj:`RestNode`): Instance of the node.
-        rest (:obj:`il2_rest.models.ChainIdModel`): Chain model.
+        chainId (:obj:`il2_rest.models.ChainIdModel`): Chain model.
     
     Attributes:
         id (:obj:`str`): Chain id.
