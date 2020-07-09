@@ -72,6 +72,7 @@ class RestChain :
     Attributes:
         id (:obj:`str`): Chain id.
         name (:obj:`str`): Chain name.
+        licensingStatus (:obj:`str`): Licensing status.
     """
     def __init__(self, rest, chainId, **kwargs) :
         if rest is None :
@@ -85,6 +86,7 @@ class RestChain :
 
         self.id = chainId.id
         self.name = chainId.name
+        self.licensingStatus = chainId.licensingStatus
     
 
     @property
@@ -561,7 +563,8 @@ class RestChain :
         return self.store_document_from_bytes(doc_bytes = content.encode('utf-8'), name = name, content_type = content_type)
 
     def __str__(self) :
-        return f"Chain '{self.name}' #{self.id}"
+        return f"Chain '{self.name}' #{self.id} ({self.licensingStatus})"
+        
 
     def __post_document(self, doc_bytes, model) :
         return DocumentDetailsModel.from_json(self.__rest._post_raw(f"/documents@{self.id}{model.to_query_string}", doc_bytes, model.contentType).json())

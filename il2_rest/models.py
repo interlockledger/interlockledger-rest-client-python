@@ -399,13 +399,15 @@ class ChainIdModel(BaseModel) :
     Chain Id
 
     Attributes:
-        id (:obj:`str`): Unique record id
-        name (:obj:`str`): Chain name
+        id (:obj:`str`): Unique record id.
+        name (:obj:`str`): Chain name.
+        licensingStatus (:obj:`str`): Licensing status.
     """
 
-    def __init__(self, chain_id=None, name=None, **kwargs) :
+    def __init__(self, chain_id=None, name=None, licensingStatus=None, **kwargs) :
         self.id = kwargs.get('id', chain_id)
         self.name = name
+        self.licensingStatus = licensingStatus
 
     def __eq__(self, other) :
         """ :obj:`bool`: Return self.id == other.id."""
@@ -426,7 +428,7 @@ class ChainIdModel(BaseModel) :
 
     def __str__(self) :
         """ :obj:`str`: String representation of the :obj:`ChainIdModel`."""
-        return f"Chain '{self.name}' #{self.id}"
+        return f"Chain '{self.name}' #{self.id} ({self.licensingStatus})"
 
 
 class ChainCreatedModel(ChainIdModel) :
