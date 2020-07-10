@@ -56,7 +56,9 @@ from .models import RecordModel
 from .models import RecordModelAsJson
 from .models import NewRecordModelAsJson
 from .models import DocumentUploadModel
+from .models import JsonDocumentRecordModel
 
+from .util import build_query
 
 
 class RestChain :
@@ -124,6 +126,11 @@ class RestChain :
         json_data = self.__rest._get(f'/records@{self.id}/asJson')
         return [RecordModelAsJson.from_json(item) for item in json_data]
     
+    @property
+    def json_documents(self):
+        """:obj:`list` of :obj:`il2_rest.models.JsonDocumentRecordModel`: List of JSON document records in the chain."""
+        return self.json_documents_from()
+
     @property
     def summary(self):
         """:obj:`il2_rest.models.ChainSummaryModel`: Chain details"""
@@ -449,6 +456,44 @@ class RestChain :
         """
         return RecordModelAsJson.from_json(self.__rest._get(f"/records@{self.id}/{serial}/asJson"))
 
+    def json_documents_from(self, firstSerial = None, lastSerial = None):
+        """
+        Get a list of JSON documents stored in the chain.
+        Args:
+            firstSerial (:obj:`int`): First serial number of the query.
+            lastSerial (:obj:`int`): Last serial number of the query.
+
+        Returns:
+            :obj:`list` of :obj:`il2_rest.models.JsonDocumentRecordModel`: List of JSON document records in the chain.
+        """
+        query_str = build_query(['firstSerial', 'lastSerial'],[firstSerial, lastSerial])
+        json_data = self.__rest._get(f'/jsonDocuments@{self.id}{query_str}')
+        return [JsonDocumentRecordModel.from_json(item) for item in json_data]
+    
+    def json_document_at(self, serial):
+        """
+        Get a specific JSON document stored in the chain.
+        Args:
+            serial (:obj:`int`): Serial number of the record.
+
+        Returns:
+            :obj:`il2_rest.models.JsonDocumentRecordModel`: JSON document record.
+        """
+        return JsonDocumentRecordModel.from_json(self.__rest._get(f'/jsonDocuments@{self.id}/{serial}'))
+    
+    def json_document_at_as_str(self, serial):
+        """
+        Get a specific JSON document stored in the chain as a JSON string.
+        Args:
+            serial (:obj:`int`): Serial number of the record.
+
+        Returns:
+            :obj:`str`: JSON document string.
+        """
+        return self.__rest._get(f'/jsonDocuments@{self.id}/{serial}/asJson')
+    
+
+
     def store_document_from_bytes(self, doc_bytes, name = None, content_type = None, model = None) :
         """
         Store document on chain using bytes.
@@ -561,6 +606,34 @@ class RestChain :
             Document 'document.txt' [plain/text] d_G2-zQ05L5QZ-omHi7cfyJW1Ses4xovJuFoOUNnxNo#SHA256
         """
         return self.store_document_from_bytes(doc_bytes = content.encode('utf-8'), name = name, content_type = content_type)
+
+    def store_json_document(self, payload) :
+        """
+        Store a JSON document record.
+        
+        Args:
+            payload (:obj:`dict`): A valid JSON.
+
+        Returns:
+            :obj:`il2_rest.models.JsonDocumentRecordModel`: Added JSON document details.
+        
+        Example:
+            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
+            >>> json_data = {
+            ...     "field1" : 1,
+            ...     "field2" : "Test",
+            ...     "field3": [1,2,3],
+            ...     "field4" : {
+            ...         "value1" : 10,
+            ...         "value2" : 20
+            ...     }
+            ... }
+            >>> new_json_document = chain.chain.store_json_document(json_data)
+            >>> print(new_json_document)
+            
+        """
+        return JsonDocumentRecordModel.from_json(self.__rest._post(f"/jsonDocuments@{self.id}", payload))
 
     def __str__(self) :
         return f"Chain '{self.name}' #{self.id} ({self.licensingStatus})"
@@ -821,7 +894,6 @@ class RestNode :
     def _prepare_post_request(self, url, body, accept) :
         cur_uri = uri.URI(self.base_uri, path = url)
         
-        #json_data = BaseModel.json(body)
         if issubclass(type(body) ,BaseModel) :
             json_data = body.json()
         else :

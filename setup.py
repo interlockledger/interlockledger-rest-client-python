@@ -34,13 +34,12 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="il2_rest", # Replace with your own username
-    version="1.0.2",
+    version="1.1.0",
     author="Daniel Chino",
     author_email="dchino@interlockledger.network",
     description="A python client to InterlockLedger Node REST API",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    #url="https://github.com/pypa/sampleproject",
     packages=setuptools.find_packages(),
     install_requires=[
           'colour>=0.1.5',

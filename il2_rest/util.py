@@ -124,6 +124,28 @@ def to_bytes(value) :
         return bytes(value)
 
 
+def build_query(args_names, args_values) :
+    """
+    Transform a list of names and values in a HTTP query string.
+    
+    Args:
+        args_names (:obj:`list` of :obj:`str`): List of names.
+        args_values (:obj:`list`): List of values, must have same length of args_names.
+    Returns:
+        :obj:`str` : Query string.
+    """
+    ret_str = ''
+    first = True
+    for (name, value) in zip(args_names, args_values) :
+        if value :
+            if first :
+                ret_str += '?'
+                first = False
+            else :
+                ret_str += '&'
+            ret_str += f'{name}={value}'
+    return ret_str
+
 
 
 

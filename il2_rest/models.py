@@ -28,7 +28,7 @@
 
 
 """
-Resource models available in the IL2 REST API (v3.5.0).
+Resource models available in the IL2 REST API.
 """
 
 import os
@@ -1038,7 +1038,24 @@ class InterlockingRecordModel(RecordModel) :
         return f"Interlocked chain {self.interlockedChainId} at record #{self.interlockedRecordSerial} (offset: {self.interlockedRecordOffset}) with hash {self.interlockedRecordHash}{os.linesep}{super().__str__()}"
 
 
+class JsonDocumentRecordModel(RecordModelBase) :
+    """
+    Record to store JSON documents.
 
+    Attributes:
+        jsonText (:obj:`str`): JSON document as string.
+        network (:obj:`str`): Network name this chain is part.
+        reference (:obj:`str`): Universal reference of this record.
+    """
+    def __init__(self, applicationId = None, chainId = None, createdAt = None, rec_hash = None, 
+                 payloadTagId = None, serial = None, rec_type = None, version = None,
+                 jsonText = None, network = None, reference = None, **kwargs) :
+        rec_hash = kwargs.get('hash', rec_hash)
+        rec_type = kwargs.get('type', rec_type)
+        super().__init__(applicationId, chainId, createdAt, rec_hash, payloadTagId, serial, rec_type, version, **kwargs)
+        self.jsonText = jsonText
+        self.network = network
+        self.reference = reference
 
 
 class Versions(BaseModel) :
