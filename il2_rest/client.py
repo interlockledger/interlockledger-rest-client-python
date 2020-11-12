@@ -515,18 +515,18 @@ class RestChain :
 
             >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
             >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
-            >>> new_document = chain.store_document_from_bytes(doc_bytes = b'Bytes message!', name = 'bytes_file.txt', content_type = 'plain/text')
+            >>> new_document = chain.store_document_from_bytes(doc_bytes = b'Bytes message!', name = 'bytes_file.txt', content_type = 'text/plain')
             >>> print(new_document)
-            Document 'bytes_file.txt' [plain/text] ZegBNUskzzJRqKvIuOiuhyhJvXJ5YxMJL99ONvqkcXs#SHA256
+            Document 'bytes_file.txt' [text/plain] ZegBNUskzzJRqKvIuOiuhyhJvXJ5YxMJL99ONvqkcXs#SHA256
 
             Using the model to specify the description of the document.
 
             >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
             >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
-            >>> model = DocumentUploadModel(name = 'other_bytes_file.txt', contentType = 'plain/text')
+            >>> model = DocumentUploadModel(name = 'other_bytes_file.txt', contentType = 'text/plain')
             >>> new_document = chain.store_document_from_bytes(doc_bytes = b'Other bytes message!', model = model)
             >>> print(new_document)
-            Document 'other_bytes_file.txt' [plain/text] wLQypXsHLV0H7RdNrrM3NvViA7W1-9pcClPgWGMmF6Q#SHA256
+            Document 'other_bytes_file.txt' [text/plain] wLQypXsHLV0H7RdNrrM3NvViA7W1-9pcClPgWGMmF6Q#SHA256
         """
         if not model :
             if name is None:
@@ -565,10 +565,10 @@ class RestChain :
 
             >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
             >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
-            >>> model = DocumentUploadModel(name = 'my_test.txt', contentType = 'plain/text', cipher = CipherAlgorithms.AES256)
+            >>> model = DocumentUploadModel(name = 'my_test.txt', contentType = 'text/plain', cipher = CipherAlgorithms.AES256)
             >>> new_document = chain.store_document_from_file(file_path = './test.txt', model = model)
             >>> print(new_document)
-            Document 'my_test.txt' [plain/text] FukEkll0cTDSp4k4zJehM--5ZzjMz-LVeAsSeaMIeeg#SHA256
+            Document 'my_test.txt' [text/plain] FukEkll0cTDSp4k4zJehM--5ZzjMz-LVeAsSeaMIeeg#SHA256
         """
         if not os.path.isfile(file_path) :
             raise FileNotFoundError(f"No file '{file_path}' to store as a document!")
@@ -583,7 +583,7 @@ class RestChain :
             
         return self.__post_file_document(file_path, model)
 
-    def store_document_from_text(self, content, name, content_type = "plain/text") :
+    def store_document_from_text(self, content, name, content_type = "text/plain") :
         """
         Store document on chain using bytes.
 
@@ -603,7 +603,7 @@ class RestChain :
             >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
             >>> new_document = chain.store_document_from_text(content = 'Simple text', name = 'document.txt')
             >>> print(new_document)
-            Document 'document.txt' [plain/text] d_G2-zQ05L5QZ-omHi7cfyJW1Ses4xovJuFoOUNnxNo#SHA256
+            Document 'document.txt' [text/plain] d_G2-zQ05L5QZ-omHi7cfyJW1Ses4xovJuFoOUNnxNo#SHA256
         """
         return self.store_document_from_bytes(doc_bytes = content.encode('utf-8'), name = name, content_type = content_type)
 
@@ -839,7 +839,7 @@ class RestNode :
         return [InterlockingRecordModel.from_json(item) for item in json_data]
 
 
-    def _call_api_plain_doc(self, url, method, accept = "plain/text") :
+    def _call_api_plain_doc(self, url, method, accept = "text/plain") :
         return self._prepare_request(url, method, accept).text
 
     def _call_api_raw_doc(self, url, method, accept = "*") :
@@ -913,11 +913,9 @@ class RestNode :
         headers = {'Accept': accept,
                    'Content-type' : contentType}
         
-        
         with self.__pfx_to_pem() as cert :
             response = requests.post(url = cur_uri, data = body, headers=headers, 
                         cert = cert, verify = False)
-        
         self.__treat_response_error(response)
         return response
 
@@ -930,7 +928,6 @@ class RestNode :
             with open(file_path, 'rb') as f :
                 response = requests.post(url = cur_uri, data = f, headers=headers, 
                             cert = cert, verify = False)
-        
         self.__treat_response_error(response)
         return response
 
