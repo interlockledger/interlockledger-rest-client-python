@@ -625,6 +625,59 @@ class RawDocumentModel(BaseModel) :
                 return converted[:256]+"..." if len(converted) > 256 else converted
 
 
+class DocumentUploadConfigurationModel(BaseModel) :
+    def __init__(self, defaultCompression = None, defaultEncryption = None, fileSizeLimit = None, iterations = None, permittedContentTypes = None, timeOutInMinutes = None, **kwargs) :
+        self.defaultCompression = None
+        self.defaultEncryption = None
+        self.fileSizeLimit = None
+        self.iterations = None
+        self.permittedContentTypes = None
+        self.timeOutInMinutes = None
+
+class DocumentsBeginTransactionModel(BaseModel) :
+    def __init__(self, chain, comment = None, encryption = None, compression = None, generatePublicDirectory = None, iterations = None, password = None, **kwargs) :
+        self.chain = chain 
+        self.comment = comment 
+        self.compression = compression 
+        self.encryption = encryption 
+        self.generatePublicDirectory = generatePublicDirectory
+        self.iterations = iterations
+        self.password = password 
+
+class DocumentsTransactionModel(BaseModel) :
+    def __init__(self, chain = None, transactionId = None, canCommitNow = None, countOfUploadedDocuments = None, timeOutLimit = None, **kwargs) :
+        self.chain = chain
+        self.transactionId = transactionId
+        self.canCommitNow = transactionId
+        self.countOfUploadedDocuments = countOfUploadedDocuments
+        self.timeOutLimit = timeOutLimit
+
+class DocumentsMetadataModel(BaseModel) :
+    def __init__(self, comment = None, compression = None, encryption = None, encryptionParameters = None, publicDirectory = None, **kwargs) :
+        self.comment = comment 
+        self.compression = compression 
+        self.encryption = encryption 
+        if encryptionParameters :
+            self.encryptionParameters = encryptionParameters if isinstance(encryptionParameters, DocumentsMetadataModel.EncryptionParameters) else DocumentsMetadataModel.EncryptionParameters.from_json(encryptionParameters)
+        else :
+            self.encryptionParameters = encryptionParameters
+        
+        if publicDirectory :
+            self.publicDirectory = [item if isinstance(item, DocumentsMetadataModel.PublicDirectory) else DocumentsMetadataModel.PublicDirectory.from_json(item) for item in publicDirectory]
+        else:
+            self.publicDirectory = publicDirectory
+    
+    class EncryptionParameters(BaseModel) :
+        def __init__(self, iterations = None, salt = None, **kwargs) :
+            self.iterations = iterations
+            self.salt = salt
+    
+    class PublicDirectory(BaseModel) :
+        def __init__(self, name = None, comment = None, mimeType = None, **kwargs) :
+            self.name = name 
+            self.comment = comment
+            self.mimeType = mimeType
+        
 
 class ForceInterlockModel(BaseModel) :
     """

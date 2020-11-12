@@ -156,3 +156,12 @@ class RecordType(AutoName) :
     Closing = auto()
     EmergencyClosing = auto()
     Corrupted = auto()
+
+class DocumentsCompression(AutoName) :
+    """
+    Enumeration of the compression algorithm.
+    """
+    NONE = auto()
+    GZIP = auto()
+    BROTLI = auto()
+    ZSTD = auto()
