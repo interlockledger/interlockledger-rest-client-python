@@ -57,7 +57,7 @@ from .models import RecordModelAsJson
 from .models import NewRecordModelAsJson
 from .models import DocumentUploadModel
 from .models import JsonDocumentRecordModel
-
+from .models import DocumentUploadConfigurationModel
 from .util import build_query
 
 
@@ -635,6 +635,7 @@ class RestChain :
         """
         return JsonDocumentRecordModel.from_json(self.__rest._post(f"/jsonDocuments@{self.id}", payload))
 
+    
     def __str__(self) :
         return f"Chain '{self.name}' #{self.id} ({self.licensingStatus})"
         
@@ -745,6 +746,10 @@ class RestNode :
         json_data = self._get('/peers')
         return [PeerModel.from_json(item) for item in json_data]
     
+    @property
+    def documents_config(self) :
+        return DocumentUploadConfigurationModel.from_json(self._get('/documents/configuration'))
+
     def add_mirrors_of(self, new_mirrors) :
         """
         Add new mirrors in this node.

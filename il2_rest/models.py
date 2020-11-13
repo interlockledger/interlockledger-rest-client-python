@@ -627,12 +627,23 @@ class RawDocumentModel(BaseModel) :
 
 class DocumentUploadConfigurationModel(BaseModel) :
     def __init__(self, defaultCompression = None, defaultEncryption = None, fileSizeLimit = None, iterations = None, permittedContentTypes = None, timeOutInMinutes = None, **kwargs) :
-        self.defaultCompression = None
-        self.defaultEncryption = None
-        self.fileSizeLimit = None
-        self.iterations = None
-        self.permittedContentTypes = None
-        self.timeOutInMinutes = None
+        self.defaultCompression = defaultCompression
+        self.defaultEncryption = defaultEncryption
+        self.fileSizeLimit = fileSizeLimit
+        self.iterations = iterations
+        self.permittedContentTypes = permittedContentTypes
+        self.timeOutInMinutes = timeOutInMinutes
+    
+    def __str__(self) :
+        ret =   'DocumentUploadConfiguration {\n'
+        ret += f'   defaultCompression : "{self.defaultCompression}\n'
+        ret += f'   defaultEncryption : "{self.defaultEncryption}\n'
+        ret += f'   fileSizeLimit : {self.fileSizeLimit}\n'
+        ret += f'   iterations : {self.iterations}\n'
+        ret += f'   permittedContentTypes : {self.permittedContentTypes}\n'
+        ret += f'   timeOutInMinutes : {self.timeOutInMinutes}\n'
+        ret += '}'
+        return ret
 
 class DocumentsBeginTransactionModel(BaseModel) :
     def __init__(self, chain, comment = None, encryption = None, compression = None, generatePublicDirectory = None, iterations = None, password = None, **kwargs) :
