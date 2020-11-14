@@ -96,6 +96,9 @@ class BaseModel :
     Base class for all models.
     """    
 
+    def __str__(self) :
+        return type(self).__name__ + ' ' + json.dumps(self, indent=4, cls=CustomEncoder)
+
     #@classmethod
     def json(self, hide_null = True, return_as_str = False) :
         """
@@ -626,6 +629,25 @@ class RawDocumentModel(BaseModel) :
 
 
 class DocumentUploadConfigurationModel(BaseModel) :
+    """
+    Node configuration of uploaded documents.
+
+    Args:
+        defaultCompression (:obj:`str`): Default compression algorithm.
+        defaultEncryption (:obj:`str`): Default encryption algorithm.
+        fileSizeLimit (:obj:`int`): Maximum file size.
+        iterations (:obj:`int`): Default number of PBE iterations to generate the key.
+        permittedContentTypes (:obj:`list` of :obj:`str`): List of content types mime-type/extension.
+        timeOutInMinutes (:obj:`int`): Timeout in minutes.
+    
+    Attributes:
+        defaultCompression (:obj:`str`): Default compression algorithm.
+        defaultEncryption (:obj:`str`): Default encryption algorithm.
+        fileSizeLimit (:obj:`int`): Maximum file size.
+        iterations (:obj:`int`): Default number of PBE iterations to generate the key.
+        permittedContentTypes (:obj:`list` of :obj:`str`): List of content types mime-type/extension.
+        timeOutInMinutes (:obj:`int`): Timeout in minutes.
+    """    
     def __init__(self, defaultCompression = None, defaultEncryption = None, fileSizeLimit = None, iterations = None, permittedContentTypes = None, timeOutInMinutes = None, **kwargs) :
         self.defaultCompression = defaultCompression
         self.defaultEncryption = defaultEncryption
@@ -634,18 +656,34 @@ class DocumentUploadConfigurationModel(BaseModel) :
         self.permittedContentTypes = permittedContentTypes
         self.timeOutInMinutes = timeOutInMinutes
     
-    def __str__(self) :
-        ret =   'DocumentUploadConfiguration {\n'
-        ret += f'   defaultCompression : "{self.defaultCompression}\n'
-        ret += f'   defaultEncryption : "{self.defaultEncryption}\n'
-        ret += f'   fileSizeLimit : {self.fileSizeLimit}\n'
-        ret += f'   iterations : {self.iterations}\n'
-        ret += f'   permittedContentTypes : {self.permittedContentTypes}\n'
-        ret += f'   timeOutInMinutes : {self.timeOutInMinutes}\n'
-        ret += '}'
-        return ret
 
 class DocumentsBeginTransactionModel(BaseModel) :
+    """
+    Parameters for starting a transaction to store many documents in a single InterlockLedger record.
+
+    Args:
+        chain (:obj:`str`): Id of the chain where the set of documents should be stored.
+        comment (:obj:`str`): Any additional information about the set of documents to be stored.
+        compression (:obj:`il2_rest.enumerations.DocumentsCompression`): Compression algorithm.
+        encryption (:obj:`str`): The encryption descriptor in the <pbe>-<hash>-<cipher>-<level> format
+        generatePublicDirectory (:obj:`bool`): If the publically viewable PublicDirectory field should be created.
+        iterations (:obj:`int`): Override for the number of PBE iterations to generate the key.
+        password (:obj:`bytes`): Password as bytes if Encryption is not null.
+    
+    Attributes:
+        chain (:obj:`str`): Id of the chain where the set of documents should be stored.
+        comment (:obj:`str`): Any additional information about the set of documents to be stored.
+        compression (:obj:`il2_rest.enumerations.DocumentsCompression`): Compression algorithm.
+            The compression algorithm can be as follows:\n
+            - NONE: No compression. Simply store the bytes;\n
+            - GZIP: Compression of the data using the gzip standard;\n
+            - BROTLI: Compression of the data using the brotli standard;\n
+            - ZSTD: Compression of the data using the ZStandard from Facebook (In the future).
+        encryption (:obj:`str`): The encryption descriptor in the <pbe>-<hash>-<cipher>-<level> format
+        generatePublicDirectory (:obj:`bool`): If the publically viewable PublicDirectory field should be created.
+        iterations (:obj:`int`): Override for the number of PBE iterations to generate the key.
+        password (:obj:`bytes`): Password as bytes if Encryption is not null.
+    """    
     def __init__(self, chain, comment = None, encryption = None, compression = None, generatePublicDirectory = None, iterations = None, password = None, **kwargs) :
         self.chain = chain 
         self.comment = comment 

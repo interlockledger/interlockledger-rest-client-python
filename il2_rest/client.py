@@ -58,6 +58,7 @@ from .models import NewRecordModelAsJson
 from .models import DocumentUploadModel
 from .models import JsonDocumentRecordModel
 from .models import DocumentUploadConfigurationModel
+from .models import DocumentsTransactionModel
 from .util import build_query
 
 
@@ -635,6 +636,80 @@ class RestChain :
         """
         return JsonDocumentRecordModel.from_json(self.__rest._post(f"/jsonDocuments@{self.id}", payload))
 
+    def documents_transaction_status(self, transaction_id) :
+        """
+        Get the ongoing status of a transaction.
+
+        Args:
+            transaction_id (:obj:`str`): Id of the transaction.
+        
+        Returns:
+            :obj:`il2_rest.models.DocumentsTransactionModel`: Transaction identifier and limits.
+        """
+        return DocumentsTransactionModel.from_json(self.__rest._get(f"/documents/transaction/{transaction_id}"))
+
+    def documents_begin_transaction(self, comment = None, compression = None, generatePublicDirectory = None, iterations = None, encryption = None, password = None, model = None) :
+        """
+        Begin a transaction to store a set of documents. May rollback on timeout or errors.
+        
+        Args:
+            comment (:obj:`str`): Any additional information about the set of documents to be stored.
+            compression (:obj:`il2_rest.enumerations.DocumentsCompression`): Compression algorithm.
+                The compression algorithm can be as follows:\n
+                - NONE: No compression. Simply store the bytes;\n
+                - GZIP: Compression of the data using the gzip standard;\n
+                - BROTLI: Compression of the data using the brotli standard;\n
+                - ZSTD: Compression of the data using the ZStandard from Facebook (In the future).
+            generatePublicDirectory (:obj:`bool`): If the publically viewable PublicDirectory field should be created.
+            iterations (:obj:`int`): Override for the number of PBE iterations to generate the key.
+            encryption (:obj:`str`): The encryption descriptor in the <pbe>-<hash>-<cipher>-<level> format
+            password (:obj:`bytes`): Password as bytes if Encryption is not null.
+        
+        Returns:
+            :obj:`il2_rest.models.DocumentsTransactionModel`: Started transaction identifier and limits.
+        """
+        if model :
+            if model.chain != self.id :
+                raise TypeError('model.chain does not match self.id')
+        else :
+            model = DocumentsTransactionModel(chain = self.id, comment = comment, encryption = encryption, compression = compression, generatePublicDirectory = generatePublicDirectory, iterations = iterations, password = password)
+        return DocumentsTransactionModel.from_json(self.__rest._post("/documents/transaction", model))
+            
+    def documents_transaction_add_item(self, transaction_id, name, content_type, filepath, comment = None) :
+        """
+        Adds another document to a pending transaction of multi-documents.
+
+        Args:
+            transaction_id (:obj:`str`): Id of the ongoing transaction.
+            name (:obj:`str`): File name.
+            content_type (:obj:`str`): File mime-type.
+            filepath (:obj:`str`): Path to the file to upload.
+            comment (:obj:`str`, optional): Additional comment.
+        Returns:
+            :obj:`bool`: True if success
+        """
+        query = f"/documents/transaction/{transaction_id}?name={name}"
+        if comment :
+            query += f"&comment={comment}"
+        
+        resp = self.__rest._post_file(query, filepath, content_type)
+        if resp.status_code == 200 :
+            return True
+        else :
+            return False
+    
+    def documents_transaction_commit(self, transaction_id) :
+        """
+        Store set of uploaded documents.
+
+        Args:
+            transaction_id (:obj:`str`): Id of the ongoing transaction.
+        
+        Returns:
+            :obj:`str`: Documents storage locator.
+        """
+        resp = self.__rest._post(f"/documents/transaction/{transaction_id}/commit", None)
+        return resp
     
     def __str__(self) :
         return f"Chain '{self.name}' #{self.id} ({self.licensingStatus})"
@@ -748,6 +823,7 @@ class RestNode :
     
     @property
     def documents_config(self) :
+        """:obj:`il2_rest.models.DocumentUploadConfigurationModel`: Get documents upload configuration. """
         return DocumentUploadConfigurationModel.from_json(self._get('/documents/configuration'))
 
     def add_mirrors_of(self, new_mirrors) :
@@ -869,7 +945,8 @@ class RestNode :
     def __treat_response_error(self, response) :
         if 400<= response.status_code and response.status_code < 600 :
             if response.text :
-                msg = f"{response.status_code} {response.reason}: ({response.json()['exceptionType']}) {response.json()['message']}"
+                msg = response.text
+                #msg = f"{response.status_code} {response.reason}: ({response.json()['exceptionType']}) {response.json()['message']}"
                 raise requests.HTTPError(msg)
             else :
                 response.raise_for_status()
