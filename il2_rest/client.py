@@ -34,6 +34,7 @@ import requests
 import json
 import base64
 import re
+import shutil
 from OpenSSL import crypto
 #from cryptography.hazmat.primitives.serialization import Encoding
 
@@ -58,7 +59,9 @@ from .models import NewRecordModelAsJson
 from .models import DocumentUploadModel
 from .models import JsonDocumentRecordModel
 from .models import DocumentUploadConfigurationModel
+from .models import DocumentsBeginTransactionModel
 from .models import DocumentsTransactionModel
+from .models import DocumentsMetadataModel
 from .util import build_query
 
 
@@ -645,8 +648,68 @@ class RestChain :
         
         Returns:
             :obj:`il2_rest.models.DocumentsTransactionModel`: Transaction identifier and limits.
+        
+        Example:
+            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
+            >>> resp = chain.documents_transaction_status('IZqVW6p7z4hVdWzv')
+            >>> print(resp)
         """
         return DocumentsTransactionModel.from_json(self.__rest._get(f"/documents/transaction/{transaction_id}"))
+
+    def documents_transaction_metadata(self, locator):
+        """
+        Retrieve the metadata for the set of documents from chain.
+
+        Args:
+            locator (:obj:`str`): A Documents Storage Locator.
+        
+        Returns:
+            :obj:`il2_rest.models.DocumentsMetadataModel`: Metadata associated to a Multi-Document Storage Locator
+        
+        Example:
+            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
+            >>> resp = chain.documents_transaction_metadata('EbAfcWGwCwzuiEtSwIwYQYIHy-g05CZl6jrcBAYuYRIe')
+            >>> print(resp)
+        """
+        return DocumentsMetadataModel.from_json(self.__rest._get(f"/documents/{locator}/metadata"))
+
+
+    def download_single_document_at(self, locator, index, dst_path = './') :
+        """
+        Download document by position from the set of documents to a folder (default: current folder).
+
+        Args:
+            locator (:obj:`str`): A Documents Storage Locator.
+            index (:obj:`int`): Index of the file.
+            dst_path (:obj:`str`): Download the file to this folder.
+
+        Example:
+            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
+            >>> chain.download_single_document_at('EbAfcWGwCwzuiEtSwIwYQYIHy-g05CZl6jrcBAYuYRIe', 0, '/path/to/download/')
+        """
+        self.__rest._download_file(f"/documents/{locator}/{index}")
+        return
+
+    def download_documents_as_zip(self, locator, dst_path = './') :
+        """
+        Download a compressed file with all documents to a folder (default: current folder).
+
+        Args:
+            locator (:obj:`str`): A Documents Storage Locator.
+            dst_path (:obj:`str`): Download the file to this folder.
+
+        Example:
+            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
+            >>> chain.download_documents_as_zip('EbAfcWGwCwzuiEtSwIwYQYIHy-g05CZl6jrcBAYuYRIe', '/path/to/download/')
+        """
+        self.__rest._download_file(f"/documents/{locator}/zip")
+        return
+
+    
 
     def documents_begin_transaction(self, comment = None, compression = None, generatePublicDirectory = None, iterations = None, encryption = None, password = None, model = None) :
         """
@@ -664,15 +727,38 @@ class RestChain :
             iterations (:obj:`int`): Override for the number of PBE iterations to generate the key.
             encryption (:obj:`str`): The encryption descriptor in the <pbe>-<hash>-<cipher>-<level> format
             password (:obj:`bytes`): Password as bytes if Encryption is not null.
+            model (:obj:`il2_rest.models.DocumentsBeginTransactionModel`, optional): 
         
         Returns:
             :obj:`il2_rest.models.DocumentsTransactionModel`: Started transaction identifier and limits.
+        
+        Examples:
+            Begin transaction using a :obj:`il2_rest.models.DocumentsBeginTransactionModel`:
+            
+            >>> from il2_rest.models import DocumentsBeginTransactionModel
+            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
+            >>> model = DocumentsBeginTransactionModel(chain = 'EbAfcWGwCwzuiEtSwIwYQYIHy-g05CZl6jrcBAYuYRI', 
+            ...                                        comment ='Using model')
+            >>> resp = chain.documents_transaction_metadata('EbAfcWGwCwzuiEtSwIwYQYIHy-g05CZl6jrcBAYuYRIe')
+            >>> print(resp)
+
+            The same can be done passing all the information as parameters:
+            
+            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
+            >>> resp = chain.documents_begin_transaction(comment ='Using parameters')
+            >>> print(resp)
+
+
         """
         if model :
+            if not isinstance(model, DocumentsBeginTransactionModel) :
+                raise TypeError('model must be DocumentsBeginTransactionModel')
             if model.chain != self.id :
-                raise TypeError('model.chain does not match self.id')
+                raise TypeError(f"self.id == '{self.id}' does not match model.chain == '{model.chain}'")
         else :
-            model = DocumentsTransactionModel(chain = self.id, comment = comment, encryption = encryption, compression = compression, generatePublicDirectory = generatePublicDirectory, iterations = iterations, password = password)
+            model = DocumentsBeginTransactionModel(chain = self.id, comment = comment, encryption = encryption, compression = compression, generatePublicDirectory = generatePublicDirectory, iterations = iterations, password = password)
         return DocumentsTransactionModel.from_json(self.__rest._post("/documents/transaction", model))
             
     def documents_transaction_add_item(self, transaction_id, name, content_type, filepath, comment = None) :
@@ -687,6 +773,15 @@ class RestChain :
             comment (:obj:`str`, optional): Additional comment.
         Returns:
             :obj:`bool`: True if success
+
+        Example:
+            After beginning a transaction, you can add as many items as you wish:
+            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
+            >>> resp = chain.documents_begin_transaction(comment ='Using parameters')
+            >>> transaction_id = resp.transactionId
+            >>> chain.documents_transaction_add_item(transaction_id, "item1.txt", "text/plain", "./test.txt"
+            >>> chain.documents_transaction_add_item(transaction_id, "item2.txt", "text/plain", "./test2.txt", "This file has a comment."
         """
         query = f"/documents/transaction/{transaction_id}?name={name}"
         if comment :
@@ -702,11 +797,22 @@ class RestChain :
         """
         Store set of uploaded documents.
 
+        *Note:* Rementer to save the locator after commiting.
+
         Args:
             transaction_id (:obj:`str`): Id of the ongoing transaction.
         
         Returns:
             :obj:`str`: Documents storage locator.
+
+        Example:
+            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
+            >>> resp = chain.documents_begin_transaction(comment ='Using parameters')
+            >>> transaction_id = resp.transactionId
+            >>> chain.documents_transaction_add_item(transaction_id, "item1.txt", "text/plain", "./test.txt"
+            >>> chain.documents_transaction_add_item(transaction_id, "item2.txt", "text/plain", "./test2.txt", "This file has a comment."
+            >>> locator = chain.documents_transaction_commit(transaction_id)
         """
         resp = self.__rest._post(f"/documents/transaction/{transaction_id}/commit", None)
         return resp
@@ -951,6 +1057,18 @@ class RestNode :
             else :
                 response.raise_for_status()
         
+        return
+    
+    def _download_file(self, url, dst_path = './') :
+        cur_uri = uri.URI(self.base_uri, path = url)
+        with self.__pfx_to_pem() as cert :
+            with requests.get(cur_uri, cert = cert, stream = True, verify = False) as r:
+                d = r.headers['content-disposition']
+                filename = re.findall("filename=(.+);", d)[0]
+                filepath = os.path.join(dst_path, filename)
+                print(filepath)
+                with open(filepath, 'wb') as f :
+                    shutil.copyfileobj(r.raw, f)
         return
 
     def _get_raw_response(self, url, method, accept) :

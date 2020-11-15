@@ -191,9 +191,25 @@ class AppsModel(BaseModel) :
             publisherName (:obj:`str`): Publisher name as registered in the Genesis chain of the network.
             dataModels (:obj:`list` of :obj:`DataModel`): The list of data models for the payloads of the records stored in the chains.
             reservedILTagIds (:obj:`list` of :obj:`il2_rest.util.LimitedRange`): The list of ranges of ILTagIds to reserve for the application.
-            simplifiedHashCode (:obj:`int`): The start date for the validity of the app, but if prior to the effective publication of the app will be overridden with the publication date and time.
+            simplifiedHashCode (:obj:`int`): Hash code.
+            start (:obj:`datetime.datetime`/:obj:`str`): The start date for the validity of the app, but if prior to the effective publication of the app will be overridden with the publication date and time.
+                If a string is passed, it will be automatically converted to datetime.datetime, as long as the string  is in the 'yyyy-mm-ddTHH:MM:SS+HH:MM' format.
+            version (:obj:`int`): Version of the application.
+        
+        Attributes:
+            alternativeId (:obj:`int`): Alternative id for the application.
+            appVersion (:obj:`version`): Application semantic version, with four numeric parts.
+            description (:obj:`str`): Description of the application.
+            id (:obj:`int`): Unique id for the application.
+            name (:obj:`str`): Application name.
+            publisherId (:obj:`str`): Publisher id, which is the identifier for the key the publisher uses to sign the workflow requests in its own chain. It should match the PublisherName
+            publisherName (:obj:`str`): Publisher name as registered in the Genesis chain of the network.
+            dataModels (:obj:`list` of :obj:`DataModel`): The list of data models for the payloads of the records stored in the chains.
+            reservedILTagIds (:obj:`list` of :obj:`il2_rest.util.LimitedRange`): The list of ranges of ILTagIds to reserve for the application.
+            simplifiedHashCode (:obj:`int`): Hash code.
             start (:obj:`datetime.datetime`): The start date for the validity of the app, but if prior to the effective publication of the app will be overridden with the publication date and time.
             version (:obj:`int`): Version of the application.
+        
         """
 
         def __init__(self, alternativeId = None, appVersion = None, description = None, app_id = None, name = None, publisherId = None, dataModels = None, publisherName = None, reservedILTagIds = None, simplifiedHashCode = None, start = None, version_ = None, **kwargs) :
@@ -694,14 +710,49 @@ class DocumentsBeginTransactionModel(BaseModel) :
         self.password = password 
 
 class DocumentsTransactionModel(BaseModel) :
+    """
+    Transaction identifier and limits.
+
+    Args:
+        chain (:obj:`str`): Id of chain where the transaction data will be stored.
+        transactionId (:obj:`str`): Id of the transaction to use when uploading each file and committing the transaction.
+        canCommitNow (:obj:`bool`): If no files/documents are still uploading.
+        countOfUploadedDocuments (:obj:`int`): Total count of uploaded documents for this transaction.
+        timeOutLimit (:obj:`datetime.datetime`/:obj:`str`): The transaction will be aborted if not completed until this timeout.
+            If a string is passed, it will be automatically converted to datetime.datetime, as long as the string  is in the 'yyyy-mm-ddTHH:MM:SS+HH:MM' format.
+
+    Attributes:
+        chain (:obj:`str`): Id of chain where the transaction data will be stored.
+        transactionId (:obj:`str`): Id of the transaction to use when uploading each file and committing the transaction.
+        canCommitNow (:obj:`bool`): If no files/documents are still uploading.
+        countOfUploadedDocuments (:obj:`int`): Total count of uploaded documents for this transaction.
+        timeOutLimit (:obj:`datetime.datetime`): The transaction will be aborted if not completed until this timeout.
+    """
     def __init__(self, chain = None, transactionId = None, canCommitNow = None, countOfUploadedDocuments = None, timeOutLimit = None, **kwargs) :
         self.chain = chain
         self.transactionId = transactionId
         self.canCommitNow = transactionId
         self.countOfUploadedDocuments = countOfUploadedDocuments
-        self.timeOutLimit = timeOutLimit
+        self.timeOutLimit = timeOutLimit if isinstance(timeOutLimit, datetime.datetime) else string2datetime(timeOutLimit)
 
 class DocumentsMetadataModel(BaseModel) :
+    """
+    Metadata associated to a Multi-Document Storage Locator.
+
+    Args:
+        comment (:obj:`str`): Any additional information about this set of documents
+        compression (:obj:`str`): Compression algorithm.
+        encryption (:obj:`str`): The encryption descriptor in the <pbe>-<hash>-<cipher>-<level> format.
+        encryptionParameters (:obj:`list` of :obj:`EncryptionParameters`/:obj:`list` of :obj:`str`): The parameters used to make the encryption of the set of documents.
+        publicDirectory (:obj:`DirectoryEntry`/:obj:`str`): List of stored documents.
+
+    Attributes:
+        comment (:obj:`str`): Any additional information about this set of documents
+        compression (:obj:`str`): Compression algorithm.
+        encryption (:obj:`str`): The encryption descriptor in the <pbe>-<hash>-<cipher>-<level> format.
+        encryptionParameters (:obj:`list` of :obj:`EncryptionParameters`): The parameters used to make the encryption of the set of documents.
+        publicDirectory (:obj:`DirectoryEntry`): List of stored documents.
+    """
     def __init__(self, comment = None, compression = None, encryption = None, encryptionParameters = None, publicDirectory = None, **kwargs) :
         self.comment = comment 
         self.compression = compression 
@@ -712,16 +763,31 @@ class DocumentsMetadataModel(BaseModel) :
             self.encryptionParameters = encryptionParameters
         
         if publicDirectory :
-            self.publicDirectory = [item if isinstance(item, DocumentsMetadataModel.PublicDirectory) else DocumentsMetadataModel.PublicDirectory.from_json(item) for item in publicDirectory]
+            self.publicDirectory = [item if isinstance(item, DocumentsMetadataModel.DirectoryEntry) else DocumentsMetadataModel.DirectoryEntry.from_json(item) for item in publicDirectory]
         else:
             self.publicDirectory = publicDirectory
     
     class EncryptionParameters(BaseModel) :
+        """
+        The parameters used to make the encryption of the set of documents.
+        
+        Attributes:
+            iterations (:obj:`str`): Number of iterations to generate the key.
+            salt (:obj:`str`): Salt value to feed the cypher engine.
+        """
         def __init__(self, iterations = None, salt = None, **kwargs) :
             self.iterations = iterations
             self.salt = salt
     
-    class PublicDirectory(BaseModel) :
+    class DirectoryEntry(BaseModel) :
+        """
+        Entry for each stored document in this MultiDocument set
+
+        Attributes:
+            name (:obj:`str`): Document file name.
+            iterations (:obj:`str`): Any provided additional information about the document file.
+            mimeType (:obj:`str`): Mime Type for the document content
+        """
         def __init__(self, name = None, comment = None, mimeType = None, **kwargs) :
             self.name = name 
             self.comment = comment
@@ -1032,7 +1098,8 @@ class RecordModelBase(BaseModel) :
     Args:
         applicationId (:obj:`int`): Application id this record is associated with.
         chainId (:obj:`str`): Chain id that owns this record.
-        createdAt (:obj:`datetime.datetime`): Time of record creation.
+        createdAt (:obj:`datetime.datetime`/:obj:`str`): Time of record creation.
+            If a string is passed, it will be automatically converted to datetime.datetime, as long as the string is in the 'yyyy-mm-ddTHH:MM:SS+HH:MM' format.
         rec_hash (:obj:`str`): Hash of the full encoded bytes of the record.
         payloadTagId (:obj:`int`): The payload's TagId.
         serial (:obj:`int`): Block serial number. For the first record this value is zero (0).
