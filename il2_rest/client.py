@@ -1066,7 +1066,6 @@ class RestNode :
                 d = r.headers['content-disposition']
                 filename = re.findall("filename=(.+);", d)[0]
                 filepath = os.path.join(dst_path, filename)
-                print(filepath)
                 with open(filepath, 'wb') as f :
                     shutil.copyfileobj(r.raw, f)
         return
