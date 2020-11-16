@@ -24,7 +24,7 @@ To use the `il2_rest` package, you can add the interlockledger_rest folder to yo
     * pyOpenSSL (19.1.0)
     * requests (2.22.0)
     * uri (2.0.1)
-* InterlockLedger Node Server 4.0.39
+* InterlockLedger Node Server 4.1.6
 
 ### Installation
 

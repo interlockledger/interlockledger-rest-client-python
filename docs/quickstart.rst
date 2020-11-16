@@ -116,8 +116,50 @@ To permit new apps:
     [4]
 
 
+Storing Multi-Documents
+-----------------------
+
+It is possible to store multiple documents in a single record of a chain.
+First you will need to begin a transaction:
+
+.. code-block:: python3
+
+    >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+    >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
+    >>> resp = chain.documents_begin_transaction(comment ='Using parameters')
+    >>> transaction_id = resp.transactionId
+
+Then, you can add as many files you wish using the transaction id:
+
+.. code-block:: python3
+
+    >>> chain.documents_transaction_add_item(transaction_id, "item1.txt", "text/plain", "./test.txt"
+    >>> chain.documents_transaction_add_item(transaction_id, "item2.txt", "text/plain", "./test2.txt", "This file has a comment."
+
+When you are done, all you need to do is commit the transaction:
+
+.. code-block:: python3
+
+    >>> locator = chain.documents_transaction_commit(transaction_id)
+
+
+To download the files stored in a chain, you will need to use the locator of a multi-document record. You can store a single file of a multi-document record using the index of the file in the record:
+
+.. code-block:: python3
+
+    >>> chain.download_single_document_at(locator, 0, '/path/to/download/')
+
+Or you can download all files in a compressed in a single file:
+
+.. code-block:: python3
+
+    >>> chain.download_documents_as_zip(locator, '/path/to/download/')
+
 Storing Documents
 -----------------
+
+.. warning:: 
+    The single document API will be deprecated, please use the Multi-Documents API.
 
 You can store documents using the `il2_rest`. There are three ways to store a document: plain text, bytes or file. To store a text document you can use the following script:
 

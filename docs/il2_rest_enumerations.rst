@@ -74,3 +74,10 @@ RecordType
     :undoc-members:
     :show-inheritance:
 
+DocumentsCompression
+--------------------
+.. autoclass:: il2_rest.enumerations.DocumentsCompression
+    :members:
+    :undoc-members:
+    :show-inheritance:
+

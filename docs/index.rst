@@ -8,7 +8,7 @@ Welcome to InterlockLedgerAPI's documentation!
 
 .. image:: /images/full-logo-dark.png
 
-This package is a python client to the InterlockLedger Node REST API. It connects to InterlockLedger nodes, allowing the creation of chains, interlocks, and storage of records and documents. This client requires the InterlockLedger Node Server version 4.0.39.
+This package is a python client to the InterlockLedger Node REST API. It connects to InterlockLedger nodes, allowing the creation of chains, interlocks, and storage of records and documents. This client requires the InterlockLedger Node Server version 4.1.6.
 
 
 The InterlockLedger
@@ -22,7 +22,7 @@ A chain is a sequential list of records, back chained with signatures/hashes to 
 importantly, any external logic can validate the multiple dimensions of validity for records/chains/interlockings/the ledger.
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 4
    :caption: Contents:
    
    settingup

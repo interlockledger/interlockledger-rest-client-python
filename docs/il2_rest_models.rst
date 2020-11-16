@@ -103,6 +103,21 @@ RawDocumentModel
     :undoc-members:
     :show-inheritance:
 
+DocumentUploadConfigurationModel
+--------------------------------
+.. autoclass:: il2_rest.models.DocumentUploadConfigurationModel
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+DocumentsBeginTransactionModel
+------------------------------
+.. autoclass:: il2_rest.models.DocumentsBeginTransactionModel
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 ForceInterlockModel
 -------------------
 .. autoclass:: il2_rest.models.ForceInterlockModel
