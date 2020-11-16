@@ -871,7 +871,7 @@ class KeyModel(BaseModel) :
     
     def __str__(self) :
         """(:obj:`str`): String representation of the key details."""
-        return f"Key '{self.name}' {self.id}{KeyModel.__indent}Purposes: [{self.__displayablePurposes}]{KeyModel.__indent}{self.__actions_for}";
+        return f"Key '{self.name}' {self.id}{KeyModel.__indent}Purposes: [{self.__displayablePurposes}]{KeyModel.__indent}{self.__actions_for}"
 
 
 

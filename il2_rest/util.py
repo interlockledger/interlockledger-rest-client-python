@@ -208,8 +208,8 @@ class LimitedRange :
     def __hash__(self) :
         """ :obj:`int`: Hash representation of self."""
         hash_code = 945720665
-        hash_code = hash_code * -1521134295 + self.end.__hash__();
-        hash_code = hash_code * -1521134295 + self.start.__hash__();
+        hash_code = hash_code * -1521134295 + self.end.__hash__()
+        hash_code = hash_code * -1521134295 + self.start.__hash__()
         return hash_code
 
     def __eq__(self, other) :
