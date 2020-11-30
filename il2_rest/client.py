@@ -34,6 +34,7 @@ import requests
 import json
 import base64
 import re
+import mimetypes
 import shutil
 from OpenSSL import crypto
 #from cryptography.hazmat.primitives.serialization import Encoding
@@ -761,15 +762,16 @@ class RestChain :
             model = DocumentsBeginTransactionModel(chain = self.id, comment = comment, encryption = encryption, compression = compression, generatePublicDirectory = generatePublicDirectory, iterations = iterations, password = password)
         return DocumentsTransactionModel.from_json(self.__rest._post("/documents/transaction", model))
             
-    def documents_transaction_add_item(self, transaction_id, name, content_type, filepath, comment = None) :
+    def documents_transaction_add_item(self, transaction_id, name, filepath, content_type = None, comment = None) :
         """
         Adds another document to a pending transaction of multi-documents.
 
         Args:
             transaction_id (:obj:`str`): Id of the ongoing transaction.
             name (:obj:`str`): File name.
-            content_type (:obj:`str`): File mime-type.
             filepath (:obj:`str`): Path to the file to upload.
+            content_type (:obj:`str`, optional): File mime-type. 
+                If None, it will try to guess the mime-type based on the file extension.
             comment (:obj:`str`, optional): Additional comment.
         Returns:
             :obj:`bool`: True if success
@@ -780,12 +782,15 @@ class RestChain :
             >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
             >>> resp = chain.documents_begin_transaction(comment ='Using parameters')
             >>> transaction_id = resp.transactionId
-            >>> chain.documents_transaction_add_item(transaction_id, "item1.txt", "text/plain", "./test.txt"
-            >>> chain.documents_transaction_add_item(transaction_id, "item2.txt", "text/plain", "./test2.txt", "This file has a comment."
+            >>> chain.documents_transaction_add_item(transaction_id, "item1.txt", "./test.txt")
+            >>> chain.documents_transaction_add_item(transaction_id, "item2.txt", "./test2.txt", comment = "This file has a comment.")
         """
         query = f"/documents/transaction/{transaction_id}?name={name}"
         if comment :
             query += f"&comment={comment}"
+        
+        if not content_type :
+            content_type = mimetypes.MimeTypes().guess_type(filepath)[0]
         
         resp = self.__rest._post_file(query, filepath, content_type)
         if resp.status_code == 200 :
