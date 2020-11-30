@@ -90,8 +90,10 @@ def string2datetime(time_string) :
     Returns:
         :obj:`datetime.datetime`: date time object.
     """
-    time_string = re.sub('([+-][0-9]{2}):([0-9]{2})', '\\1\\2', time_string)
-    time_string = re.sub('(\.[0-9]{1,6})([0-9]*)', '\\1', time_string)
+    # Replacing timezone format from 00:00 to 0000
+    time_string = re.sub(r'([+-][0-9]{2}):([0-9]{2})', '\\1\\2', time_string)
+    # Croping extra digits of seconds' decimal (max 6 digits)
+    time_string = re.sub(r'(\.[0-9]{1,6})([0-9]*)', '\\1', time_string)
     if '.' in time_string :
         return datetime.datetime.strptime(time_string,'%Y-%m-%dT%H:%M:%S.%f%z')
     else :

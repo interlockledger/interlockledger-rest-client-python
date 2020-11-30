@@ -245,7 +245,7 @@ class AppsModel(BaseModel) :
         
         @staticmethod
         def __safe(name):
-            return re.sub('[\s\\\/:""<>|\*\?]+', '_', name) 
+            return re.sub(r'[\s\\\/:""<>|\*\?]+', '_', name) 
 
         def __eq__(self, other) :
             """ :obj:`bool`: Return True if self and other have the same id and appVersion."""
