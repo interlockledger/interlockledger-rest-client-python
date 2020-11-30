@@ -695,7 +695,11 @@ class DocumentsBeginTransactionModel(BaseModel) :
             - GZIP: Compression of the data using the gzip standard;\n
             - BROTLI: Compression of the data using the brotli standard;\n
             - ZSTD: Compression of the data using the ZStandard from Facebook (In the future).
-        encryption (:obj:`str`): The encryption descriptor in the <pbe>-<hash>-<cipher>-<level> format
+        encryption (:obj:`str`): The encryption descriptor in the <pbe>-<hash>-<cipher>-<level> format.
+            Examples:\n
+            - "PBKDF2-SHA256-AES256-LOW"
+            - "PBKDF2-SHA512-AES256-MID"
+            - "PBKDF2-SHA256-AES128-HIGH"
         generatePublicDirectory (:obj:`bool`): If the publically viewable PublicDirectory field should be created.
         iterations (:obj:`int`): Override for the number of PBE iterations to generate the key.
         password (:obj:`bytes`): Password as bytes if Encryption is not null.
@@ -707,7 +711,7 @@ class DocumentsBeginTransactionModel(BaseModel) :
         self.encryption = encryption 
         self.generatePublicDirectory = generatePublicDirectory
         self.iterations = iterations
-        self.password = password 
+        self.password = to_bytes(password)
 
 class DocumentsTransactionModel(BaseModel) :
     """

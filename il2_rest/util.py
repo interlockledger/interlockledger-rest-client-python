@@ -119,7 +119,7 @@ def to_bytes(value) :
     elif type(value) is bytes :
         return value
     elif type(value) is str :
-        return value.encode()
+        return value.encode('utf-8')
     else :
         return bytes(value)
 
