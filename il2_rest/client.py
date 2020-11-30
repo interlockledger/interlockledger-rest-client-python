@@ -727,6 +727,10 @@ class RestChain :
             generatePublicDirectory (:obj:`bool`): If the publically viewable PublicDirectory field should be created.
             iterations (:obj:`int`): Override for the number of PBE iterations to generate the key.
             encryption (:obj:`str`): The encryption descriptor in the <pbe>-<hash>-<cipher>-<level> format
+                Examples:\n
+                - "PBKDF2-SHA256-AES256-LOW" 
+                - "PBKDF2-SHA512-AES256-MID"
+                - "PBKDF2-SHA256-AES128-HIGH"
             password (:obj:`bytes`): Password as bytes if Encryption is not null.
             model (:obj:`il2_rest.models.DocumentsBeginTransactionModel`, optional): 
         
