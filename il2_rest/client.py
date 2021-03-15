@@ -123,13 +123,13 @@ class RestChain :
     def records(self):
         """:obj:`list` of :obj:`il2_rest.models.RecordModel`: List of records in the chain."""
         json_data = self.__rest._get(f'/records@{self.id}')
-        return [RecordModel.from_json(item) for item in json_data]
+        return [RecordModel.from_json(item) for item in json_data['items']]
     
     @property
     def records_as_json(self):
         """:obj:`list` of :obj:`il2_rest.models.RecordModelAsJson`: List of records in the chain with payload mapped to JSON."""
         json_data = self.__rest._get(f'/records@{self.id}/asJson')
-        return [RecordModelAsJson.from_json(item) for item in json_data]
+        return [RecordModelAsJson.from_json(item) for item in json_data['items']]
     
     @property
     def json_documents(self):
@@ -418,7 +418,7 @@ class RestChain :
         if lastSerial :
             cur_curl += f"&lastSerial={lastSerial}"
         json_data = self.__rest._get(cur_curl)
-        return [RecordModel.from_json(item) for item in json_data]
+        return [RecordModel.from_json(item) for item in json_data['items']]
 
     def records_from_as_json(self, firstSerial, lastSerial = None) :
         """
@@ -435,7 +435,7 @@ class RestChain :
         if lastSerial :
             cur_curl += f"&lastSerial={lastSerial}"
         json_data = self.__rest._get(cur_curl)
-        return [RecordModelAsJson.from_json(item) for item in json_data]
+        return [RecordModelAsJson.from_json(item) for item in json_data['items']]
 
     def record_at(self, serial) :
         """
