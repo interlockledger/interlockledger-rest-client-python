@@ -881,30 +881,44 @@ class RestNode :
         network (:obj:`RestNetwork`): Network information client.
     """
 
-    def __init__(self, cert_file, cert_pass, port = NetworkPredefinedPorts.MainNet.value, address = 'localhost') :
+    def __init__(self, cert_file, cert_pass, port = NetworkPredefinedPorts.MainNet.value, address = 'localhost', verify_ca=True) :
         if port is None :
             port  = NetworkPredefinedPorts.MainNet.value
         
+        self.verify_ca = verify_ca
         self.base_uri = uri.URI(f'https://{address}:{port}/')
         self.__certificate = self.__get_cert_from_file(cert_file, cert_pass)
         self.network = RestNetwork(self)
+        self._session = None
+        self.__pem_file = None
 
-    
+    def __del__(self) :
+        if self.__pem_file :
+            # Making sure to delete the temp pem file
+            self.__pem_file.close()
+            pass
+
+
+    def _get_session(self) :
+        if not self._session :
+            self.__pfx_to_pem()
+            self._session = requests.Session()
+            self._session.cert = self.__pem_file.name
+            self._session.verify = self.verify_ca
+        return self._session
+
     def __get_cert_from_file(self, cert_path, cert_pass) :
         return crypto.load_pkcs12(open(cert_path, 'rb').read(), cert_pass.encode())
 
     @contextlib.contextmanager
     def __pfx_to_pem(self) :
-        with tempfile.NamedTemporaryFile(suffix='.pem') as t_pem: 
-            f_pem = open(t_pem.name, 'wb')
-            f_pem.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, self.__certificate.get_privatekey()))
-            f_pem.write(crypto.dump_certificate(crypto.FILETYPE_PEM, self.__certificate.get_certificate()))
-            #ca = self.__certificate.get_ca_certificates()
-            #if ca is not None :
-            #    for cert in ca :
-            #        f_pem.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
-            f_pem.close()
-            yield t_pem.name
+        self.__pem_file = tempfile.NamedTemporaryFile(suffix='.pem')
+        f_pem = open(self.__pem_file.name, 'wb')
+        f_pem.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, self.__certificate.get_privatekey()))
+        f_pem.write(crypto.dump_certificate(crypto.FILETYPE_PEM, self.__certificate.get_certificate()))
+        f_pem.close()
+        print(self.__pem_file.name)
+        
 
 
     @property
@@ -1070,31 +1084,29 @@ class RestNode :
     
     def _download_file(self, url, dst_path = './') :
         cur_uri = uri.URI(self.base_uri, path = url)
-        with self.__pfx_to_pem() as cert :
-            with requests.get(cur_uri, cert = cert, stream = True, verify = False) as r:
-                d = r.headers['content-disposition']
-                filename = re.findall("filename=(.+);", d)[0]
-                filepath = os.path.join(dst_path, filename)
-                with open(filepath, 'wb') as f :
-                    shutil.copyfileobj(r.raw, f)
+        s = self._get_session()
+        with s.get(cur_uri, stream = True) as r:
+            d = r.headers['content-disposition']
+            filename = re.findall("filename=(.+);", d)[0]
+            filepath = os.path.join(dst_path, filename)
+            with open(filepath, 'wb') as f :
+                shutil.copyfileobj(r.raw, f)
         return
 
     def _get_raw_response(self, url, method, accept) :
         cur_uri = uri.URI(self.base_uri, path = url)
-        
-        with self.__pfx_to_pem() as cert :
-            response = requests.request(method = method, url = cur_uri, stream = True,
-                                headers={'Accept': accept}, cert = cert, verify = False)
+        s = self._get_session()
+        response = s.request(method = method, url = cur_uri, stream = True,
+                                headers={'Accept': accept})
         
         self.__treat_response_error(response)
         return response
 
     def _prepare_request(self, url, method, accept) :
         cur_uri = uri.URI(self.base_uri, path = url)
-        
-        with self.__pfx_to_pem() as cert :
-            response = requests.request(method = method, url = cur_uri, stream = True,
-                                headers={'Accept': accept}, cert = cert, verify = False)
+        s = self._get_session()
+        response = s.request(method = method, url = cur_uri, stream = True,
+                                headers={'Accept': accept})
         
         self.__treat_response_error(response)
         return response
@@ -1108,9 +1120,8 @@ class RestNode :
             json_data = BaseModel.to_json(body)
         headers = {'Accept': accept,
                    'Content-type' : "application/json; charset=utf-8"}
-        with self.__pfx_to_pem() as cert :
-            response = requests.post(url = cur_uri, headers=headers,
-                                    json = json_data, cert = cert, verify = False)
+        s = self._get_session()
+        response = s.post(url = cur_uri, headers=headers, json = json_data)
         
         self.__treat_response_error(response)
         return response
@@ -1121,9 +1132,8 @@ class RestNode :
         headers = {'Accept': accept,
                    'Content-type' : contentType}
         
-        with self.__pfx_to_pem() as cert :
-            response = requests.post(url = cur_uri, data = body, headers=headers, 
-                        cert = cert, verify = False)
+        s = self._get_session()
+        response = s.post(url = cur_uri, data = body, headers=headers)
         self.__treat_response_error(response)
         return response
 
@@ -1132,10 +1142,9 @@ class RestNode :
         headers = {'Accept': accept,
                    'Content-type' : contentType}
         
-        with self.__pfx_to_pem() as cert :
-            with open(file_path, 'rb') as f :
-                response = requests.post(url = cur_uri, data = f, headers=headers, 
-                            cert = cert, verify = False)
+        s = self._get_session()
+        with open(file_path, 'rb') as f :
+            response = s.post(url = cur_uri, data = f, headers=headers)
         self.__treat_response_error(response)
         return response
 
