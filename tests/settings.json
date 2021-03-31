@@ -1,0 +1,10 @@
+{
+    "host":{
+        "address":"node.il2",
+        "port": 32022
+    },
+    "certificate" :{
+        "path":"use local_settings.json to specify your path",
+        "password":"use local_settings.json to specify the password"
+    }
+}
