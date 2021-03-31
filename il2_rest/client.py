@@ -37,6 +37,7 @@ import re
 import mimetypes
 import shutil
 from OpenSSL import crypto
+from cryptography.hazmat.primitives.serialization import pkcs12
 #from cryptography.hazmat.primitives.serialization import Encoding
 
 
@@ -875,6 +876,7 @@ class RestNode :
         cert_pass (:obj:`str`): Password of the .pfx certificate.
         port (:obj:`int`): Port number to connect.
         address (:obj:`str`): Address of the node.
+        verify_ca (:obj:`bool`): If True, checks CA.
 
     Attributes:
         base_uri (:obj:`uri.URI`): The base URI address of the node.
@@ -896,9 +898,9 @@ class RestNode :
         if self.__pem_file :
             # Making sure to delete the temp pem file
             self.__pem_file.close()
-            pass
-
-
+        if self._session :
+            self._session.close()
+    
     def _get_session(self) :
         if not self._session :
             self.__pfx_to_pem()
@@ -908,7 +910,9 @@ class RestNode :
         return self._session
 
     def __get_cert_from_file(self, cert_path, cert_pass) :
-        return crypto.load_pkcs12(open(cert_path, 'rb').read(), cert_pass.encode())
+        with open(cert_path, 'rb') as f :
+            pkcs_cert = crypto.load_pkcs12(f.read(), cert_pass.encode())
+        return pkcs_cert
 
     @contextlib.contextmanager
     def __pfx_to_pem(self) :
@@ -917,9 +921,12 @@ class RestNode :
         f_pem.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, self.__certificate.get_privatekey()))
         f_pem.write(crypto.dump_certificate(crypto.FILETYPE_PEM, self.__certificate.get_certificate()))
         f_pem.close()
-        print(self.__pem_file.name)
-        
 
+
+    @property
+    def api_version(self) :
+        """:obj:`str`: IL2 API version."""
+        return self._get('/apiVersion')
 
     @property
     def certificate_name(self) :
@@ -958,9 +965,9 @@ class RestNode :
     def add_mirrors_of(self, new_mirrors) :
         """
         Add new mirrors in this node.
-    
+        
         Args:
-            new_mirrors (:obj:`list` of :obj:`str`): List of mirrors chain ids.
+            new_mirrors (:obj:`list` of :obj:`str`): List of chain ids you want to mirror.
 
         Returns:
             :obj:`list` of :obj:`il2_rest.models.ChainIdModel`: List of the chain information.
