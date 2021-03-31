@@ -175,7 +175,7 @@ class AppsModel(BaseModel) :
         self.validApps = []
         for item in validApps :
             self.validApps.append(item if isinstance(item, self.PublishedApp) else self.PublishedApp.from_json(item))
-        
+                
     @functools.total_ordering
     class PublishedApp(BaseModel) :
         """
@@ -322,8 +322,14 @@ class DataModel(BaseModel) :
     """
     def __init__(self, description = None, dataFields = None, indexes = None, payloadName = None, payloadTagId = None, version = None, **kwargs) :
         self.description = description
-        self.dataFields = [item if isinstance(item, self.DataFieldModel) else self.DataFieldModel.from_json(item) for item in dataFields]
-        self.indexes = [item if isinstance(item, self.DataIndexModel) else self.DataIndexModel.from_json(item) for item in indexes]
+        if dataFields :
+            self.dataFields = [item if isinstance(item, self.DataFieldModel) else self.DataFieldModel.from_json(item) for item in dataFields]
+        else :
+            self.dataFields = []
+        if indexes :
+            self.indexes = [item if isinstance(item, self.DataIndexModel) else self.DataIndexModel.from_json(item) for item in indexes]
+        else :
+            self.indexes = []
         self.payloadName = payloadName
         self.payloadTagId = payloadTagId
         self.version = version
