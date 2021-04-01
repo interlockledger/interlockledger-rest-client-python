@@ -35,6 +35,8 @@ import re
 import json
 import datetime
 import base64
+from OpenSSL import crypto
+from cryptography.hazmat.primitives.serialization import pkcs12
 
 from enum import Enum
 from packaging import version
@@ -241,6 +243,27 @@ class LimitedRange :
         """
         return other.start in self or other.end in self or self in other
     
+
+class PKCS12Certificate :
+    def __init__(self, path, password) :
+        self.__pkcs12_cert = self.__get_cert_from_file(path, password)
+        
+    @property
+    def friendly_name(self) :
+        return self.__pkcs12_cert.get_friendlyname()
+
+    @property
+    def private_key(self) :
+        return crypto.dump_privatekey(crypto.FILETYPE_PEM, self.__pkcs12_cert.get_privatekey())
+    
+    @property
+    def public_certificate(self) :
+        return crypto.dump_certificate(crypto.FILETYPE_PEM, self.__pkcs12_cert.get_certificate())
+
+    def __get_cert_from_file(self, cert_path, cert_pass) :
+        with open(cert_path, 'rb') as f :
+            pkcs_cert = crypto.load_pkcs12(f.read(), cert_pass.encode())
+        return pkcs_cert
 
 
 if __name__ == '__main__' :

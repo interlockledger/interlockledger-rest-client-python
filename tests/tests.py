@@ -3,6 +3,7 @@ import json
 import os
 from il2_rest import RestNode, RestChain
 from il2_rest.models import *
+from il2_rest.util import *
 
 def load_settings(filepath = './'):
     def mergedicts(dict1, dict2):
@@ -38,7 +39,8 @@ def load_settings(filepath = './'):
 
     return settings
 
-class TestRestNode(unittest.TestCase) :
+
+class TestIl2Rest(unittest.TestCase) :
     def setUp(self) :
         args = load_settings('./tests')
         self.cert_path = args['certificate']['path']
@@ -46,18 +48,63 @@ class TestRestNode(unittest.TestCase) :
         self.address = args['host']['address']
         self.port_number = args['host']['port']
 
-    
-    def test_rest_node(self) :
+    #@unittest.SkipTest
+    def test_rest_node_get(self) :
+        print('Checking RestNode get methods...')
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
-        self.assertIsInstance(node.details, NodeDetailsModel)
-        print(node.details)
-        print(node.details)
-        print(node.details)
-        print(node.details)
-        print(node.details)
-        print(node.details)
         
+        details = node.details
+        self.assertIsInstance(details, NodeDetailsModel)
+        
+        api_version = node.api_version
+        self.assertIsInstance(api_version, str)
 
+        apps = node.network.apps
+        self.assertIsInstance(apps, AppsModel)
+
+        peers = node.peers
+        self.assertIsInstance(peers, list)
+        for peer in peers:
+            self.assertIsInstance(peer, PeerModel)
+        
+        mirrors = node.mirrors
+        self.assertIsInstance(mirrors, list)
+        for mirror in mirrors :
+            self.assertIsInstance(mirror, RestChain)
+
+    #@unittest.SkipTest
+    def test_chains_get(self) :
+        print('Checking RestChain get methods...')
+        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
+        chain_list = node.chains
+        self.assertIsInstance(chain_list, list)
+        for chain in chain_list :
+            self.assertIsInstance(chain, RestChain)
+            self.assertIsInstance(chain.summary, ChainSummaryModel)
+            self.assertIsInstance(chain.active_apps, list)
+            #interlocks = chain.interlocks
+            #self.assertIsInstance(interlocks)
+            break
+    
+    def test_json_docs(self) :
+        print('Checking JsonDocs...')
+        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
+        chain = node.chains[0]
+        json_body = {"attribute_1":"value_1", "number_1": 1}
+        #response = chain.store_json_document(json_body)
+        response = chain.json_document_at(11)
+        self.assertIsInstance(response, JsonDocumentRecordModel)
+        print(response.encryptedJson.decode_with(None))
+
+    def test_pkcs12_certificate(self) :
+        print('Checking PKCS12Certificate...')        
+        certificate = PKCS12Certificate(path=self.cert_path, password = self.cert_pass)
+        self.assertIsNotNone(certificate.friendly_name)
+        self.assertIsNotNone(certificate.private_key)
+        self.assertIsNotNone(certificate.public_certificate)
+
+
+        
 
 if __name__=='__main__' :
     unittest.main()

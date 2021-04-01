@@ -36,9 +36,6 @@ import base64
 import re
 import mimetypes
 import shutil
-from OpenSSL import crypto
-from cryptography.hazmat.primitives.serialization import pkcs12
-#from cryptography.hazmat.primitives.serialization import Encoding
 
 
 from .enumerations import NetworkPredefinedPorts
@@ -65,6 +62,7 @@ from .models import DocumentsBeginTransactionModel
 from .models import DocumentsTransactionModel
 from .models import DocumentsMetadataModel
 from .util import build_query
+from .util import PKCS12Certificate
 
 
 class RestChain :
@@ -889,7 +887,8 @@ class RestNode :
         
         self.verify_ca = verify_ca
         self.base_uri = uri.URI(f'https://{address}:{port}/')
-        self.__certificate = self.__get_cert_from_file(cert_file, cert_pass)
+        #self.__certificate = self.__get_cert_from_file(cert_file, cert_pass)
+        self.__certificate = PKCS12Certificate(cert_file, cert_pass)
         self.network = RestNetwork(self)
         self._session = None
         self.__pem_file = None
@@ -909,17 +908,13 @@ class RestNode :
             self._session.verify = self.verify_ca
         return self._session
 
-    def __get_cert_from_file(self, cert_path, cert_pass) :
-        with open(cert_path, 'rb') as f :
-            pkcs_cert = crypto.load_pkcs12(f.read(), cert_pass.encode())
-        return pkcs_cert
 
     @contextlib.contextmanager
     def __pfx_to_pem(self) :
         self.__pem_file = tempfile.NamedTemporaryFile(suffix='.pem')
         f_pem = open(self.__pem_file.name, 'wb')
-        f_pem.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, self.__certificate.get_privatekey()))
-        f_pem.write(crypto.dump_certificate(crypto.FILETYPE_PEM, self.__certificate.get_certificate()))
+        f_pem.write(self.__certificate.private_key)
+        f_pem.write(self.__certificate.public_certificate)
         f_pem.close()
 
 
@@ -931,7 +926,7 @@ class RestNode :
     @property
     def certificate_name(self) :
         """:obj:`str`: Certificate friendly name."""
-        return self.__certificate.get_friendlyname()
+        return self.__certificate.friendly_name
     
     @property
     def chains(self):
