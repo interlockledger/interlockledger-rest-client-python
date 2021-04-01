@@ -222,10 +222,15 @@ class AppsModel(BaseModel) :
             self.name = name
             self.publisherId = publisherId
             self.publisherName = publisherName
+            if isinstance(dataModels,list) :
+                self.dataModels = [item if isinstance(item, DataModel) else DataModel.from_json(item) for item in dataModels]
+            else :
+                self.dataModels = []
 
-            self.dataModels = [item if isinstance(item, DataModel) else DataModel.from_json(item) for item in dataModels]
-
-            self.reservedILTagIds = [item if isinstance(item, LimitedRange) else LimitedRange.resolve(item) for item in reservedILTagIds]
+            if isinstance(reservedILTagIds,list) :
+                self.reservedILTagIds = [item if isinstance(item, LimitedRange) else LimitedRange.resolve(item) for item in reservedILTagIds]
+            else :
+                self.reservedILTagIds = []
             #for item in reservedILTagIds :
             #    self.reservedILTagIds.append(item if type(item) is LimitedRange else LimitedRange.resolve(item))
             self.simplifiedHashCode = simplifiedHashCode
@@ -1225,16 +1230,61 @@ class JsonDocumentRecordModel(RecordModelBase) :
         jsonText (:obj:`str`): JSON document as string.
         network (:obj:`str`): Network name this chain is part.
         reference (:obj:`str`): Universal reference of this record.
+        encyptedJson (:obj:`EncryptedTextModel`): JSON Documents encrypted text.
     """
     def __init__(self, applicationId = None, chainId = None, createdAt = None, rec_hash = None, 
                  payloadTagId = None, serial = None, rec_type = None, version = None,
-                 jsonText = None, network = None, reference = None, **kwargs) :
+                 jsonText = None, network = None, reference = None, encryptedJson = None, **kwargs) :
         rec_hash = kwargs.get('hash', rec_hash)
         rec_type = kwargs.get('type', rec_type)
         super().__init__(applicationId, chainId, createdAt, rec_hash, payloadTagId, serial, rec_type, version, **kwargs)
         self.jsonText = jsonText
         self.network = network
         self.reference = reference
+        self.encryptedJson = encryptedJson if isinstance(encryptedJson, EncryptedTextModel) else EncryptedTextModel.from_json(encryptedJson)
+    
+class EncryptedTextModel(BaseModel) :
+    """
+    JSON Documents encrypted text.
+
+    Attributes:
+        cipher (:obj:`il2_rest.enumerations.CipherAlgorithms`): Cipher algorithm used to cipher the text.
+        cipherText (:obj:`str`): Encrypted text.
+        readingKeys (:obj:`list` of `ReadiReadingKeyModel`): List of keys able to read this encrypted text.
+    """
+    def __init__(self, cipher = None, cipherText = None, readingKeys = None, **kwargs):
+        self.cipher = cipher if isinstance(cipher, CipherAlgorithms) else CipherAlgorithms(cipher)
+        self.cipherText = cipherText
+        if readingKeys and isinstance(readingKeys, list):
+            self.readingKeys = [item if isinstance(item, ReadingKeyModel) else ReadingKeyModel.from_json(item) for item in readingKeys]
+        else :
+            self.readingKeys = []
+
+    def decode_with(self, certificate) :
+        """
+        Decode the encrypted JSON Document text using the keys inside the certificate.
+        Args:
+            certificate (:obj:``): Certificate with keys to decode the text.
+
+        Returns:
+            :obj:`str`: Decoded text.
+        """
+        return "TODO"
+    
+class ReadingKeyModel(BaseModel) :
+    """
+    Keys able to read an encrypted JSON Document record.
+
+    Attributes:
+        encryptedIV (:obj:`str`): TODO.
+        encryptedKey (:obj:`str`): TODO.
+        publicKeyHash (:obj:`str`): TODO.
+    """
+    def __init__(self, encryptedIV = None, encryptedKey = None, publicKeyHash = None, 
+                readerId = None, **kwargs) :
+        self.encryptedIV = encryptedIV
+        self.encryptedKey = encryptedKey
+        self.publicKeyHash = publicKeyHash
 
 
 class Versions(BaseModel) :
