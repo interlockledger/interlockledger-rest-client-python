@@ -48,7 +48,7 @@ class TestIl2Rest(unittest.TestCase) :
         self.address = args['host']['address']
         self.port_number = args['host']['port']
 
-    #@unittest.SkipTest
+    @unittest.SkipTest
     def test_rest_node_get(self) :
         print('Checking RestNode get methods...')
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
@@ -72,7 +72,7 @@ class TestIl2Rest(unittest.TestCase) :
         for mirror in mirrors :
             self.assertIsInstance(mirror, RestChain)
 
-    #@unittest.SkipTest
+    @unittest.SkipTest
     def test_chains_get(self) :
         print('Checking RestChain get methods...')
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
@@ -82,10 +82,55 @@ class TestIl2Rest(unittest.TestCase) :
             self.assertIsInstance(chain, RestChain)
             self.assertIsInstance(chain.summary, ChainSummaryModel)
             self.assertIsInstance(chain.active_apps, list)
-            #interlocks = chain.interlocks
-            #self.assertIsInstance(interlocks)
+            interlocks = chain.interlocks()
+            self.assertIsInstance(interlocks, PageOfModel)
+            if interlocks.items :
+                self.assertIsInstance(interlocks.items[0], InterlockingRecordModel)
+            keys = chain.permitted_keys
+            if keys :
+                self.assertIsInstance(keys[0], KeyModel)
+            records = chain.records()
+            self.assertIsInstance(records, PageOfModel)
+            if records.items :
+                self.assertIsInstance(records.items[0], RecordModel)
+            records = chain.records_as_json()
+            self.assertIsInstance(records, PageOfModel)
+            if records.items :
+                self.assertIsInstance(records.items[0], RecordModelAsJson)
+            break
+
+    #@unittest.SkipTest
+    def test_page_of_methods(self) :
+        print('Checking records methods...')
+        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
+        chain_list = node.chains
+        self.assertIsInstance(chain_list, list)
+        for chain in chain_list :
+            interlocks = chain.interlocks()
+            self.assertEqual(interlocks.page, 0)
+            self.assertEqual(interlocks.pageSize, 10)
+            interlocks = chain.interlocks(pageSize = 20)
+            self.assertEqual(interlocks.pageSize, 20)           
+            
+            
+            records = chain.records()
+            self.assertEqual(records.page, 0)
+            self.assertEqual(records.pageSize, 10)
+            records = chain.records(page = 1)
+            self.assertEqual(records.page, 1)
+            records = chain.records(pageSize = 20)
+            self.assertEqual(records.pageSize, 20)
+
+            records = chain.records_as_json()
+            self.assertEqual(records.page, 0)
+            self.assertEqual(records.pageSize, 10)
+            records = chain.records_as_json(page = 1)
+            self.assertEqual(records.page, 1)
+            records = chain.records_as_json(pageSize = 20)
+            self.assertEqual(records.pageSize, 20)
             break
     
+    @unittest.SkipTest
     def test_json_docs(self) :
         print('Checking JsonDocs...')
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
@@ -94,8 +139,10 @@ class TestIl2Rest(unittest.TestCase) :
         #response = chain.store_json_document(json_body)
         response = chain.json_document_at(11)
         self.assertIsInstance(response, JsonDocumentRecordModel)
-        print(response.encryptedJson.decode_with(None))
+        pkcs12_cert = PKCS12Certificate(path=self.cert_path, password = self.cert_pass)
+        print(response.encryptedJson.decode_with(pkcs12_cert))
 
+    @unittest.SkipTest
     def test_pkcs12_certificate(self) :
         print('Checking PKCS12Certificate...')        
         certificate = PKCS12Certificate(path=self.cert_path, password = self.cert_pass)

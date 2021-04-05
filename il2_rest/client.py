@@ -130,18 +130,6 @@ class RestChain :
         json_data = self.__rest._get(f'/chain/{self.id}/key')
         return [KeyModel.from_json(item) for item in json_data]
     
-    
-    def records(self):
-        """:obj:`list` of :obj:`il2_rest.models.RecordModel`: List of records in the chain."""
-        json_data = self.__rest._get(f'/records@{self.id}')
-        return [RecordModel.from_json(item) for item in json_data['items']]
-    
-    @property
-    def records_as_json(self):
-        """:obj:`list` of :obj:`il2_rest.models.RecordModelAsJson`: List of records in the chain with payload mapped to JSON."""
-        json_data = self.__rest._get(f'/records@{self.id}/asJson')
-        return [RecordModelAsJson.from_json(item) for item in json_data['items']]
-    
     @property
     def json_documents(self):
         """:obj:`list` of :obj:`il2_rest.models.JsonDocumentRecordModel`: List of JSON document records in the chain."""
@@ -414,39 +402,51 @@ class RestChain :
         return [KeyModel.from_json(item) for item in json_data]
 
     
-    def records_from(self, firstSerial, lastSerial = None, page = 0, pageSize = 10) :
+    def records(self, firstSerial = None, lastSerial = None, page = 0, pageSize = 10) :
         """
         Get list of records starting from a given serial number.
 
         Args:
-            firstSerial (:obj:`int`): Starting serial number.
+            firstSerial (:obj:`int`, optional): Starting serial number.
             lastSerial (:obj:`int`, optional): Last serial number.
+            page (:obj:`int`, optional): Page to return (Default is 0).
+            pageSize (:obj:`int`, optional): Number of items per page (Default is 10). If 0 returns all.
 
         Returns:
-            :obj:`list` of :obj:`il2_rest.models.RecordModel`: List of records in the given interval.
+            :obj:`il2_rest.models.PageOfModel` of :obj:`il2_rest.models.RecordModel`: List of records in the given interval.
         """
-        cur_curl = f"/records@{self.id}?firstSerial={firstSerial}&page={page}&pageSize={pageSize}"
+        cur_curl = f"/records@{self.id}?page={page}&pageSize={pageSize}"
+        if firstSerial :
+            cur_curl += f"&firstSerial={firstSerial}"
         if lastSerial :
             cur_curl += f"&lastSerial={lastSerial}"
         json_data = self.__rest._get(cur_curl)
-        return [RecordModel.from_json(item) for item in json_data['items']]
+        json_data['itemClass'] = RecordModel
+        #return [RecordModel.from_json(item) for item in json_data['items']]
+        return PageOfModel.from_json(json_data)
 
-    def records_from_as_json(self, firstSerial, lastSerial = None, page = 0, pageSize = 10) :
+    def records_as_json(self, firstSerial = None, lastSerial = None, page = 0, pageSize = 10) :
         """
         Get list of records with payload mapped to JSON starting from a given serial number.
 
         Args:
-            firstSerial (:obj:`int`): Starting serial number.
+            firstSerial (:obj:`int`, optional): Starting serial number.
             lastSerial (:obj:`int`, optional): Last serial number.
+            page (:obj:`int`, optional): Page to return (Default is 0).
+            pageSize (:obj:`int`, optional): Number of items per page (Default is 10). If 0 returns all.
 
         Returns:
-            :obj:`list` of :obj:`il2_rest.models.RecordModelAsJson`: List of records mapped to JSON in the given interval.
+            :obj:`il2_rest.models.PageOfModel` of :obj:`il2_rest.models.RecordModelAsJson`: List of records mapped to JSON in the given interval.
         """
-        cur_curl = f"/records@{self.id}/asJson?firstSerial={firstSerial}&page={page}&pageSize={pageSize}"
+        cur_curl = f"/records@{self.id}/asJson?page={page}&pageSize={pageSize}"
+        if firstSerial :
+            cur_curl += f"&firstSerial={firstSerial}"
         if lastSerial :
             cur_curl += f"&lastSerial={lastSerial}"
         json_data = self.__rest._get(cur_curl)
-        return [RecordModelAsJson.from_json(item) for item in json_data['items']]
+        json_data['itemClass'] = RecordModelAsJson
+        #return [RecordModelAsJson.from_json(item) for item in json_data['items']]
+        return PageOfModel.from_json(json_data)
 
     def record_at(self, serial) :
         """
