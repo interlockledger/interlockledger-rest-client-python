@@ -1306,6 +1306,21 @@ class Versions(BaseModel) :
         self.peer2peer = peer2peer
 
 
+class PageOfModel(BaseModel):
+    def __init__(self, items = None, page = None, pageSize = None, totalNumberOfPages = None, itemClass = None, **kwargs) :
+        if not itemClass :
+            raise ValueError('itemClass must be specified.')
+        elif not issubclass(itemClass, BaseModel) :
+            print(type(itemClass), type(BaseModel))
+            raise ValueError('itemClass must be a subclass of BaseModel.')
+        if items :
+            self.items = [itemClass.from_json(item) for item in items]
+        else :
+            self.items = []        
+        self.page = page
+        self.pageSize = pageSize
+        self.totalNumberOfPages = totalNumberOfPages
+
 
 
 if __name__ == '__main__' :
