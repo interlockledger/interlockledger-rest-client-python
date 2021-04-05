@@ -155,7 +155,6 @@ def build_query(args_names, args_values) :
 
 class LimitedRange :
     """ 
-    
     A closed interval of integers represented by the notation '[start-end]'.
     If the range has only one value, the range is represented by '[start]'.
     
@@ -245,19 +244,30 @@ class LimitedRange :
     
 
 class PKCS12Certificate :
+    """ 
+    A PKCS12 certificate interface.    
+    
+    Args:
+            path (:obj:`str`): Path to the .pfx certificate. 
+            password (:obj:`str`): Password of the .pfx certificate.
+    """
+
     def __init__(self, path, password) :
         self.__pkcs12_cert = self.__get_cert_from_file(path, password)
         
     @property
     def friendly_name(self) :
+        """:obj:`str`: Certificate friendly name."""
         return self.__pkcs12_cert.get_friendlyname()
 
     @property
     def private_key(self) :
+        """:obj:`str`: Certificate private key."""
         return crypto.dump_privatekey(crypto.FILETYPE_PEM, self.__pkcs12_cert.get_privatekey())
     
     @property
     def public_certificate(self) :
+        """:obj:`str`: Certificate public certificate."""
         return crypto.dump_certificate(crypto.FILETYPE_PEM, self.__pkcs12_cert.get_certificate())
 
     def __get_cert_from_file(self, cert_path, cert_pass) :

@@ -75,33 +75,6 @@ ChainSummaryModel
     :undoc-members:
     :show-inheritance:
 
-DocumentBaseModel
------------------
-.. autoclass:: il2_rest.models.DocumentBaseModel
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-DocumentDetailsModel
---------------------
-.. autoclass:: il2_rest.models.DocumentDetailsModel
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-DocumentUploadModel
--------------------
-.. autoclass:: il2_rest.models.DocumentUploadModel
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-RawDocumentModel
-----------------
-.. autoclass:: il2_rest.models.RawDocumentModel
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 DocumentUploadConfigurationModel
 --------------------------------
@@ -114,6 +87,13 @@ DocumentUploadConfigurationModel
 DocumentsBeginTransactionModel
 ------------------------------
 .. autoclass:: il2_rest.models.DocumentsBeginTransactionModel
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+DocumentsMetadataModel
+----------------------
+.. autoclass:: il2_rest.models.DocumentsMetadataModel
     :members:
     :undoc-members:
     :show-inheritance:
@@ -215,6 +195,29 @@ InterlockingRecordModel
     :show-inheritance:
 
 
+JsonDocumentRecordModel
+-----------------------
+.. autoclass:: il2_rest.models.JsonDocumentRecordModel
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+EncryptedTextModel
+------------------
+.. autoclass:: il2_rest.models.EncryptedTextModel
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+ReadingKeyModel
+---------------
+.. autoclass:: il2_rest.models.ReadingKeyModel
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+
 Versions
 --------
 .. autoclass:: il2_rest.models.Versions
@@ -222,3 +225,9 @@ Versions
     :undoc-members:
     :show-inheritance:
 
+PageOfModel
+-----------
+.. autoclass:: il2_rest.models.PageOfModel
+    :members:
+    :undoc-members:
+    :show-inheritance:

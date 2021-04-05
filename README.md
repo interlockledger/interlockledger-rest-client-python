@@ -24,7 +24,12 @@ To use the `il2_rest` package, you can add the interlockledger_rest folder to yo
     * pyOpenSSL (19.1.0)
     * requests (2.22.0)
     * uri (2.0.1)
-* InterlockLedger Node Server 4.1.6
+    * pyilint (0.2.0)
+* InterlockLedger Node Server 5.3.2
+* InterlockLedger API v6.0.0
+
+To build the documentation:
+* Sphinx (3.5.3)
 
 ### Installation
 
@@ -34,7 +39,7 @@ pip3 install .
 ```
 
 ## Example
-How to use the interlockledger rest client to store a text document:
+How to use the interlockledger rest client to store a JSON document:
 
 <pre>
 >>> import il2_rest
@@ -50,9 +55,38 @@ Roles: Interlocking,Mirror,PeerRegistry,Relay,User
 Chains: 20i...&lt;REDACTED&gt;..._fc, 5rA...&lt;REDACTED&gt;...Pso
 
 >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
->>> doc_resp = chain.store_document_from_text(content = 'Plain text', name = 'text_file.txt')
+>>> json_body = {"attribute_1":"value_1", "number_1": 1}
+>>> doc_resp = chain.store_json_document(json_body)
 >>> print(doc_resp)
 
-Document 'text_file.txt' [plain/text] z0F...&lt;REDACTED&gt;...CKQ#SHA256
+{
+    "applicationId": 8,
+    "chainId": "UHtrQ...&lt;REDACTED&gt;...XRY",
+    "createdAt": "2021-04-01T01:04:59.989000+00:00",
+    "hash": "bGewIc...&lt;REDACTED&gt;...Ck#SHA256",
+    "payloadTagId": 2100,
+    "serial": 11,
+    "type": "Data",
+    "version": 3,
+    "jsonText": "",
+    "network": "Minerva",
+    "reference": "Minerva:UHtr...&lt;REDACTED&gt;...",
+    "encryptedJson": {
+        "cipher": "AES256",
+        "cipherText": "/IKpN0pb...&lt;REDACTED&gt;...s8V9",
+        "readingKeys": [
+            {
+                "encryptedIV": "G4/xdfi4F...&lt;REDACTED&gt;...QY18m",
+                "encryptedKey": "rifETUkx...&lt;REDACTED&gt;...D+2GDp",
+                "publicKeyHash": "QVxUC2T...&lt;REDACTED&gt;...lE#SHA256"
+            },
+            {
+                "encryptedIV": "ZD8nzLt...&lt;REDACTED&gt;...xeE+",
+                "encryptedKey": "q/9UqXpA...&lt;REDACTED&gt;...4xn4Zx",
+                "publicKeyHash": "QVxUC2T2B...&lt;REDACTED&gt;...lE#SHA256"
+            }
+        ]
+    }
+}
 </pre>
 

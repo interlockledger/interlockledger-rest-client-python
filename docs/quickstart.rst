@@ -133,8 +133,8 @@ Then, you can add as many files you wish using the transaction id:
 
 .. code-block:: python3
 
-    >>> chain.documents_transaction_add_item(transaction_id, "item1.txt", "text/plain", "./test.txt"
-    >>> chain.documents_transaction_add_item(transaction_id, "item2.txt", "text/plain", "./test2.txt", "This file has a comment."
+    >>> chain.documents_transaction_add_item(transaction_id, "item1.txt", "./test.txt", "text/plain")
+    >>> chain.documents_transaction_add_item(transaction_id, "item2.txt", "./test2.txt", "text/plain", "This file has a comment.")
 
 When you are done, all you need to do is commit the transaction:
 
@@ -154,53 +154,3 @@ Or you can download all files in a compressed in a single file:
 .. code-block:: python3
 
     >>> chain.download_documents_as_zip(locator, '/path/to/download/')
-
-Storing Documents
------------------
-
-.. warning:: 
-    The single document API will be deprecated, please use the Multi-Documents API.
-
-You can store documents using the `il2_rest`. There are three ways to store a document: plain text, bytes or file. To store a text document you can use the following script:
-
-.. code-block:: python3
-
-    >>> doc_resp = chain.store_document_from_text(content = 'Plain text', name = 'text_file.txt')
-    >>> print(doc_resp)
-    Document 'text_file.txt' [plain/text] uXKjPk_ftuMIFv90sJnjJJ0JYc5VoLjCIVaLPdhVP4c#SHA256
-
-If you need to store an array of bytes, you can use the following script:
-
-.. code-block:: python3
-
-    >>> new_document = chain.store_document_from_bytes(doc_bytes = b'Bytes message!', name = 'bytes_file.txt', content_type = 'plain/text')
-    >>> print(new_document)
-    Document 'bytes_file.txt' [plain/text] ZegBNUskzzJRqKvIuOiuhyhJvXJ5YxMJL99ONvqkcXs#SHA256
-
-It is also possible to store an array of bytes by using the ``DocumentUploadModel``:
-
-.. code-block:: python3
-
-    >>> from il2_rest.models import DocumentUploadModel
-    >>> model = DocumentUploadModel(name = 'other_bytes_file.txt', contentType = 'plain/text')
-    >>> new_document = chain.store_document_from_bytes(doc_bytes = b'Other bytes message!', model = model)
-    >>> print(new_document)
-    Document 'other_bytes_file.txt' [plain/text] wLQypXsHLV0H7RdNrrM3NvViA7W1-9pcClPgWGMmF6Q#SHA256
-
-Finally, you can store a file by passing its path:
-
-.. code-block:: python3
-
-    >>> new_document = chain.store_document_from_file(file_path = './test.pdf', content_type = 'application/pdf')
-    >>> print(new_document)
-    Document 'test.pdf' [application/pdf] tZpQvucMOi-FYHNQvI9UaOampVCUPtw3m0Z5TXwuF20#SHA256
-
-.. code-block:: python3
-
-    >>> from il2_rest.models import DocumentUploadModel
-    >>> model = DocumentUploadModel(name = 'my_test.txt', contentType = 'plain/text', cipher = CipherAlgorithms.AES256)
-    >>> new_document = chain.store_document_from_file(file_path = './test.txt', model = model)
-    >>> print(new_document)
-    Document 'my_test.txt' [plain/text] FukEkll0cTDSp4k4zJehM--5ZzjMz-LVeAsSeaMIeeg#SHA256
-
-
