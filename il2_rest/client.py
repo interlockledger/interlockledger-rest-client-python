@@ -61,6 +61,7 @@ from .models import DocumentUploadConfigurationModel
 from .models import DocumentsBeginTransactionModel
 from .models import DocumentsTransactionModel
 from .models import DocumentsMetadataModel
+from .models import PageOfModel
 from .util import build_query
 from .util import PKCS12Certificate
 
@@ -106,11 +107,22 @@ class RestChain :
         json_data = self.__rest._get(f'/documents@{self.id}')
         return [DocumentDetailsModel.from_json(item) for item in json_data]
     
-    @property
-    def interlocks(self):
-        """:obj:`list` of :obj:`il2_rest.models.InterlockingRecordModel`: List of interlocks registered in the chain."""
-        json_data = self.__rest._get(f'/chain/{self.id}/interlockings')
-        return [InterlockingRecordModel.from_json(item) for item in json_data]
+    def interlocks(self, howManyFromLast = 0, page = 0, pageSize = 10) :
+        """
+        Get list of interlocks registered for the chain.
+
+        Args:
+            howManyFromLast (:obj:`int`): How many interlocking records to return. If ommited or 0 returns all.
+            page (:obj:`int`): Page to return.
+            pageSize (:obj:`int`): Number of items per page. If 0 returns all.
+
+        Returns:
+            :obj:`il2_rest.models.PageOfModel` of :obj:`il2_rest.models.InterlockingRecordModel`: List of interlocks registered in the chain.
+        """
+        json_data = self.__rest._get(f'/chain/{self.id}/interlockings?howManyFromLast={howManyFromLast}&page={page}&pageSize={pageSize}')
+        json_data['itemClass'] = InterlockingRecordModel
+        return PageOfModel.from_json(json_data)
+        #return [InterlockingRecordModel.from_json(item) for item in json_data]
     
     @property
     def permitted_keys(self):
@@ -118,7 +130,7 @@ class RestChain :
         json_data = self.__rest._get(f'/chain/{self.id}/key')
         return [KeyModel.from_json(item) for item in json_data]
     
-    @property
+    
     def records(self):
         """:obj:`list` of :obj:`il2_rest.models.RecordModel`: List of records in the chain."""
         json_data = self.__rest._get(f'/records@{self.id}')
@@ -402,7 +414,7 @@ class RestChain :
         return [KeyModel.from_json(item) for item in json_data]
 
     
-    def records_from(self, firstSerial, lastSerial = None) :
+    def records_from(self, firstSerial, lastSerial = None, page = 0, pageSize = 10) :
         """
         Get list of records starting from a given serial number.
 
@@ -413,13 +425,13 @@ class RestChain :
         Returns:
             :obj:`list` of :obj:`il2_rest.models.RecordModel`: List of records in the given interval.
         """
-        cur_curl = f"/records@{self.id}?firstSerial={firstSerial}"
+        cur_curl = f"/records@{self.id}?firstSerial={firstSerial}&page={page}&pageSize={pageSize}"
         if lastSerial :
             cur_curl += f"&lastSerial={lastSerial}"
         json_data = self.__rest._get(cur_curl)
         return [RecordModel.from_json(item) for item in json_data['items']]
 
-    def records_from_as_json(self, firstSerial, lastSerial = None) :
+    def records_from_as_json(self, firstSerial, lastSerial = None, page = 0, pageSize = 10) :
         """
         Get list of records with payload mapped to JSON starting from a given serial number.
 
@@ -430,7 +442,7 @@ class RestChain :
         Returns:
             :obj:`list` of :obj:`il2_rest.models.RecordModelAsJson`: List of records mapped to JSON in the given interval.
         """
-        cur_curl = f"/records@{self.id}/asJson?firstSerial={firstSerial}"
+        cur_curl = f"/records@{self.id}/asJson?firstSerial={firstSerial}&page={page}&pageSize={pageSize}"
         if lastSerial :
             cur_curl += f"&lastSerial={lastSerial}"
         json_data = self.__rest._get(cur_curl)
