@@ -49,13 +49,10 @@ from .models import ChainCreatedModel
 from .models import ChainIdModel
 from .models import ChainSummaryModel
 from .models import KeyModel
-from .models import DocumentDetailsModel
-from .models import RawDocumentModel
 from .models import InterlockingRecordModel
 from .models import RecordModel
 from .models import RecordModelAsJson
 from .models import NewRecordModelAsJson
-from .models import DocumentUploadModel
 from .models import JsonDocumentRecordModel
 from .models import DocumentUploadConfigurationModel
 from .models import DocumentsBeginTransactionModel
@@ -100,12 +97,6 @@ class RestChain :
     def active_apps(self):
         """:obj:`list` of :obj:`int`: Enumerate apps that are currently permitted on this chain."""
         return self.__rest._get(f"/chain/{self.id}/activeApps")
-
-    @property
-    def documents(self):
-        """:obj:`list` of :obj:`il2_rest.models.DocumentDetailsModel`: Enumerate documents that are stored on this chain."""
-        json_data = self.__rest._get(f'/documents@{self.id}')
-        return [DocumentDetailsModel.from_json(item) for item in json_data]
     
     def interlocks(self, howManyFromLast = 0, page = 0, pageSize = 10) :
         """
@@ -259,41 +250,6 @@ class RestChain :
             if payload is None:
                 raise TypeError('payload is None')
             model = NewRecordModelAsJson(applicationId = applicationId, payloadTagId = payloadTagId, rec_type = rec_type, rec_json=payload)
-
-    
-    def document_as_plain(self, fileId) :
-        """
-        Retrieve document from chain as plain text.
-
-        Args:
-            fileId (:obj:`str`): Unique id of the document file.
-
-        Returns:
-            :obj:`str`: Document content as a UTF-8 string.
-        """
-        return self.__rest._call_api_plain_doc(f"/documents@{self.id}/{fileId}", "GET")
-
-    def document_as_raw(self, fileId) :
-        """
-        Retrieve document from chain as raw bytes.
-
-        Args:
-            fileId (:obj:`str`): Unique id of the document file.
-
-        Returns:
-            :obj:`il2_rest.models.RawDocumentModel`: Document model with content as raw bytes.
-        """
-        response = self.__rest._call_api_raw_doc(f"/documents@{self.id}/{fileId}", "GET")
-
-        content = response.content
-        content_type = response.headers['Content-type']
-        content_disposition = response.headers['Content-Disposition']
-        name = re.findall("filename=([^;]+)", content_disposition)[0]
-
-        ret = RawDocumentModel(contentType = content_type, name = name, content = content)
-
-        return ret
-
 
     def force_interlock(self, model) : 
         """
@@ -507,121 +463,6 @@ class RestChain :
             :obj:`str`: JSON document string.
         """
         return self.__rest._get(f'/jsonDocuments@{self.id}/{serial}/asJson')
-    
-
-
-    def store_document_from_bytes(self, doc_bytes, name = None, content_type = None, model = None) :
-        """
-        Store document on chain using bytes.
-
-        If more details is needed to upload the document, please use a :obj:`il2_rest.models.DocumentUploadModel` model.
-
-        Args:
-            doc_bytes (:obj:`bytes`): Document bytes.
-            name (:obj:`str`): Document name (may be a file name with an extension).
-            content_type (:obj:`str`): Document content type (mime-type).
-            model (:obj:`il2_rest.models.DocumentUploadModel`): Model with the description of the new document. **NOTE:**  if model is not None, the other arguments will be ignored.
-
-        Returns:
-            :obj:`il2_rest.models.DocumentDetailsModel`: Added document details.
-
-        Examples:
-            Adding a file document without specifying the name.
-            The file name in the file_path will be used as the name of the document.
-
-            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
-            >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
-            >>> new_document = chain.store_document_from_bytes(doc_bytes = b'Bytes message!', name = 'bytes_file.txt', content_type = 'text/plain')
-            >>> print(new_document)
-            Document 'bytes_file.txt' [text/plain] ZegBNUskzzJRqKvIuOiuhyhJvXJ5YxMJL99ONvqkcXs#SHA256
-
-            Using the model to specify the description of the document.
-
-            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
-            >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
-            >>> model = DocumentUploadModel(name = 'other_bytes_file.txt', contentType = 'text/plain')
-            >>> new_document = chain.store_document_from_bytes(doc_bytes = b'Other bytes message!', model = model)
-            >>> print(new_document)
-            Document 'other_bytes_file.txt' [text/plain] wLQypXsHLV0H7RdNrrM3NvViA7W1-9pcClPgWGMmF6Q#SHA256
-        """
-        if not model :
-            if name is None:
-                raise TypeError('name is None')
-            if content_type is None:
-                raise TypeError('content_type is None')
-            model = DocumentUploadModel(name = name, contentType = content_type)
-        return self.__post_document(doc_bytes, model)
-
-    def store_document_from_file(self, file_path, content_type= None, name = None, model = None) :
-        """
-        Store document on chain using a file.
-
-        If more details is needed to upload the document, please use a :obj:`il2_rest.models.DocumentUploadModel` model.
-
-        Args:
-            file_path (:obj:`bytes`): Filepath of the document file.
-            content_type (:obj:`str`): Document content type (mime-type).
-            name (:obj:`str`, optional): Document name (may be a file name with an extension). Can be derived from the file_path.
-            model (:obj:`il2_rest.models.DocumentUploadModel`): Model with the description of the new document. **NOTE:**  if model is not None, the other arguments will be ignored.
-
-        Returns:
-            :obj:`il2_rest.models.DocumentDetailsModel`: Added document details.
-
-        Examples:
-            Adding a file document without specifying the name.
-            The file name in the file_path will be used as the name of the document.
-
-            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
-            >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
-            >>> new_document = chain.store_document_from_file(file_path = './test.pdf', content_type = 'application/pdf')
-            >>> print(new_document)
-            Document 'test.pdf' [application/pdf] tZpQvucMOi-FYHNQvI9UaOampVCUPtw3m0Z5TXwuF20#SHA256
-
-            Using the model to specify the description of the document.
-
-            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
-            >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
-            >>> model = DocumentUploadModel(name = 'my_test.txt', contentType = 'text/plain', cipher = CipherAlgorithms.AES256)
-            >>> new_document = chain.store_document_from_file(file_path = './test.txt', model = model)
-            >>> print(new_document)
-            Document 'my_test.txt' [text/plain] FukEkll0cTDSp4k4zJehM--5ZzjMz-LVeAsSeaMIeeg#SHA256
-        """
-        if not os.path.isfile(file_path) :
-            raise FileNotFoundError(f"No file '{file_path}' to store as a document!")
-
-        if not model :
-            if content_type is None:
-                raise TypeError('content_type is None')
-            if name is None :
-                name = os.path.basename(file_path)
-
-            model = DocumentUploadModel(name = name, contentType = content_type)
-            
-        return self.__post_file_document(file_path, model)
-
-    def store_document_from_text(self, content, name, content_type = "text/plain") :
-        """
-        Store document on chain using bytes.
-
-        If more details is needed to upload the document, please use a :obj:`il2_rest.models.DocumentUploadModel` model.
-
-        Args:
-            doc_bytes (:obj:`bytes`): Document bytes.
-            content_type (:obj:`str`): Document content type (mime-type).
-            name (:obj:`str`, optional): Document name (may be a file name with an extension). Can be derived from the file_path.
-            model (:obj:`il2_rest.models.DocumentUploadModel`): Model with the description of the new document. **NOTE:**  if model is not None, the other arguments will be ignored.
-
-        Returns:
-            :obj:`il2_rest.models.DocumentDetailsModel`: Added document details.
-
-        Example:
-            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
-            >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
-            >>> new_document = chain.store_document_from_text(content = 'Simple text', name = 'document.txt')
-            >>> print(new_document)
-            Document 'document.txt' [text/plain] d_G2-zQ05L5QZ-omHi7cfyJW1Ses4xovJuFoOUNnxNo#SHA256
-        """
-        return self.store_document_from_bytes(doc_bytes = content.encode('utf-8'), name = name, content_type = content_type)
 
     def store_json_document(self, payload) :
         """
@@ -702,7 +543,7 @@ class RestChain :
             >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
             >>> chain.download_single_document_at('EbAfcWGwCwzuiEtSwIwYQYIHy-g05CZl6jrcBAYuYRIe', 0, '/path/to/download/')
         """
-        self.__rest._download_file(f"/documents/{locator}/{index}")
+        self.__rest._download_file(f"/documents/{locator}/{index}", dst_path=dst_path)
         return
 
     def download_documents_as_zip(self, locator, dst_path = './') :
@@ -718,7 +559,7 @@ class RestChain :
             >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
             >>> chain.download_documents_as_zip('EbAfcWGwCwzuiEtSwIwYQYIHy-g05CZl6jrcBAYuYRIe', '/path/to/download/')
         """
-        self.__rest._download_file(f"/documents/{locator}/zip")
+        self.__rest._download_file(f"/documents/{locator}/zip", dst_path=dst_path)
         return
 
     
@@ -839,13 +680,7 @@ class RestChain :
     
     def __str__(self) :
         return f"Chain '{self.name}' #{self.id} ({self.licensingStatus})"
-        
-
-    def __post_document(self, doc_bytes, model) :
-        return DocumentDetailsModel.from_json(self.__rest._post_raw(f"/documents@{self.id}{model.to_query_string}", doc_bytes, model.contentType).json())
-
-    def __post_file_document(self, filepath, model) :
-        return DocumentDetailsModel.from_json(self.__rest._post_file(f"/documents@{self.id}{model.to_query_string}", filepath, model.contentType).json())
+      
 
 
 

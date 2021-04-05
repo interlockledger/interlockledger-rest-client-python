@@ -99,7 +99,7 @@ class TestIl2Rest(unittest.TestCase) :
                 self.assertIsInstance(records.items[0], RecordModelAsJson)
             break
 
-    #@unittest.SkipTest
+    @unittest.SkipTest
     def test_page_of_methods(self) :
         print('Checking records methods...')
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
@@ -130,6 +130,25 @@ class TestIl2Rest(unittest.TestCase) :
             self.assertEqual(records.pageSize, 20)
             break
     
+    #@unittest.SkipTest
+    def test_multi_document(self) :
+        print('Checking Multi-Docs...')
+        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
+        chain = node.chains[0]
+        response = chain.documents_begin_transaction(comment = 'Test transaction')
+        self.assertIsInstance(response, DocumentsTransactionModel)
+        transaction_id = response.transactionId
+        chain.documents_transaction_add_item(transaction_id, name="item.txt", content_type="text/plain", filepath="./tests/test.txt")
+        locator = chain.documents_transaction_commit(transaction_id)
+
+        chain.download_single_document_at(locator, 0, './tests/')
+        with open('./tests/test.txt','r') as f_in :  
+            with open('./tests/item.txt','r') as f_out :
+                str_in = f_in.readline()
+                str_out = f_out.readline()
+                self.assertEqual(str_in, str_out)
+
+
     @unittest.SkipTest
     def test_json_docs(self) :
         print('Checking JsonDocs...')

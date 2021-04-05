@@ -530,131 +530,6 @@ class ChainSummaryModel(ChainIdModel) :
         self.isClosedForNewTransactions = isClosedForNewTransactions
         self.lastRecord = lastRecord
 
-
-class DocumentBaseModel(BaseModel) :
-    """
-    Document base model.
-
-    Attributes:
-        cipher (:obj:`il2_rest.enumerations.CipherAlgorithms`): Cipher algorithm used to cipher the document.
-        keyId (:obj:`str`): Unique id of key that ciphers this document.
-        name (:obj:`str`):  Document name, may be a file name with an extension.
-        previousVersion (:obj:`str`): A reference to a previous version of this document (ChainId and RecordNumber).
-    """
-    def __init__(self, cipher = CipherAlgorithms.NONE, keyId = None, name = None, previousVersion = None, **kwargs) :
-        self.cipher = cipher if isinstance(cipher, CipherAlgorithms) else CipherAlgorithms(cipher)
-        self.keyId = keyId
-        self.name = name
-        self.previousVersion = previousVersion
-
-    @property
-    def is_ciphered(self):
-        """(:obj:`bool`): Return True if the document is ciphered."""
-        return self.cipher != CipherAlgorithms.NONE and not self.cipher.value.strip()
-    
-
-class DocumentDetailsModel(DocumentBaseModel) :
-    """
-    Document details.
-
-    Attributes:
-        contentType (:obj:`str`): Document content type (mime-type).
-        fileId (:obj:`str`): Unique id of the document derived from its content. The same content stored in different chains will have the same FileId.
-        physicalDocumentID (:obj:`str`): Compound id for this document as stored in this chain.
-    """
-
-    def __init__(self, cipher = CipherAlgorithms.NONE, keyId = None, name = None, previousVersion = None, contentType = None, fileId = None, physicalDocumentID = None, **kwargs):
-        super().__init__(cipher, keyId, name, previousVersion,**kwargs)
-        self.contentType = contentType
-        self.fileId = fileId
-        self.physicalDocumentID = physicalDocumentID
-
-    @property
-    def is_plain_text(self):
-        """(:obj:`bool`): Return True if the content type is plain/text."""
-        return self.contentType == "plain/text"
-
-    def __str__(self) :
-        """(:obj:`str`): String representation of the document: 'Document '{name}' [{contentType}] {fileId}'."""
-        return f"Document '{self.name}' [{self.contentType}] {self.fileId}"
-
-
-class DocumentUploadModel(DocumentBaseModel) :
-    """
-    Document model used to upload/post documents in the chain.
-
-    Attributes:
-        contentType (:obj:`str`): Document content type (mime-type).
-    """
-
-    def __init__(self, cipher = CipherAlgorithms.NONE, keyId = None, name = None, previousVersion = None, contentType = None, **kwargs) :
-        if name is None or not name.strip() :
-            raise ValueError('Document must have a name')
-            
-        if contentType is None or not contentType.strip() :
-            raise ValueError('Document must have a contentType')
-            
-        super().__init__(cipher, keyId, name, previousVersion,**kwargs)
-        self.contentType = contentType
-
-    @property
-    def to_query_string(self) :
-        """(:obj:`str`): Request query representation."""
-        sb = f"?cipher={self.cipher.value}&name={self.name}"
-        if self.keyId :
-            sb += f"&keyId={self.keyId}"
-        if self.previousVersion :
-            sb += f"&previousVersion={self.previousVersion}"
-        return sb
-
-
-
-class RawDocumentModel(BaseModel) :
-    """
-    Document as raw data.
-    
-    Args:
-        contentType (:obj:`str`): Document content type (mime-type).
-        content (:obj:`bytes`/:obj:`bytes`): Content of the document in raw bytes. If loaded from JSON, can be input as a base64 string which will be decoded to bytes.
-        name (:obj:`str`): Document name, may be a file name with an extension.
-
-    Attributes:
-        contentType (:obj:`str`): Document content type (mime-type).
-        content (:obj:`bytes`): Content of the document in raw bytes.
-        name (:obj:`str`): Document name, may be a file name with an extension.
-    """
-
-    def __init__(self, contentType = None, content = None, name = None, **kwargs) :
-        if contentType is None :
-            raise TypeError('contentType is None')
-        if content is None :
-            raise TypeError('content is None')
-        if name is None :
-            raise TypeError('name is None')
-
-        if kwargs.get('from_json') :
-            content = base64.b64decode(content)
-
-
-        self.contentType = contentType
-        self.content = to_bytes(content)
-        self.name = name
-
-    def __str__(self) :
-        return f"Document '{self.name}' [{self.contentType}]{os.linesep}{self.__partialContentAsBase64}"
-
-    @property
-    def __partialContentAsBase64(self) :
-        if not self.content :
-            return "?"
-        else :
-            if self.contentType == 'plain/text':
-                return self.content[:256]+"..." if len(self.content) > 256 else self.content
-            else:
-                converted = base64.b64encode(self.content).decode('utf-8')
-                return converted[:256]+"..." if len(converted) > 256 else converted
-
-
 class DocumentUploadConfigurationModel(BaseModel) :
     """
     Node configuration of uploaded documents.
@@ -1293,17 +1168,17 @@ class Versions(BaseModel) :
 
     Attributes:
         coreLibs (:obj:`str`): Core libraries and il2apps version.
-        messageEnvelopeWireFormat (:obj:`str`): Message envelope wire format version.
-        node (:obj:`str`): Interlockledger node daemon version.
+        main (:obj:`str`): Interlockledger node daemon version.
         peer2peer (:obj:`str`): Peer2Peer connectivity library version.
+        tags (:obj:`str`): Tag-Length-Value library version.
     """
 
-    def __init__(self, coreLibs = None, messageEnvelopeWireFormat = None, node = None, peer2peer = None, **kwargs) :
+    def __init__(self, coreLibs = None, main = None, peer2peer = None, tags = None, **kwargs) :
         
         self.coreLibs = coreLibs
-        self.messageEnvelopeWireFormat = messageEnvelopeWireFormat
-        self.node = node
+        self.main = main
         self.peer2peer = peer2peer
+        self.tags = tags
 
 
 class PageOfModel(BaseModel):
