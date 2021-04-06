@@ -38,6 +38,8 @@ import base64
 from OpenSSL import crypto
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.serialization import pkcs12
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes
 
 from enum import Enum
 from packaging import version
@@ -277,6 +279,21 @@ class PKCS12Certificate :
         return self.__pkcs12_cert[1].public_bytes(encoding=serialization.Encoding.PEM)
 
     @property
+    def key_id(self) :
+        digest = hashes.Hash(hashes.SHA1())
+        digest.update(self.__pkcs12_cert[1].public_bytes(encoding=serialization.Encoding.DER))
+        s = base64.urlsafe_b64encode(digest.finalize()).decode().replace('=','')
+        return f'Key!{s}#SHA1'
+
+    @property
+    def pub_key_hash(self) :
+        modulus = self.__pkcs12_cert[1].public_key().public_numbers().n
+        exponet = self.__pkcs12_cert[1].public_key().public_numbers().e
+        
+        return None
+        
+
+    @property
     def public_modulus(self) :
         """:obj:`int`: Public modulus."""
         return self.__pkcs12_cert[1].public_key().public_numbers().n
@@ -285,6 +302,14 @@ class PKCS12Certificate :
     def public_exponent(self) :
         """:obj:`int`: Public exponent."""
         return self.__pkcs12_cert[1].public_key().public_numbers().e
+
+    def decrypt(self, cypher_text) :
+        msg = self.__pkcs12_cert[0].decrypt(cypher_text, padding=padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA1()),
+            algorithm=hashes.SHA1(),
+            label=None
+        ))
+        return msg
 
     def __get_cert_from_file(self, cert_path, cert_pass) :
         with open(cert_path, 'rb') as f :
