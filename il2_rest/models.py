@@ -1144,6 +1144,7 @@ class EncryptedTextModel(BaseModel) :
         Returns:
             :obj:`str`: Decoded text.
         """
+        print(certificate.public_certificate)
         return "TODO"
     
 class ReadingKeyModel(BaseModel) :
@@ -1160,6 +1161,7 @@ class ReadingKeyModel(BaseModel) :
         self.encryptedIV = encryptedIV
         self.encryptedKey = encryptedKey
         self.publicKeyHash = publicKeyHash
+        self.readerId = readerId
 
 
 class Versions(BaseModel) :

@@ -51,7 +51,7 @@ class TestIl2Rest(unittest.TestCase) :
     @unittest.SkipTest
     def test_rest_node_get(self) :
         print('Checking RestNode get methods...')
-        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
+        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=False)
         
         details = node.details
         self.assertIsInstance(details, NodeDetailsModel)
@@ -130,7 +130,7 @@ class TestIl2Rest(unittest.TestCase) :
             self.assertEqual(records.pageSize, 20)
             break
     
-    #@unittest.SkipTest
+    @unittest.SkipTest
     def test_multi_document(self) :
         print('Checking Multi-Docs...')
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
@@ -159,15 +159,18 @@ class TestIl2Rest(unittest.TestCase) :
         response = chain.json_document_at(11)
         self.assertIsInstance(response, JsonDocumentRecordModel)
         pkcs12_cert = PKCS12Certificate(path=self.cert_path, password = self.cert_pass)
+        print(response)
         print(response.encryptedJson.decode_with(pkcs12_cert))
 
-    @unittest.SkipTest
+    #@unittest.SkipTest
     def test_pkcs12_certificate(self) :
         print('Checking PKCS12Certificate...')        
         certificate = PKCS12Certificate(path=self.cert_path, password = self.cert_pass)
         self.assertIsNotNone(certificate.friendly_name)
         self.assertIsNotNone(certificate.private_key)
         self.assertIsNotNone(certificate.public_certificate)
+        self.assertIsInstance(certificate.public_exponent, int)
+        self.assertIsInstance(certificate.public_modulus, int)
 
 
         

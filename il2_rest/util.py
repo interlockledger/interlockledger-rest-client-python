@@ -36,6 +36,7 @@ import json
 import datetime
 import base64
 from OpenSSL import crypto
+from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.serialization import pkcs12
 
 from enum import Enum
@@ -258,21 +259,40 @@ class PKCS12Certificate :
     @property
     def friendly_name(self) :
         """:obj:`str`: Certificate friendly name."""
-        return self.__pkcs12_cert.get_friendlyname()
+        #return self.__pkcs12_cert.get_friendlyname()
+        return self.__friendly_name
 
     @property
     def private_key(self) :
-        """:obj:`str`: Certificate private key."""
-        return crypto.dump_privatekey(crypto.FILETYPE_PEM, self.__pkcs12_cert.get_privatekey())
+        """:obj:`bytes`: Certificate private key."""
+        #return crypto.dump_privatekey(crypto.FILETYPE_PEM, self.__pkcs12_cert.get_privatekey())
+        return self.__pkcs12_cert[0].private_bytes(encoding=serialization.Encoding.PEM,
+                    format = serialization.PrivateFormat.PKCS8,
+                    encryption_algorithm=serialization.NoEncryption())
     
     @property
     def public_certificate(self) :
-        """:obj:`str`: Certificate public certificate."""
-        return crypto.dump_certificate(crypto.FILETYPE_PEM, self.__pkcs12_cert.get_certificate())
+        """:obj:`bytes`: Certificate public certificate."""
+        #return crypto.dump_certificate(crypto.FILETYPE_PEM, self.__pkcs12_cert.get_certificate())
+        return self.__pkcs12_cert[1].public_bytes(encoding=serialization.Encoding.PEM)
+
+    @property
+    def public_modulus(self) :
+        """:obj:`int`: Public modulus."""
+        return self.__pkcs12_cert[1].public_key().public_numbers().n
+
+    @property
+    def public_exponent(self) :
+        """:obj:`int`: Public exponent."""
+        return self.__pkcs12_cert[1].public_key().public_numbers().e
 
     def __get_cert_from_file(self, cert_path, cert_pass) :
         with open(cert_path, 'rb') as f :
             pkcs_cert = crypto.load_pkcs12(f.read(), cert_pass.encode())
+            self.__friendly_name = pkcs_cert.get_friendlyname()
+        with open(cert_path, 'rb') as f :
+            #pkcs_cert = crypto.load_pkcs12(f.read(), cert_pass.encode())
+            pkcs_cert = serialization.pkcs12.load_key_and_certificates(f.read(), cert_pass.encode())
         return pkcs_cert
 
 
