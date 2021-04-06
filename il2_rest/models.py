@@ -32,11 +32,15 @@ Resource models available in the IL2 REST API.
 """
 
 import os
+import io
 import json
 import re
 import datetime
 import functools
 import base64
+
+#from pyiltags.standard import ILInt
+from pyilint import ilint_decode
 
 from packaging import version
 from colour import Color
@@ -55,7 +59,9 @@ from .util import null_condition_attribute
 from .util import filter_none
 from .util import string2datetime
 from .util import to_bytes
-#from .util import CustomEncoder
+from .util import aes_decrypt
+
+
 
 
 class CustomEncoder(json.JSONEncoder) :
@@ -1138,23 +1144,67 @@ class EncryptedTextModel(BaseModel) :
     def decode_with(self, certificate) :
         """
         Decode the encrypted JSON Document text using the keys inside the certificate.
+
         Args:
-            certificate (:obj:``): Certificate with keys to decode the text.
+            certificate (:obj:`il2_rest.util.PKCS12Certificate`): PKCS12 certificate with the keys to decode the text.
 
         Returns:
-            :obj:`str`: Decoded text.
+            :obj:`dict`: Decoded JSON.
+
+        Example:
+            >>> node = RestNode(cert_file=cert_path,cert_pass=cert_pass, address=address, port =port_number)
+            >>> chain = node.chains[0]
+            >>> json_body = {"attribute_1":"value_1", "number_1": 1}
+            >>> response = chain.store_json_document(json_body)
+            >>> pkcs12_cert = PKCS12Certificate(path=cert_path, password = cert_pass)
+            >>> response_json = response.encryptedJson.decode_with(pkcs12_cert)
+            >>> print(response_json)
+            {"attribute_1":"value_1", "number_1": 1}
+
         """
-        print(certificate.public_certificate)
-        return "TODO"
+        if not self.cipher :
+            raise ValueError(f' No cipher detected.')
+        if self.cipher != CipherAlgorithms.AES256 :
+            raise ValueError(f'Cipher {self.cipher} is not currently supported.')
+        if not certificate :
+            raise ValueError('No key provided to decode EncryptedText.')
+        if not certificate.has_pk() :
+            raise ValueError('Certificate has no private key to be able to decode EncryptedText.')
+        cert_key_id = certificate.key_id
+        cert_pub_key_hash = certificate.pub_key_hash
+        if not cert_pub_key_hash :
+            raise ValueError('Non-RSA certificate is not currently supported.')
+        if not self.readingKeys :
+            raise ValueError('No reading keys able to decode EncryptedText.')
+        authorized_key = None        
+        for rk in self.readingKeys :
+            if (cert_key_id == rk.readerId) and (cert_pub_key_hash == rk.publicKeyHash) :
+                authorized_key = rk
+                break
+        if not authorized_key :
+            raise ValueError('Your key does not match one of the authorized reading keys.')
+        
+        aes_key = certificate.decrypt(base64.urlsafe_b64decode(authorized_key.encryptedKey))
+        aes_iv = certificate.decrypt(base64.urlsafe_b64decode(authorized_key.encryptedIV))
+        
+        json_bytes = aes_decrypt(base64.urlsafe_b64decode(self.cipherText), aes_key, aes_iv)
+        #print(json_bytes)
+        if json_bytes[0] != 17 :
+            raise ValueError('Something went wrong while decrypting the content. Unexpected initial bytes.')
+        
+        dec, dec_size = ilint_decode(json_bytes[1:])
+        return json.loads(json_bytes[1+dec_size:1+dec_size+dec].decode('utf-8'))
+    
     
 class ReadingKeyModel(BaseModel) :
     """
     Keys able to read an encrypted JSON Document record.
 
     Attributes:
-        encryptedIV (:obj:`str`): TODO.
-        encryptedKey (:obj:`str`): TODO.
-        publicKeyHash (:obj:`str`): TODO.
+        encryptedIV (:obj:`str`): Encrypted AES256 IV.
+        encryptedKey (:obj:`str`): Encrypted AES256 key.
+        publicKeyHash (:obj:`str`): Public key hash in IL2 text representation.
+        readerId (:obj:`str`): Id of the key.
     """
     def __init__(self, encryptedIV = None, encryptedKey = None, publicKeyHash = None, 
                 readerId = None, **kwargs) :

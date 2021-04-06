@@ -31,6 +31,7 @@
 """
 Utility classes and functions for the InterlockLedger API.
 """
+import io
 import re
 import json
 import datetime
@@ -40,10 +41,13 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 from enum import Enum
 from packaging import version
 from colour import Color
+
+import pyiltags
 
 
 def null_condition_attribute(obj, attribute) :
@@ -153,6 +157,10 @@ def build_query(args_names, args_values) :
             ret_str += f'{name}={value}'
     return ret_str
 
+def aes_decrypt(msg, key, iv) :
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
+    decryptor = cipher.decryptor()
+    return decryptor.update(msg) + decryptor.finalize()
 
 
 
@@ -254,13 +262,13 @@ class PKCS12Certificate :
             path (:obj:`str`): Path to the .pfx certificate. 
             password (:obj:`str`): Password of the .pfx certificate.
     """
-
     def __init__(self, path, password) :
         self.__pkcs12_cert = self.__get_cert_from_file(path, password)
+        self.__friendly_name = ''
         
     @property
     def friendly_name(self) :
-        """:obj:`str`: Certificate friendly name."""
+        """:obj:`str`: Certificate friendly name (Not implemented)."""
         #return self.__pkcs12_cert.get_friendlyname()
         return self.__friendly_name
 
@@ -280,6 +288,7 @@ class PKCS12Certificate :
 
     @property
     def key_id(self) :
+        """:obj:`str`: Id of the key."""
         digest = hashes.Hash(hashes.SHA1())
         digest.update(self.__pkcs12_cert[1].public_bytes(encoding=serialization.Encoding.DER))
         s = base64.urlsafe_b64encode(digest.finalize()).decode().replace('=','')
@@ -287,10 +296,32 @@ class PKCS12Certificate :
 
     @property
     def pub_key_hash(self) :
+        """:obj:`str`: Public key hash in IL2 text representation."""
+        if not self.__pkcs12_cert[1] :
+            return None
         modulus = self.__pkcs12_cert[1].public_key().public_numbers().n
         exponet = self.__pkcs12_cert[1].public_key().public_numbers().e
         
-        return None
+        writer = io.BytesIO()
+        t = pyiltags.ILRawTag(16, modulus.to_bytes((modulus.bit_length()+7)//8, byteorder='big'))
+        t.serialize(writer)
+        modulus_tag = writer.getvalue()
+
+        writer = io.BytesIO()
+        t = pyiltags.ILRawTag(16, exponet.to_bytes((exponet.bit_length()+7)//8, byteorder='big'))
+        t.serialize(writer)
+        exponet_tag = writer.getvalue()
+
+        writer = io.BytesIO()
+        t = pyiltags.ILRawTag(40, modulus_tag+exponet_tag)
+        t.serialize(writer)
+        pub_key_parameter_tag = writer.getvalue()
+
+        digest = hashes.Hash(hashes.SHA256())
+        digest.update(pub_key_parameter_tag)
+        s = base64.urlsafe_b64encode(digest.finalize()).decode().replace('=','')
+        
+        return f'{s}#SHA256'
         
 
     @property
@@ -303,7 +334,25 @@ class PKCS12Certificate :
         """:obj:`int`: Public exponent."""
         return self.__pkcs12_cert[1].public_key().public_numbers().e
 
+    def has_pk(self) :
+        """
+        Check if the certificate has a primary key.
+        
+        Returns:
+            :obj:`bool`: True if the certificate has a primary key.
+        """
+        return self.__pkcs12_cert[0] is not None
+
     def decrypt(self, cypher_text) :
+        """
+        Decode a encrypted message using RSA with SHA1.
+        
+        Args:
+            cypher_text (:obj:`bytes`): Encrypted message.
+
+        Returns:
+            :obj:`bytes`: Decrypted message.
+        """        
         msg = self.__pkcs12_cert[0].decrypt(cypher_text, padding=padding.OAEP(
             mgf=padding.MGF1(algorithm=hashes.SHA1()),
             algorithm=hashes.SHA1(),
@@ -313,10 +362,6 @@ class PKCS12Certificate :
 
     def __get_cert_from_file(self, cert_path, cert_pass) :
         with open(cert_path, 'rb') as f :
-            pkcs_cert = crypto.load_pkcs12(f.read(), cert_pass.encode())
-            self.__friendly_name = pkcs_cert.get_friendlyname()
-        with open(cert_path, 'rb') as f :
-            #pkcs_cert = crypto.load_pkcs12(f.read(), cert_pass.encode())
             pkcs_cert = serialization.pkcs12.load_key_and_certificates(f.read(), cert_pass.encode())
         return pkcs_cert
 

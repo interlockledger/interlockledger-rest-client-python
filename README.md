@@ -25,10 +25,13 @@ To use the `il2_rest` package, you can add the interlockledger_rest folder to yo
     * requests (2.22.0)
     * uri (2.0.1)
     * pyilint (0.2.0)
-* InterlockLedger Node Server 5.3.2
-* InterlockLedger API v6.0.0
+    * pyiltags (0.0.1)
+* InterlockLedger :
+    * Node Server 5.3.2
+    * API v6.0.0
 
 To build the documentation:
+
 * Sphinx (3.5.3)
 
 ### Installation

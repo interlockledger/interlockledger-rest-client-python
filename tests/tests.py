@@ -1,6 +1,7 @@
 import unittest
 import json
 import os
+
 from il2_rest import RestNode, RestChain
 from il2_rest.models import *
 from il2_rest.util import *
@@ -48,10 +49,10 @@ class TestIl2Rest(unittest.TestCase) :
         self.address = args['host']['address']
         self.port_number = args['host']['port']
 
-    @unittest.SkipTest
+    #@unittest.SkipTest
     def test_rest_node_get(self) :
         print('Checking RestNode get methods...')
-        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=False)
+        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
         
         details = node.details
         self.assertIsInstance(details, NodeDetailsModel)
@@ -72,7 +73,7 @@ class TestIl2Rest(unittest.TestCase) :
         for mirror in mirrors :
             self.assertIsInstance(mirror, RestChain)
 
-    @unittest.SkipTest
+    #@unittest.SkipTest
     def test_chains_get(self) :
         print('Checking RestChain get methods...')
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
@@ -99,7 +100,7 @@ class TestIl2Rest(unittest.TestCase) :
                 self.assertIsInstance(records.items[0], RecordModelAsJson)
             break
 
-    @unittest.SkipTest
+    #@unittest.SkipTest
     def test_page_of_methods(self) :
         print('Checking records methods...')
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
@@ -130,7 +131,7 @@ class TestIl2Rest(unittest.TestCase) :
             self.assertEqual(records.pageSize, 20)
             break
     
-    @unittest.SkipTest
+    #@unittest.SkipTest
     def test_multi_document(self) :
         print('Checking Multi-Docs...')
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
@@ -149,18 +150,18 @@ class TestIl2Rest(unittest.TestCase) :
                 self.assertEqual(str_in, str_out)
 
 
-    @unittest.SkipTest
+    #@unittest.SkipTest
     def test_json_docs(self) :
         print('Checking JsonDocs...')
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
         chain = node.chains[0]
-        json_body = {"attribute_1":"value_1", "number_1": 1}
-        #response = chain.store_json_document(json_body)
-        response = chain.json_document_at(11)
+        long_attribute = ['0123456789']*25
+        json_body = {"attribute_1":"value_1", "number_1": 1, "long_attribute":long_attribute}
+        response = chain.store_json_document(json_body)
         self.assertIsInstance(response, JsonDocumentRecordModel)
         pkcs12_cert = PKCS12Certificate(path=self.cert_path, password = self.cert_pass)
-        print(response)
-        print(response.encryptedJson.decode_with(pkcs12_cert))
+        response_json = response.encryptedJson.decode_with(pkcs12_cert)
+        self.assertEqual(json_body, response_json)
 
     #@unittest.SkipTest
     def test_pkcs12_certificate(self) :
