@@ -37,17 +37,18 @@ To build the documentation:
 ### Installation
 
 The package can also be installed by running the following command on the `setup.py` folder:
-``` bash
+```bash
 pip3 install .
 ```
 
 ## Example
+
 How to use the interlockledger rest client to store a JSON document:
 
-<pre>
+```
 >>> import il2_rest
 >>>
->>> node = il2_rest.RestNode(cert_file = 'documenter.pfx', cert_pass='password', port = 32020)
+>>> node = il2_rest.RestNode(cert_file='documenter.pfx', cert_pass='password', port=32020)
 >>> print(node.details)
 
 Node 'Node for il2tester on Apollo' Node!qh8D-FVQ8-2ng_EIDN8C9m3pOLAtz0BXKuCh9OBDr6U
@@ -91,5 +92,5 @@ Chains: 20i...&lt;REDACTED&gt;..._fc, 5rA...&lt;REDACTED&gt;...Pso
         ]
     }
 }
-</pre>
+```
 
