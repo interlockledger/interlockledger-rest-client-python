@@ -921,11 +921,12 @@ class NodeCommonModel(BaseModel) :
 
     def __str__(self) :
         ret = f"Node '{self.name}' {self.id}"
-        ret += f"\nRunning il2 node#{null_condition_attribute(self.softwareVersions, 'node')} using [Message Envelope Wire Format #{null_condition_attribute(self.softwareVersions, 'messageEnvelopeWireFormat')}] with Peer2Peer#{null_condition_attribute(self.softwareVersions, 'peer2peer')}"
+        ret += f"\nRunning il2 node#{null_condition_attribute(self.softwareVersions, 'main')} with Peer2Peer#{null_condition_attribute(self.softwareVersions, 'peer2peer')}"
         ret += f"\nNetwork {self.network}"
         ret += f"\nColor {self.fancy_color}"
         ret += f"\nOwner {self.ownerName} #{self.ownerId}"
         ret += f"\nRoles: {','.join(self.roles)}"
+        ret += f"\n{self.softwareVersions}"
         ret += f"\n{self._extras}"
         ret += "\n"
         return ret
@@ -1237,9 +1238,9 @@ class PageOfModel(BaseModel):
     def __init__(self, items = None, page = None, pageSize = None, totalNumberOfPages = None, itemClass = None, **kwargs) :
         if not itemClass :
             raise ValueError('itemClass must be specified.')
-        elif not issubclass(itemClass, BaseModel) :
-            print(type(itemClass), type(BaseModel))
-            raise ValueError('itemClass must be a subclass of BaseModel.')
+        #elif not issubclass(itemClass, BaseModel) :
+        #    print(itemClass,BaseModel,type(itemClass), type(BaseModel))
+        #    raise ValueError('itemClass must be a subclass of BaseModel.')
         if items :
             self.items = [itemClass.from_json(item) for item in items]
         else :

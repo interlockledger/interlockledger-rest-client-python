@@ -89,15 +89,7 @@ class RestChain :
             chainId = ChainIdModel.from_json(chainId)
 
         self.id = chainId.id
-        self.name = chainId.name
-        self.licensingStatus = chainId.licensingStatus
-    
-
-    @property
-    def active_apps(self):
-        """:obj:`list` of :obj:`int`: Enumerate apps that are currently permitted on this chain."""
-        return self.__rest._get(f"/chain/{self.id}/activeApps")
-    
+        self.name = chainId.nameDetail
     def interlocks(self, howManyFromLast = 0, page = 0, pageSize = 10) :
         """
         Get list of interlocks registered for the chain.
@@ -610,8 +602,8 @@ class RestChain :
 
         """
         if model :
-            if not isinstance(model, DocumentsBeginTransactionModel) :
-                raise TypeError('model must be DocumentsBeginTransactionModel')
+            #if not isinstance(model, DocumentsBeginTransactionModel) :
+            #    raise TypeError('model must be DocumentsBeginTransactionModel')
             if model.chain != self.id :
                 raise TypeError(f"self.id == '{self.id}' does not match model.chain == '{model.chain}'")
         else :
