@@ -48,17 +48,31 @@ How to use the interlockledger rest client to store a JSON document:
 ```
 >>> import il2_rest
 >>>
->>> node = il2_rest.RestNode(cert_file='documenter.pfx', cert_pass='password', port=32020)
+>>> address = 'your.node.url.address'
+>>> port = 32020 # change this value to your node API port number
+>>> node = il2_rest.RestNode(
+        cert_file='documenter.pfx',
+        cert_pass='password',
+        address=address,
+        port=port
+    )
 >>> print(node.details)
 
-Node 'Node for il2tester on Apollo' Node!qh8D-FVQ8-2ng_EIDN8C9m3pOLAtz0BXKuCh9OBDr6U
-Running il2 node#3.6.0 using [Message Envelope Wire Format #1] with Peer2Peer#2.1.0
-Network Apollo
-Owner il2tester #Owner!yj...&lt;REDACTED&gt;...zk
-Roles: Interlocking,Mirror,PeerRegistry,Relay,User
-Chains: 20i...&lt;REDACTED&gt;..._fc, 5rA...&lt;REDACTED&gt;...Pso
+Node 'Node for il2test Database on Minerva' Node!-vRv_TeFEv...&lt;REDACTED&gt;...Km9r85A
+Running il2 node#5.6.52 with Peer2Peer#6.4.0
+Network Minerva
+Color #d53c07
+Owner il2test Database #Owner!-ozg6...&lt;REDACTED&gt;...sqKc
+Roles: Interlocking,Mirror,PeerRegistry,User
+Versions {
+    "coreLibs": "9.8.6",
+    "main": "5.6.52",
+    "peer2peer": "6.4.0",
+    "tags": "9.4.0"
+}
+Chains: UHtrQ...&lt;REDACTED&gt;...XRY, or7lz...&lt;REDACTED&gt;...DxI
 
->>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
+>>> chain = node.chain_by_id('UHtrQ...&lt;REDACTED&gt;...XRY')
 >>> json_body = {"attribute_1":"value_1", "number_1": 1}
 >>> doc_resp = chain.store_json_document(json_body)
 >>> print(doc_resp)
