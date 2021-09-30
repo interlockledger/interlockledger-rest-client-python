@@ -89,7 +89,14 @@ class RestChain :
             chainId = ChainIdModel.from_json(chainId)
 
         self.id = chainId.id
-        self.name = chainId.nameDetail
+        self.name = chainId.name
+        self.licensingStatus = chainId.licensingStatus
+
+    @property
+    def active_apps(self):
+        """:obj:`list` of :obj:`int`: Enumerate apps that are currently permitted on this chain."""
+        return self.__rest._get(f"/chain/{self.id}/activeApps")
+    
     def interlocks(self, howManyFromLast = 0, page = 0, pageSize = 10) :
         """
         Get list of interlocks registered for the chain.
@@ -105,8 +112,7 @@ class RestChain :
         json_data = self.__rest._get(f'/chain/{self.id}/interlockings?howManyFromLast={howManyFromLast}&page={page}&pageSize={pageSize}')
         json_data['itemClass'] = InterlockingRecordModel
         return PageOfModel.from_json(json_data)
-        #return [InterlockingRecordModel.from_json(item) for item in json_data]
-    
+        
     @property
     def permitted_keys(self):
         """:obj:`list` of :obj:`il2_rest.models.KeyModel`: Enumerate keys that are currently permitted on chain."""

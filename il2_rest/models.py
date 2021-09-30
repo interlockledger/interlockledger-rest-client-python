@@ -1101,7 +1101,7 @@ class InterlockingRecordModel(RecordModel) :
 
     def __str__(self) :
         """(:obj:`str`): String representation."""
-        return f"Interlocked chain {self.interlockedChainId} at record #{self.interlockedRecordSerial} (offset: {self.interlockedRecordOffset}) with hash {self.interlockedRecordHash}{os.linesep}{super().__str__()}"
+        return f"@@Interlocked chain {self.interlockedChainId} at record #{self.interlockedRecordSerial} (offset: {self.interlockedRecordOffset}) with hash {self.interlockedRecordHash}{os.linesep}"
 
 
 class JsonDocumentRecordModel(RecordModelBase) :
