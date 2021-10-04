@@ -191,7 +191,7 @@ def try_to_add_nice_record_as_json(chain) :
     try :
         print()
         print("  Trying to add a nice record as JSON:")
-        model = NewRecordModelAsJson(applicationId = 1, payloadTagId = 300, rec_json= {'tagId': 300,'version' : 0, 'apps': [0,1,2,3,4]})
+        model = NewRecordModelAsJson(applicationId = 1, payloadTagId = 300, rec_json= {'tagId': 300,'version': 0, 'apps': [0,1,2,3,4]})
         print(model.json())
         print(type(model))
         record = chain.add_record_as_json(model = model)

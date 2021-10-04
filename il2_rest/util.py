@@ -183,7 +183,7 @@ class LimitedRange :
     
     """
 
-    def __init__(self, start, count = 1, end = None) :
+    def __init__(self, start, count=1, end=None) :
         if count == 0 :
             raise ValueError(f'count is out of range')
         
@@ -213,7 +213,7 @@ class LimitedRange :
         if len(parts) == 1:
             return cls(int(parts[0]))
         else :
-            return cls(int(parts[0]), end = int(parts[1]))
+            return cls(int(parts[0]), end=int(parts[1]))
 
     def __str__(self) :
         """ :obj:`str`: String representation of self. """
@@ -277,7 +277,7 @@ class PKCS12Certificate :
         """:obj:`bytes`: Certificate private key."""
         #return crypto.dump_privatekey(crypto.FILETYPE_PEM, self.__pkcs12_cert.get_privatekey())
         return self.__pkcs12_cert[0].private_bytes(encoding=serialization.Encoding.PEM,
-                    format = serialization.PrivateFormat.PKCS8,
+                    format=serialization.PrivateFormat.PKCS8,
                     encryption_algorithm=serialization.NoEncryption())
     
     @property
@@ -371,7 +371,7 @@ if __name__ == '__main__' :
         a = LimitedRange(start=1,end=10)
         b = LimitedRange(start=3,end=4)
         c = LimitedRange(start=5,end=14)
-        d = LimitedRange(start =1)
+        d = LimitedRange(start=1)
 
         print(a, a.count)
         print(d, d.count)

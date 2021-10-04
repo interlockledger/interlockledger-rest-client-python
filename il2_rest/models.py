@@ -106,7 +106,7 @@ class BaseModel :
         return type(self).__name__ + ' ' + json.dumps(self, indent=4, cls=CustomEncoder)
 
     #@classmethod
-    def json(self, hide_null = True, return_as_str = False) :
+    def json(self, hide_null=True, return_as_str=False) :
         """
         Convert a BaseModel class to a dict (JSON like).
 
@@ -120,7 +120,7 @@ class BaseModel :
         return BaseModel.to_json(self, hide_null, return_as_str)
     
     @classmethod
-    def to_json(cls, obj, hide_null = True, return_as_str = False) :
+    def to_json(cls, obj, hide_null=True, return_as_str=False) :
         """
         Convert an object to a dict (JSON like).
 
@@ -132,7 +132,7 @@ class BaseModel :
         Returns:
             :obj:`dict`/:obj:`str` : return obj as a JSON
         """   
-        ret_json = json.loads(json.dumps(obj, cls = CustomEncoder))
+        ret_json = json.loads(json.dumps(obj, cls=CustomEncoder))
         
         if hide_null :
             ret_json = filter_none(ret_json)
@@ -176,7 +176,7 @@ class AppsModel(BaseModel) :
         validApps (:obj:`list` of :obj:`PublishedApp`): Currently valid apps for this network
     """
 
-    def __init__(self, network = None, validApps = [], **kwargs) :
+    def __init__(self, network=None, validApps=[], **kwargs) :
         self.network = network
         self.validApps = []
         for item in validApps :
@@ -218,7 +218,7 @@ class AppsModel(BaseModel) :
         
         """
 
-        def __init__(self, alternativeId = None, appVersion = None, description = None, app_id = None, name = None, publisherId = None, dataModels = None, publisherName = None, reservedILTagIds = None, simplifiedHashCode = None, start = None, version_ = None, **kwargs) :
+        def __init__(self, alternativeId=None, appVersion=None, description=None, app_id=None, name=None, publisherId=None, dataModels=None, publisherName=None, reservedILTagIds=None, simplifiedHashCode=None, start=None, version_=None, **kwargs) :
 
 
             self.alternativeId = alternativeId
@@ -285,7 +285,7 @@ class AppPermissions(BaseModel) :
         appId(:obj:`int`): App to be permitted (by number)
         actionIds(:obj:`list` of :obj:`int`): App actions to be permitted by number.
     """
-    def __init__(self, appId = None, actionIds = [], **kwargs) :
+    def __init__(self, appId=None, actionIds=[], **kwargs) :
         self.appId = appId
         self.actionIds = actionIds if actionIds else []
 
@@ -305,7 +305,7 @@ class AppPermissions(BaseModel) :
         p = permissions.split(',')
         appId = int(p[0])
         actionIds = [int(item) for item in p[1:]]
-        return cls(appId = appId, actionIds = actionIds)
+        return cls(appId=appId, actionIds=actionIds)
 
     def to_str(self) :
         """ :obj:`str`: String representation of app permissions in the JSON format ('#<appId>,<actionId_1>,...,<actionId_n>')."""
@@ -331,7 +331,7 @@ class DataModel(BaseModel) :
         payloadTagId(:obj:`int`): Tag id for this payload type. It must be a number in the reserved ranges.      
         version (:obj:`int`) : Version of this data model, should start from 1.
     """
-    def __init__(self, description = None, dataFields = None, indexes = None, payloadName = None, payloadTagId = None, version = None, **kwargs) :
+    def __init__(self, description=None, dataFields=None, indexes=None, payloadName=None, payloadTagId=None, version=None, **kwargs) :
         self.description = description
         if dataFields :
             self.dataFields = [item if isinstance(item, self.DataFieldModel) else self.DataFieldModel.from_json(item) for item in dataFields]
@@ -361,7 +361,7 @@ class DataModel(BaseModel) :
             version (:obj:`int`): Version of the data field.
         """
 
-        def __init__(self, cast = None, elementTagId = None, isOpaque = None, isOptional = None, description = None, Enumeration = None, enumerationAsFlags = None, name = None, serializationVersion = None, subDataFields = None, tagId = None, version = None, **kwargs) :
+        def __init__(self, cast=None, elementTagId=None, isOpaque=None, isOptional=None, description=None, Enumeration=None, enumerationAsFlags=None, name=None, serializationVersion=None, subDataFields=None, tagId=None, version=None, **kwargs) :
             
 
             if cast :
@@ -393,7 +393,7 @@ class DataModel(BaseModel) :
             name (:obj:`str`): Name of the index.
         """
 
-        def __init__(self, elements = None, isUnique = None, name = None, **kwargs) :
+        def __init__(self, elements=None, isUnique=None, name=None, **kwargs) :
             self.elements = [item if isinstance(item, self.DataIndexElementModel) else self.DataIndexElementModel.from_json(item) for item in elements]
             self.isUnique = isUnique
             self.name = name
@@ -407,7 +407,7 @@ class DataModel(BaseModel) :
                 fieldPath (:obj:`str`): Path of the data field to be indexed.
                 function (:obj:`str`): To be defined.
             """
-            def __init__(self, descendingOrder = None, fieldPath = None, function = None, **kwargs) :
+            def __init__(self, descendingOrder=None, fieldPath=None, function=None, **kwargs) :
                 self.descendingOrder = descendingOrder
                 self.fieldPath = fieldPath
                 self.function = function
@@ -423,7 +423,7 @@ class ExportedKeyFile(BaseModel) :
         keyName (:obj:`str`): Name of the key.
     """
 
-    def __init__(self, keyFileBytes = None, keyFileName = None, keyName = None, **kwargs) :
+    def __init__(self, keyFileBytes=None, keyFileName=None, keyName=None, **kwargs) :
         self.keyFileBytes = to_bytes(keyFileBytes)
         self.keyFileName = keyFileName
         self.keyName = keyName
@@ -477,7 +477,7 @@ class ChainCreatedModel(ChainIdModel) :
         name (:obj:`str`): Chain name.
     """
 
-    def __init__(self, chain_id=None, name=None, keyFiles = [], **kwargs) :
+    def __init__(self, chain_id=None, name=None, keyFiles=[], **kwargs) :
         chain_id = kwargs.get('id', chain_id)
         super().__init__(chain_id, name)
         self.keyFiles = [item if isinstance(item, ExportedKeyFile) else ExportedKeyFile.from_json(item) for item in keyFiles]
@@ -500,9 +500,9 @@ class ChainCreationModel(BaseModel) :
         parent (:obj:`str`): Parent record Id.
     """
     def __init__(self, name, emergencyClosingKeyPassword, managementKeyPassword,
-                additionalApps = None, description = None, emergencyClosingKeyStrength = KeyStrength.ExtraStrong,
-                managementKeyStrength = KeyStrength.Strong, keysAlgorithm = Algorithms.RSA,
-                operatingKeyStrength = KeyStrength.Normal, parent = None, **kwargs) :
+                additionalApps=None, description=None, emergencyClosingKeyStrength=KeyStrength.ExtraStrong,
+                managementKeyStrength=KeyStrength.Strong, keysAlgorithm=Algorithms.RSA,
+                operatingKeyStrength=KeyStrength.Normal, parent=None, **kwargs) :
         if additionalApps is None :
             self.additionalApps = None
         else :
@@ -528,7 +528,7 @@ class ChainSummaryModel(ChainIdModel) :
         isClosedForNewTransactions (:obj:`bool`): Indicates if the chain accepts new records.
         lastRecord (:obj:`int`): Serial number of the last record.
     """
-    def __init__(self, chain_id=None, name=None, activeApps = [], description = None, isClosedForNewTransactions = False, lastRecord = None, **kwargs) :
+    def __init__(self, chain_id=None, name=None, activeApps=[], description=None, isClosedForNewTransactions=False, lastRecord=None, **kwargs) :
         chain_id = kwargs.get('id', chain_id)
         super().__init__(chain_id, name)
         self.activeApps = activeApps
@@ -556,7 +556,7 @@ class DocumentUploadConfigurationModel(BaseModel) :
         permittedContentTypes (:obj:`list` of :obj:`str`): List of content types mime-type/extension.
         timeOutInMinutes (:obj:`int`): Timeout in minutes.
     """    
-    def __init__(self, defaultCompression = None, defaultEncryption = None, fileSizeLimit = None, iterations = None, permittedContentTypes = None, timeOutInMinutes = None, **kwargs) :
+    def __init__(self, defaultCompression=None, defaultEncryption=None, fileSizeLimit=None, iterations=None, permittedContentTypes=None, timeOutInMinutes=None, **kwargs) :
         self.defaultCompression = defaultCompression
         self.defaultEncryption = defaultEncryption
         self.fileSizeLimit = fileSizeLimit
@@ -596,7 +596,7 @@ class DocumentsBeginTransactionModel(BaseModel) :
         iterations (:obj:`int`): Override for the number of PBE iterations to generate the key.
         password (:obj:`bytes`): Password as bytes if Encryption is not null.
     """    
-    def __init__(self, chain, comment = None, encryption = None, compression = None, generatePublicDirectory = None, iterations = None, password = None, **kwargs) :
+    def __init__(self, chain, comment=None, encryption=None, compression=None, generatePublicDirectory=None, iterations=None, password=None, **kwargs) :
         self.chain = chain 
         self.comment = comment 
         self.compression = compression 
@@ -624,7 +624,7 @@ class DocumentsTransactionModel(BaseModel) :
         countOfUploadedDocuments (:obj:`int`): Total count of uploaded documents for this transaction.
         timeOutLimit (:obj:`datetime.datetime`): The transaction will be aborted if not completed until this timeout.
     """
-    def __init__(self, chain = None, transactionId = None, canCommitNow = None, countOfUploadedDocuments = None, timeOutLimit = None, **kwargs) :
+    def __init__(self, chain=None, transactionId=None, canCommitNow=None, countOfUploadedDocuments=None, timeOutLimit=None, **kwargs) :
         self.chain = chain
         self.transactionId = transactionId
         self.canCommitNow = transactionId
@@ -649,7 +649,7 @@ class DocumentsMetadataModel(BaseModel) :
         encryptionParameters (:obj:`list` of :obj:`EncryptionParameters`): The parameters used to make the encryption of the set of documents.
         publicDirectory (:obj:`DirectoryEntry`): List of stored documents.
     """
-    def __init__(self, comment = None, compression = None, encryption = None, encryptionParameters = None, publicDirectory = None, **kwargs) :
+    def __init__(self, comment=None, compression=None, encryption=None, encryptionParameters=None, publicDirectory=None, **kwargs) :
         self.comment = comment 
         self.compression = compression 
         self.encryption = encryption 
@@ -671,7 +671,7 @@ class DocumentsMetadataModel(BaseModel) :
             iterations (:obj:`str`): Number of iterations to generate the key.
             salt (:obj:`str`): Salt value to feed the cypher engine.
         """
-        def __init__(self, iterations = None, salt = None, **kwargs) :
+        def __init__(self, iterations=None, salt=None, **kwargs) :
             self.iterations = iterations
             self.salt = salt
     
@@ -684,7 +684,7 @@ class DocumentsMetadataModel(BaseModel) :
             iterations (:obj:`str`): Any provided additional information about the document file.
             mimeType (:obj:`str`): Mime Type for the document content
         """
-        def __init__(self, name = None, comment = None, mimeType = None, **kwargs) :
+        def __init__(self, name=None, comment=None, mimeType=None, **kwargs) :
             self.name = name 
             self.comment = comment
             self.mimeType = mimeType
@@ -701,7 +701,7 @@ class ForceInterlockModel(BaseModel) :
 
     """
 
-    def __init__(self, hashAlgorithm = HashAlgorithms.SHA256, minSerial = 0, targetChain = None, **kwargs) :
+    def __init__(self, hashAlgorithm=HashAlgorithms.SHA256, minSerial=0, targetChain=None, **kwargs) :
         self.hashAlgorithm = hashAlgorithm if isinstance(hashAlgorithm, HashAlgorithms) else HashAlgorithms(hashAlgorithm)
         self.minSerial = minSerial
         self.targetChain = targetChain
@@ -733,7 +733,7 @@ class KeyModel(BaseModel) :
         publicKey (:obj:`str`): Key public key.
         purposes (:obj:`list` of :obj:`il2_rest.enumerations.KeyPurpose`/:obj:`str`): Key valid purposes.
     """
-    def __init__(self, key_id = None, name = None, permissions = None, publicKey = None, purposes = None, **kwargs) :
+    def __init__(self, key_id=None, name=None, permissions=None, publicKey=None, purposes=None, **kwargs) :
         self.id = kwargs.get('id', key_id)
         self.name = name
         if isinstance(permissions, list) :
@@ -792,8 +792,8 @@ class KeyPermitModel(BaseModel) :
         publicKey (:obj:`str`): Key public key.
         purposes (:obj:`list` of :obj:`il2_rest.enumerations.KeyPurpose`/:obj:`str`): Key valid purposes.
     """
-    def __init__(self, key_id = None, name = None, permissions = None, publicKey = None,
-                 purposes = [], app = None, appActions = None, **kwargs) :
+    def __init__(self, key_id=None, name=None, permissions=None, publicKey=None,
+                 purposes=[], app=None, appActions=None, **kwargs) :
         key_id = kwargs.get("id", key_id)
         
         if app is not None and appActions is not None :
@@ -823,8 +823,8 @@ class KeyPermitModel(BaseModel) :
         
 
 #class MessageModel(BaseModel) :
-#    def __init__(self, applicationId = None, chainId = None, messageType = None,
-#                 payload = None, payloadAsText = None, **kwargs) :
+#    def __init__(self, applicationId=None, chainId=None, messageType=None,
+#                 payload=None, payloadAsText=None, **kwargs) :
 #        
 #        if kwargs.get('from_json') :
 #            payload = base64.b64decode(payload)
@@ -848,8 +848,8 @@ class NewRecordModelBase(BaseModel) :
         applicationId (:obj:`int`): Application id this record is associated with.
         rec_type (:obj:`il2_rest.enumerations.RecordType`): Block type. Most records are of the type 'Data'. Corresponds to the 'type' field in the JSON.
     """
-    def __init__(self, applicationId = None, rec_type = RecordType.Data, **kwargs) :
-        self.applicationId = applicationId
+    def __init__(self, applicationId=None, rec_type=RecordType.Data, **kwargs) :
+        self.applicationId=applicationId
 
         rec_type = kwargs.get('type', rec_type)
         self.type = rec_type if isinstance(rec_type, RecordType) else RecordType(rec_type)
@@ -864,7 +864,7 @@ class NewRecordModelAsJson(NewRecordModelBase) :
         JSON (:obj:`dict`): The payload data matching the metadata for PayloadTagId.
         payloadTagId (:obj:`il2_rest.enumerations.RecordType`): The tag id for the payload, as registered for the application.
     """
-    def __init__(self, applicationId = None, rec_type = RecordType.Data, rec_json = None, payloadTagId = None, **kwargs) :
+    def __init__(self, applicationId=None, rec_type=RecordType.Data, rec_json=None, payloadTagId=None, **kwargs) :
         rec_type = kwargs.get('type', rec_type)
         super().__init__(applicationId, rec_type, **kwargs)
         self.JSON = kwargs.get('json', rec_json)
@@ -883,7 +883,7 @@ class NewRecordModel(NewRecordModelBase) :
     Attributes:
         payloadBytes (:obj:`dict`): The payload in bytes. Must match the bytes schema of the application Id.
     """
-    def __init__(self, applicationId = None, rec_type = RecordType.Data, payloadBytes = None, **kwargs) :
+    def __init__(self, applicationId=None, rec_type=RecordType.Data, payloadBytes=None, **kwargs) :
         rec_type = kwargs.get('type', rec_type)
         super().__init__(applicationId, rec_type, **kwargs)
 
@@ -909,7 +909,7 @@ class NodeCommonModel(BaseModel) :
         softwareVersions (:obj:`Versions`): Version of software running the Node.
 
     """
-    def __init__(self, color = None, node_id = None, name = None, network = None, ownerId = None, ownerName = None, roles = None, softwareVersions = None, **kwargs) :
+    def __init__(self, color=None, node_id=None, name=None, network=None, ownerId=None, ownerName=None, roles=None, softwareVersions=None, **kwargs) :
         self.color = Color(color)
         self.id = kwargs.get('id', node_id)
         self.name = name
@@ -949,7 +949,7 @@ class NodeDetailsModel(NodeCommonModel) :
         chains (:obj:`list` of :obj:`str`): List of owned records, only the ids
     """
 
-    def __init__(self, color = None, node_id = None, name = None, network = None, ownerId = None, ownerName = None, roles = None, softwareVersions = None, chains = [], **kwargs) :
+    def __init__(self, color=None, node_id=None, name=None, network=None, ownerId=None, ownerName=None, roles=None, softwareVersions=None, chains=[], **kwargs) :
         node_id = kwargs.get('id', node_id)
         super().__init__(color, node_id, name, network, ownerId, ownerName, roles, softwareVersions, **kwargs)
         self.chains = chains
@@ -968,7 +968,7 @@ class PeerModel(NodeCommonModel) :
         port (:obj:`int`): Port the peer is listening.
         protocol (:obj:`il2_rest.enumerations.NetworkProtocol`):  Network protocol the peer is listening.
     """
-    def __init__(self, color = None, node_id = None, name = None, network = None, ownerId = None, ownerName = None, roles = None, softwareVersions = None, address = None, port = None, protocol = None, **kwargs) :
+    def __init__(self, color=None, node_id=None, name=None, network=None, ownerId=None, ownerName=None, roles=None, softwareVersions=None, address=None, port=None, protocol=None, **kwargs) :
         node_id = kwargs.get('id', node_id)
         super().__init__(color, node_id, name, network, ownerId, ownerName, roles, softwareVersions, **kwargs)
 
@@ -1020,8 +1020,8 @@ class RecordModelBase(BaseModel) :
         
     """
 
-    def __init__(self, applicationId = None, chainId = None, createdAt = None, rec_hash = None, 
-                 payloadTagId = None, serial = None, rec_type = None, version = None, reference = None, network = None, **kwargs) :
+    def __init__(self, applicationId=None, chainId=None, createdAt=None, rec_hash=None, 
+                 payloadTagId=None, serial=None, rec_type=None, version=None, reference=None, network=None, **kwargs) :
         rec_hash = kwargs.get('hash', rec_hash)
         rec_type = kwargs.get('type', rec_type)
 
@@ -1052,9 +1052,9 @@ class RecordModel(RecordModelBase) :
         payloadBytes (:obj:`bytes`): The payload's bytes.
     """
 
-    def __init__(self, applicationId = None, chainId = None, createdAt = None, rec_hash = None, 
-                 payloadTagId = None, serial = None, rec_type = None, version = None, reference = None, network = None, 
-                 payloadBytes = None, **kwargs) :
+    def __init__(self, applicationId=None, chainId=None, createdAt=None, rec_hash=None, 
+                 payloadTagId=None, serial=None, rec_type=None, version=None, reference=None, network=None, 
+                 payloadBytes=None, **kwargs) :
         rec_hash = kwargs.get('hash', rec_hash)
         rec_type = kwargs.get('type', rec_type)
         super().__init__(applicationId, chainId, createdAt, rec_hash, payloadTagId, serial, rec_type, version, reference, network, **kwargs)
@@ -1074,9 +1074,9 @@ class RecordModelAsJson(RecordModelBase) :
         payload (): Payload bytes.
     """
 
-    def __init__(self, applicationId = None, chainId = None, createdAt = None, rec_hash = None, 
-                 payloadTagId = None, serial = None, rec_type = None, version = None, reference = None, network = None, 
-                 payload = None, **kwargs) :
+    def __init__(self, applicationId=None, chainId=None, createdAt=None, rec_hash=None, 
+                 payloadTagId=None, serial=None, rec_type=None, version=None, reference=None, network=None, 
+                 payload=None, **kwargs) :
         rec_hash = kwargs.get('hash', rec_hash)
         rec_type = kwargs.get('type', rec_type)
         super().__init__(applicationId, chainId, createdAt, rec_hash, payloadTagId, serial, rec_type, version, reference, network, **kwargs)
@@ -1095,10 +1095,10 @@ class InterlockingRecordModel(RecordModel) :
         interlockedRecordSerial (:obj:`int`): Interlocked Record Serial.
     """
 
-    def __init__(self, applicationId = None, chainId = None, createdAt = None, rec_hash = None, 
-                 payloadTagId = None, serial = None, rec_type = None, version = None, reference = None, network = None, 
-                 payloadBytes = None, interlockedChainId = None, interlockedRecordHash = None, 
-                 interlockedRecordOffset = None, interlockedRecordSerial = None, **kwargs) :
+    def __init__(self, applicationId=None, chainId=None, createdAt=None, rec_hash=None, 
+                 payloadTagId=None, serial=None, rec_type=None, version=None, reference=None, network=None, 
+                 payloadBytes=None, interlockedChainId=None, interlockedRecordHash=None, 
+                 interlockedRecordOffset=None, interlockedRecordSerial=None, **kwargs) :
         rec_hash = kwargs.get('hash', rec_hash)
         rec_type = kwargs.get('type', rec_type)
         super().__init__(applicationId, chainId, createdAt, rec_hash, payloadTagId, serial, rec_type, version, reference, network, payloadBytes, **kwargs)
@@ -1120,9 +1120,9 @@ class JsonDocumentRecordModel(RecordModelBase) :
         jsonText (:obj:`str`): JSON document as string.
         encyptedJson (:obj:`EncryptedTextModel`): JSON Documents encrypted text.
     """
-    def __init__(self, applicationId = None, chainId = None, createdAt = None, rec_hash = None, 
-                 payloadTagId = None, serial = None, rec_type = None, version = None, reference = None, network = None,
-                 jsonText = None, encryptedJson = None, **kwargs) :
+    def __init__(self, applicationId=None, chainId=None, createdAt=None, rec_hash=None, 
+                 payloadTagId=None, serial=None, rec_type=None, version=None, reference=None, network=None,
+                 jsonText=None, encryptedJson=None, **kwargs) :
         rec_hash = kwargs.get('hash', rec_hash)
         rec_type = kwargs.get('type', rec_type)
         super().__init__(applicationId, chainId, createdAt, rec_hash, payloadTagId, serial, rec_type, version, reference, network, **kwargs)
@@ -1138,7 +1138,7 @@ class EncryptedTextModel(BaseModel) :
         cipherText (:obj:`str`): Encrypted text.
         readingKeys (:obj:`list` of `ReadiReadingKeyModel`): List of keys able to read this encrypted text.
     """
-    def __init__(self, cipher = None, cipherText = None, readingKeys = None, **kwargs):
+    def __init__(self, cipher=None, cipherText=None, readingKeys=None, **kwargs):
         self.cipher = cipher if isinstance(cipher, CipherAlgorithms) else CipherAlgorithms(cipher)
         self.cipherText = cipherText
         if readingKeys and isinstance(readingKeys, list):
@@ -1157,11 +1157,11 @@ class EncryptedTextModel(BaseModel) :
             :obj:`dict`: Decoded JSON.
 
         Example:
-            >>> node = RestNode(cert_file=cert_path,cert_pass=cert_pass, address=address, port =port_number)
+            >>> node = RestNode(cert_file=cert_path,cert_pass=cert_pass, address=address, port=port_number)
             >>> chain = node.chains[0]
             >>> json_body = {"attribute_1":"value_1", "number_1": 1}
             >>> response = chain.store_json_document(json_body)
-            >>> pkcs12_cert = PKCS12Certificate(path=cert_path, password = cert_pass)
+            >>> pkcs12_cert = PKCS12Certificate(path=cert_path, password=cert_pass)
             >>> response_json = response.encryptedJson.decode_with(pkcs12_cert)
             >>> print(response_json)
             {"attribute_1":"value_1", "number_1": 1}
@@ -1211,8 +1211,8 @@ class ReadingKeyModel(BaseModel) :
         publicKeyHash (:obj:`str`): Public key hash in IL2 text representation.
         readerId (:obj:`str`): Id of the key.
     """
-    def __init__(self, encryptedIV = None, encryptedKey = None, publicKeyHash = None, 
-                readerId = None, **kwargs) :
+    def __init__(self, encryptedIV=None, encryptedKey=None, publicKeyHash=None, 
+                readerId=None, **kwargs) :
         self.encryptedIV = encryptedIV
         self.encryptedKey = encryptedKey
         self.publicKeyHash = publicKeyHash
@@ -1230,7 +1230,7 @@ class Versions(BaseModel) :
         tags (:obj:`str`): Tag-Length-Value library version.
     """
 
-    def __init__(self, coreLibs = None, main = None, peer2peer = None, tags = None, **kwargs) :
+    def __init__(self, coreLibs=None, main=None, peer2peer=None, tags=None, **kwargs) :
         
         self.coreLibs = coreLibs
         self.main = main
@@ -1239,7 +1239,7 @@ class Versions(BaseModel) :
 
 
 class PageOfModel(BaseModel):
-    def __init__(self, items = None, page = None, pageSize = None, totalNumberOfPages = None, itemClass = None, **kwargs) :
+    def __init__(self, items=None, page=None, pageSize=None, totalNumberOfPages=None, itemClass=None, **kwargs) :
         if not itemClass :
             raise ValueError('itemClass must be specified.')
         #elif not issubclass(itemClass, BaseModel) :
