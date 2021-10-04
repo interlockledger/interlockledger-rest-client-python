@@ -1002,6 +1002,9 @@ class RecordModelBase(BaseModel) :
         serial (:obj:`int`): Block serial number. For the first record this value is zero (0).
         rec_type (:obj:`il2_rest.enumerations.RecordType`): Block type. Most records are of the type 'Data'. Corresponds to the 'type' field in the JSON.
         version (:obj:`int`): Version of this record structure.
+        network (:obj:`str`): Network name this chain is part.
+        reference (:obj:`str`): Universal reference of this record.
+        
 
     Attributes:
         applicationId (:obj:`int`): Application id this record is associated with.
@@ -1012,10 +1015,13 @@ class RecordModelBase(BaseModel) :
         serial (:obj:`int`): Block serial number. For the first record this value is zero (0).
         type (:obj:`il2_rest.enumerations.RecordType`): Block type. Most records are of the type 'Data'. Corresponds to the 'type' field in the JSON.
         version (:obj:`int`): Version of this record structure.
+        network (:obj:`str`): Network name this chain is part.
+        reference (:obj:`str`): Universal reference of this record.
+        
     """
 
     def __init__(self, applicationId = None, chainId = None, createdAt = None, rec_hash = None, 
-                 payloadTagId = None, serial = None, rec_type = None, version = None, **kwargs) :
+                 payloadTagId = None, serial = None, rec_type = None, version = None, reference = None, network = None, **kwargs) :
         rec_hash = kwargs.get('hash', rec_hash)
         rec_type = kwargs.get('type', rec_type)
 
@@ -1027,6 +1033,8 @@ class RecordModelBase(BaseModel) :
         self.serial = serial
         self.type = rec_type
         self.version = version
+        self.reference = reference
+        self.network = network
 
     def __str__(self) :
         """(:obj:`str`): JSON representation of the record as string."""
@@ -1045,11 +1053,11 @@ class RecordModel(RecordModelBase) :
     """
 
     def __init__(self, applicationId = None, chainId = None, createdAt = None, rec_hash = None, 
-                 payloadTagId = None, serial = None, rec_type = None, version = None, 
+                 payloadTagId = None, serial = None, rec_type = None, version = None, reference = None, network = None, 
                  payloadBytes = None, **kwargs) :
         rec_hash = kwargs.get('hash', rec_hash)
         rec_type = kwargs.get('type', rec_type)
-        super().__init__(applicationId, chainId, createdAt, rec_hash, payloadTagId, serial, rec_type, version, **kwargs)
+        super().__init__(applicationId, chainId, createdAt, rec_hash, payloadTagId, serial, rec_type, version, reference, network, **kwargs)
         
         if kwargs.get('from_json') :
             payloadBytes = base64.b64decode(payloadBytes)
@@ -1067,11 +1075,11 @@ class RecordModelAsJson(RecordModelBase) :
     """
 
     def __init__(self, applicationId = None, chainId = None, createdAt = None, rec_hash = None, 
-                 payloadTagId = None, serial = None, rec_type = None, version = None, 
+                 payloadTagId = None, serial = None, rec_type = None, version = None, reference = None, network = None, 
                  payload = None, **kwargs) :
         rec_hash = kwargs.get('hash', rec_hash)
         rec_type = kwargs.get('type', rec_type)
-        super().__init__(applicationId, chainId, createdAt, rec_hash, payloadTagId, serial, rec_type, version, **kwargs)
+        super().__init__(applicationId, chainId, createdAt, rec_hash, payloadTagId, serial, rec_type, version, reference, network, **kwargs)
         
         self.payload = payload
 
@@ -1088,12 +1096,12 @@ class InterlockingRecordModel(RecordModel) :
     """
 
     def __init__(self, applicationId = None, chainId = None, createdAt = None, rec_hash = None, 
-                 payloadTagId = None, serial = None, rec_type = None, version = None, 
+                 payloadTagId = None, serial = None, rec_type = None, version = None, reference = None, network = None, 
                  payloadBytes = None, interlockedChainId = None, interlockedRecordHash = None, 
                  interlockedRecordOffset = None, interlockedRecordSerial = None, **kwargs) :
         rec_hash = kwargs.get('hash', rec_hash)
         rec_type = kwargs.get('type', rec_type)
-        super().__init__(applicationId, chainId, createdAt, rec_hash, payloadTagId, serial, rec_type, version, payloadBytes, **kwargs)
+        super().__init__(applicationId, chainId, createdAt, rec_hash, payloadTagId, serial, rec_type, version, reference, network, payloadBytes, **kwargs)
         self.interlockedChainId = interlockedChainId
         self.interlockedRecordHash = interlockedRecordHash
         self.interlockedRecordOffset = interlockedRecordOffset
@@ -1110,19 +1118,15 @@ class JsonDocumentRecordModel(RecordModelBase) :
 
     Attributes:
         jsonText (:obj:`str`): JSON document as string.
-        network (:obj:`str`): Network name this chain is part.
-        reference (:obj:`str`): Universal reference of this record.
         encyptedJson (:obj:`EncryptedTextModel`): JSON Documents encrypted text.
     """
     def __init__(self, applicationId = None, chainId = None, createdAt = None, rec_hash = None, 
-                 payloadTagId = None, serial = None, rec_type = None, version = None,
-                 jsonText = None, network = None, reference = None, encryptedJson = None, **kwargs) :
+                 payloadTagId = None, serial = None, rec_type = None, version = None, reference = None, network = None,
+                 jsonText = None, encryptedJson = None, **kwargs) :
         rec_hash = kwargs.get('hash', rec_hash)
         rec_type = kwargs.get('type', rec_type)
-        super().__init__(applicationId, chainId, createdAt, rec_hash, payloadTagId, serial, rec_type, version, **kwargs)
+        super().__init__(applicationId, chainId, createdAt, rec_hash, payloadTagId, serial, rec_type, version, reference, network, **kwargs)
         self.jsonText = jsonText
-        self.network = network
-        self.reference = reference
         self.encryptedJson = encryptedJson if isinstance(encryptedJson, EncryptedTextModel) else EncryptedTextModel.from_json(encryptedJson)
     
 class EncryptedTextModel(BaseModel) :
@@ -1250,72 +1254,3 @@ class PageOfModel(BaseModel):
         self.totalNumberOfPages = totalNumberOfPages
 
 
-
-if __name__ == '__main__' :
-    def test_version() :
-        json_data = {'coreLibs': '2.2.0', 'messageEnvelopeWireFormat': '1','node': '0.18.0','peer2peer': '0.26.2'}
-        v = Versions.from_json(json_data)
-        print(json_data)
-        print(json.dumps(v, cls = CustomEncoder))
-        print(type(v))
-
-    def test_node_common_model() :
-        json_data = {'chains': ['cA7CTUJxkcpGMpuGtg59kB9z5BllR-gQ4k4xBn8VAuo'],
-                    'color': '#20F9C7',
-                    'extensions': {'MaximumNumberOfNodesProxyed': '32',
-                    'RequiresProxying': 'False'},
-                    'id': 'Node!qh8D-FVQ8-2ng_EIDN8C9m3pOLAtz0BXKuCh9OBDr6U',
-                    'name': 'Node for il2tester on Apollo',
-                    'network': 'Apollo',
-                    'ownerId': 'Owner!yj_wQTrTDbBjQlTPF-qrtyfagLeT3UT8Mb5ObvqPXzk',
-                    'ownerName': 'il2tester',
-                    'peerAddress': 'ilkl-apollo://localhost:32021',
-                    'roles': ['Interlocking', 'Mirror', 'PeerRegistry', 'Relay', 'User'],
-                    'softwareVersions': {'coreLibs': '2.2.0',
-                    'messageEnvelopeWireFormat': '1',
-                    'node': '0.18.0',
-                    'peer2peer': '0.26.2'}}
-
-
-        node = NodeCommonModel.from_json(json_data)
-
-        print(type(node))
-        print()
-        print(node)
-
-
-        print(json.dumps(node, indent = 4, cls=CustomEncoder))
-    
-    def test_node_details_model() :
-        json_data = {'chains': ['cA7CTUJxkcpGMpuGtg59kB9z5BllR-gQ4k4xBn8VAuo'],
-                    'color': '#20F9C7',
-                    'extensions': {'MaximumNumberOfNodesProxyed': '32',
-                    'RequiresProxying': 'False'},
-                    'id': 'Node!qh8D-FVQ8-2ng_EIDN8C9m3pOLAtz0BXKuCh9OBDr6U',
-                    'name': 'Node for il2tester on Apollo',
-                    'network': 'Apollo',
-                    'ownerId': 'Owner!yj_wQTrTDbBjQlTPF-qrtyfagLeT3UT8Mb5ObvqPXzk',
-                    'ownerName': 'il2tester',
-                    'peerAddress': 'ilkl-apollo://localhost:32021',
-                    'roles': ['Interlocking', 'Mirror', 'PeerRegistry', 'Relay', 'User'],
-                    'softwareVersions': {'coreLibs': '2.2.0',
-                    'messageEnvelopeWireFormat': '1',
-                    'node': '0.18.0',
-                    'peer2peer': '0.26.2'}}
-
-
-        node = NodeDetailsModel.from_json(json_data)
-
-        print(type(node))
-        print()
-        print(node)
-
-
-        print(json.dumps(node, indent = 4, cls=CustomEncoder))
-    
-    
-    
-    #test_version()
-    #test_node_common_model()
-    #test_node_details_model()
-    
