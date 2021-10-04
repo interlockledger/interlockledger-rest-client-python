@@ -831,11 +831,8 @@ class RestNode :
             >>> print(chain)
             Chain '3.6.2 chain name' #A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE
         """
-        chains = self.chains
-        for chain in chains :
-            if chain.id == chain_id :
-                return chain
-        return None
+        json_data = self._get(f'/chain/{chain_id}')
+        return RestChain(self, ChainIdModel.from_json(json_data))
 
     def create_chain(self, model) :
         """
