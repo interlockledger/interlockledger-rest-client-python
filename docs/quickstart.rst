@@ -15,7 +15,7 @@ With the ``RestNode`` class, it is possible to retrieve details of the node, suc
 
     >>> import il2_rest as il2
     >>>
-    >>> node = il2.RestNode(cert_file = 'documenter.pfx', cert_pass='password', port = 32020)
+    >>> node = il2.RestNode(cert_file='documenter.pfx', cert_pass='password', address='your.node.address', port=32020)
     >>> print(node.details)
     Node 'Node for il2tester on Apollo' Node!qh8D-FVQ8-2ng_EIDN8C9m3pOLAtz0BXKuCh9OBDr6U
     Running il2 node#3.6.0 using [Message Envelope Wire Format #1] with Peer2Peer#2.1.0
@@ -46,6 +46,66 @@ Or by its chain id:
 
 Besides retrieving and storing records and documents, the ``RestChain`` class also allows to manage the active apps in the chain, see/permit keys, and do interlocks.
 
+Storing JSON Documents
+----------------------
+
+The JSON Documents App allows you to store a custom JSON:
+
+.. code-block:: python3
+    
+    >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
+    >>> json_data = {
+    ...     "field1" : 1,
+    ...     "field2" : "Test",
+    ...     "field3": [1,2,3],
+    ...     "field4" : {
+    ...         "value1" : 10,
+    ...         "value2" : 20
+    ...     }
+    ... }
+    >>> new_json_document = chain.chain.store_json_document(json_data)
+    >>> print(new_json_document)
+
+
+Storing Multi-Documents
+-----------------------
+
+It is possible to store multiple documents in a single record of a chain.
+First you will need to begin a transaction:
+
+.. code-block:: python3
+
+    >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
+    >>> resp = chain.documents_begin_transaction(comment ='Using parameters')
+    >>> transaction_id = resp.transactionId
+
+Then, you can add as many files you wish using the transaction id:
+
+.. code-block:: python3
+
+    >>> chain.documents_transaction_add_item(transaction_id, "item1.txt", "./test.txt", "text/plain")
+    >>> chain.documents_transaction_add_item(transaction_id, "item2.txt", "./test2.txt", "text/plain", "This file has a comment.")
+
+When you are done, all you need to do is commit the transaction:
+
+.. code-block:: python3
+
+    >>> locator = chain.documents_transaction_commit(transaction_id)
+
+
+To download the files stored in a chain, you will need to use the locator of a multi-document record. You can store a single file of a multi-document record using the index of the file in the record:
+
+.. code-block:: python3
+
+    >>> chain.download_single_document_at(locator, 0, '/path/to/download/')
+
+Or you can download all files in a compressed in a single file:
+
+.. code-block:: python3
+
+    >>> chain.download_documents_as_zip(locator, '/path/to/download/')
+
+
 Managing Keys
 -------------
 
@@ -75,9 +135,9 @@ If you are using a certificate allowed to permit keys, you can permit other key 
 .. code-block:: python3
 
     >>> from il2_rest.models import KeyPermitModel
-    >>> key_model = KeyPermitModel(app = 4, appActions = [1000, 1001], key_id = 'Key!MJ0kidltB324mfkiOG0aBlEocPA#SHA1',
-    ...               name = 'documenter', publicKey = 'PubKey!KPgQEPgItqh<...REDACTED...>BZk4axWhFbTDrxADAQAB#RSA',
-    ...               purposes = [KeyPurpose.Action, KeyPurpose.Protocol])
+    >>> key_model = KeyPermitModel(app=4, appActions=[1000, 1001], key_id='Key!MJ0kidltB324mfkiOG0aBlEocPA#SHA1',
+    ...               name='documenter', publicKey='PubKey!KPgQEPgItqh<...REDACTED...>BZk4axWhFbTDrxADAQAB#RSA',
+    ...               purposes=[KeyPurpose.Action, KeyPurpose.Protocol])
     >>> keys = chain.permit_keys([key_model])
     >>> for key in keys :
     ...     print(keys)
@@ -115,42 +175,24 @@ To permit new apps:
     >>> print(apps)
     [4]
 
+Forcing Interlocks
+------------------
 
-Storing Multi-Documents
------------------------
+The Interlocking is one of the concepts that grant immutability in IL2.
+They are made automatically by the network, this way there is no need for your application to worry about them.
+However, if you need to force an Interlocking, you can use the following code:
 
-It is possible to store multiple documents in a single record of a chain.
-First you will need to begin a transaction:
+.. code-block:: python3
+    
+    >>> from il2_rest.models import ForceInterlockModel
+    >>> force_model = ForceInterlockModel(targetChain='or7lzOGOvzH3GeNUTPqJI41CY0rVcEWgw6IEBmSSDxI')
+    >>> interlock_model = chain.force_interlock(model=force_model)
+    Interlocked chain or7lzOGOvzH3GeNUTPqJI41CY0rVcEWgw6IEBmSSDxI at record #11 (offset: 14308) with hash aneZJyR81OiqFzoQ0px4ZDFRCSNS9LzxbGUnueQKAtg#SHA256
+
+If you need to check the interlockings of a chain:
 
 .. code-block:: python3
 
-    >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
-    >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
-    >>> resp = chain.documents_begin_transaction(comment ='Using parameters')
-    >>> transaction_id = resp.transactionId
+    >>> for interlock in chain.interlocks().items :
+    ...    print(interlock)
 
-Then, you can add as many files you wish using the transaction id:
-
-.. code-block:: python3
-
-    >>> chain.documents_transaction_add_item(transaction_id, "item1.txt", "./test.txt", "text/plain")
-    >>> chain.documents_transaction_add_item(transaction_id, "item2.txt", "./test2.txt", "text/plain", "This file has a comment.")
-
-When you are done, all you need to do is commit the transaction:
-
-.. code-block:: python3
-
-    >>> locator = chain.documents_transaction_commit(transaction_id)
-
-
-To download the files stored in a chain, you will need to use the locator of a multi-document record. You can store a single file of a multi-document record using the index of the file in the record:
-
-.. code-block:: python3
-
-    >>> chain.download_single_document_at(locator, 0, '/path/to/download/')
-
-Or you can download all files in a compressed in a single file:
-
-.. code-block:: python3
-
-    >>> chain.download_documents_as_zip(locator, '/path/to/download/')
