@@ -97,7 +97,7 @@ class RestChain :
         """:obj:`list` of :obj:`int`: Enumerate apps that are currently permitted on this chain."""
         return self.__rest._get(f"/chain/{self.id}/activeApps")
     
-    def interlocks(self, howManyFromLast = 0, page = 0, pageSize = 10) :
+    def interlocks(self, howManyFromLast=0, page=0, pageSize=10) :
         """
         Get list of interlocks registered for the chain.
 
@@ -125,7 +125,7 @@ class RestChain :
         """:obj:`list` of :obj:`il2_rest.models.JsonDocumentRecordModel`: List of JSON document records in the chain."""
         return self.json_documents_from()
     '''
-    
+
     @property
     def summary(self):
         """:obj:`il2_rest.models.ChainSummaryModel`: Chain details"""
@@ -143,10 +143,10 @@ class RestChain :
             :obj:`il2_rest.models.RecordModel`: Added record information.
         
         Example: 
-            >>> node = RestNode(cert_file = 'recorder.pfx', cert_pass = 'password', port = 32020)
+            >>> node = RestNode(cert_file='recorder.pfx', cert_pass='password', port=32020)
             >>> chain = node.chain_by_id('cRPeHOITV_t1ZQS9CIL7Yi3djJ33ynZCdSRsEnOvX40')
-            >>> model = NewRecordModel(applicationId = 1, payloadTagId = 300, 
-            ...               payloadBytes = bytes([248, 52, 7, 5, 0, 0, 20, 2, 1, 4]))
+            >>> model = NewRecordModel(applicationId=1, payloadTagId=300, 
+            ...               payloadBytes=bytes([248, 52, 7, 5, 0, 0, 20, 2, 1, 4]))
             >>> record = chain.add_record(model)
             >>> print(record)
             {
@@ -163,7 +163,7 @@ class RestChain :
         """
         return RecordModel.from_json(self.__rest._post(f"/records@{self.id}", model))
 
-    def add_record_unpacked(self, applicationId, payloadTagId, rec_bytes, rec_type = RecordType.Data) :
+    def add_record_unpacked(self, applicationId, payloadTagId, rec_bytes, rec_type=RecordType.Data) :
         """
         Add a new record with an unpacked payload. 
         Payload inner bytes MUST go in the body, in binary form.
@@ -179,9 +179,9 @@ class RestChain :
             :obj:`il2_rest.models.RecordModel`: Added record information.
 
         Example: 
-            >>> node = RestNode(cert_file = 'recorder.pfx', cert_pass = 'password', port = 32020)
+            >>> node = RestNode(cert_file='recorder.pfx', cert_pass='password', port=32020)
             >>> chain = node.chain_by_id('VzCJczfgBeIiIBlnTRbmtsPriqwrkHqtF2yt8nhTcjM')
-            >>> record = chain.add_record_unpacked(applicationId = 1, payloadTagId = 300, rec_bytes = bytes([5, 0, 0, 20, 2, 1, 4]))
+            >>> record = chain.add_record_unpacked(applicationId=1, payloadTagId=300, rec_bytes=bytes([5, 0, 0, 20, 2, 1, 4]))
             >>> print(record)
             {
                 "applicationId": 1,
@@ -199,7 +199,7 @@ class RestChain :
         return RecordModel.from_json(self.__rest._post_raw(cur_url, rec_bytes, "application/interlockledger"))
         
 
-    def add_record_as_json(self, applicationId = None, payloadTagId = None, payload = None, rec_type = RecordType.Data, model = None) :
+    def add_record_as_json(self, applicationId=None, payloadTagId=None, payload=None, rec_type=RecordType.Data, model=None) :
         """
         Add a new record with a payload encoded as JSON.
         The JSON value will be mapped to the payload tagged format as described by the metadata associated with the payloadTagId
@@ -215,10 +215,10 @@ class RestChain :
             :obj:`il2_rest.models.RecordModel`: Added record information.
 
         Example: 
-            >>> node = RestNode(cert_file = 'recorder.pfx', cert_pass = 'password', port = 32020)
+            >>> node = RestNode(cert_file='recorder.pfx', cert_pass='password', port=32020)
             >>> chain = node.chain_by_id('tdiy2HnWv-4a_h5T4Xy8l93CQ0lVkIeu2r5qgSlALMY')
-            >>> model = NewRecordModelAsJson(applicationId = 1, payloadTagId = 300, rec_json= {'tagId': 300,'version' : 0, 'apps': [4]})
-            >>> record = chain.add_record_as_json(model = model)
+            >>> model = NewRecordModelAsJson(applicationId=1, payloadTagId=300, rec_json={'tagId': 300,'version': 0, 'apps': [4]})
+            >>> record = chain.add_record_as_json(model=model)
             >>> print(record)
             {
                 "applicationId": 1,
@@ -249,7 +249,7 @@ class RestChain :
                 raise TypeError('payloadTagId is None')
             if payload is None:
                 raise TypeError('payload is None')
-            model = NewRecordModelAsJson(applicationId = applicationId, payloadTagId = payloadTagId, rec_type = rec_type, rec_json=payload)
+            model = NewRecordModelAsJson(applicationId=applicationId, payloadTagId=payloadTagId, rec_type=rec_type, rec_json=payload)
 
     def force_interlock(self, model) : 
         """
@@ -261,9 +261,9 @@ class RestChain :
         Returns:
             :obj:`il2_rest.models.InterlockingRecordModel`: Interlocking details.
         Example:
-            >>> node = RestNode(cert_file = 'mykeymanager.pfx', cert_pass = 'password', port = 32020)
+            >>> node = RestNode(cert_file='mykeymanager.pfx', cert_pass='password', port=32020)
             >>> chain = node.chain_by_id('VzCJczfgBeIiIBlnTRbmtsPriqwrkHqtF2yt8nhTcjM')
-            >>> model = ForceInterlockModel(targetChain = '8fox30W54ZkzM-shfUeU5C7ad-_fsf5nICwNpkCUk5w')
+            >>> model = ForceInterlockModel(targetChain='8fox30W54ZkzM-shfUeU5C7ad-_fsf5nICwNpkCUk5w')
             >>> interlocks = chain.force_interlock(model)
             >>> for il in interlocks :
             ...     print(il)
@@ -299,7 +299,7 @@ class RestChain :
             :obj:`list` of :obj:`int`: Enumerate apps that are currently permitted on this chain.
 
         Example:
-            >>> node = RestNode(cert_file = 'recorder.pfx', cert_pass = 'password', port = 32020)
+            >>> node = RestNode(cert_file='recorder.pfx', cert_pass='password', port=32020)
             >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
             >>> apps = chain.permit_apps([4])
             >>> print(apps)
@@ -319,15 +319,15 @@ class RestChain :
             :obj:`list` of :obj:`il2_rest.models.KeyModel`: Enumerate keys that are currently permitted on chain.
         
         Example:
-            >>> node = RestNode(cert_file = 'mykeymanager.pfx', cert_pass = 'password', port = 32020)
+            >>> node = RestNode(cert_file='mykeymanager.pfx', cert_pass='password', port=32020)
             >>> chain = node.chain_by_id('20ic_KPTCIDfrlwQPKBHdKKp1a6ADaFtBvBjvFmf_fc')
-            >>> model_1 = KeyPermitModel(app = 4, appActions = [1000, 1001], key_id = 'Key!MJ0kidltB324mfkiOG0aBlEocPA#SHA1',
-            ...               name = 'documenter', publicKey = 'PubKey!KPgQEPgItqh<...REDACTED...>BZk4axWhFbTDrxADAQAB#RSA',
-            ...               purposes = [KeyPurpose.Action, KeyPurpose.Protocol])
-            >>> model_2 = KeyPermitModel(key_id = 'Key!aWJWFHYDmUXCTCPIW2Ugih5l4XQ#SHA1', name = 'recorder',
-            ...               publicKey = 'PubKey!KPgQEPgItxD<...REDACTED...>t1RvQCHPYtRADAQAB#RSA',
-            ...               purposes = [KeyPurpose.Action, KeyPurpose.Protocol],
-            ...               permissions = [AppPermissions(appId = 1, actionIds = [300,301,306,302,304,303,305,307])])
+            >>> model_1 = KeyPermitModel(app=4, appActions=[1000, 1001], key_id='Key!MJ0kidltB324mfkiOG0aBlEocPA#SHA1',
+            ...               name='documenter', publicKey='PubKey!KPgQEPgItqh<...REDACTED...>BZk4axWhFbTDrxADAQAB#RSA',
+            ...               purposes=[KeyPurpose.Action, KeyPurpose.Protocol])
+            >>> model_2 = KeyPermitModel(key_id='Key!aWJWFHYDmUXCTCPIW2Ugih5l4XQ#SHA1', name='recorder',
+            ...               publicKey='PubKey!KPgQEPgItxD<...REDACTED...>t1RvQCHPYtRADAQAB#RSA',
+            ...               purposes=[KeyPurpose.Action, KeyPurpose.Protocol],
+            ...               permissions=[AppPermissions(appId=1, actionIds=[300,301,306,302,304,303,305,307])])
             >>> keys = chain.permit_keys([model_1, model_2])
             >>> for key in keys :
             ...     print(keys)
@@ -358,7 +358,7 @@ class RestChain :
         return [KeyModel.from_json(item) for item in json_data]
 
     
-    def records(self, firstSerial = None, lastSerial = None, page = 0, pageSize = 10, lastToFirst=False) :
+    def records(self, firstSerial=None, lastSerial=None, page=0, pageSize=10, lastToFirst=False) :
         """
         Get list of records starting from a given serial number.
 
@@ -381,7 +381,7 @@ class RestChain :
         json_data['itemClass'] = RecordModel
         return PageOfModel.from_json(json_data)
 
-    def records_as_json(self, firstSerial = None, lastSerial = None, page = 0, pageSize = 10, lastToFirst=False) :
+    def records_as_json(self, firstSerial=None, lastSerial=None, page=0, pageSize=10, lastToFirst=False) :
         """
         Get list of records with payload mapped to JSON starting from a given serial number.
 
@@ -429,7 +429,7 @@ class RestChain :
         return RecordModelAsJson.from_json(self.__rest._get(f"/records@{self.id}/{serial}/asJson"))
 
     '''
-    def json_documents_from(self, firstSerial = None, lastSerial = None):
+    def json_documents_from(self, firstSerial=None, lastSerial=None):
         """
         Get a list of JSON documents stored in the chain.
         Args:
@@ -479,7 +479,7 @@ class RestChain :
             :obj:`il2_rest.models.JsonDocumentRecordModel`: Added JSON document details.
         
         Example:
-            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> node = RestNode(cert_file='documenter.pfx', cert_pass='password')
             >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
             >>> json_data = {
             ...     "field1" : 1,
@@ -490,7 +490,7 @@ class RestChain :
             ...         "value2" : 20
             ...     }
             ... }
-            >>> new_json_document = chain.chain.store_json_document(json_data)
+            >>> new_json_document = chain.store_json_document(json_data)
             >>> print(new_json_document)
             
         """
@@ -507,7 +507,7 @@ class RestChain :
             :obj:`il2_rest.models.DocumentsTransactionModel`: Transaction identifier and limits.
         
         Example:
-            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> node = RestNode(cert_file='documenter.pfx', cert_pass='password')
             >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
             >>> resp = chain.documents_transaction_status('IZqVW6p7z4hVdWzv')
             >>> print(resp)
@@ -525,7 +525,7 @@ class RestChain :
             :obj:`il2_rest.models.DocumentsMetadataModel`: Metadata associated to a Multi-Document Storage Locator
         
         Example:
-            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> node = RestNode(cert_file='documenter.pfx', cert_pass='password')
             >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
             >>> resp = chain.documents_transaction_metadata('EbAfcWGwCwzuiEtSwIwYQYIHy-g05CZl6jrcBAYuYRIe')
             >>> print(resp)
@@ -533,7 +533,7 @@ class RestChain :
         return DocumentsMetadataModel.from_json(self.__rest._get(f"/documents/{locator}/metadata"))
 
 
-    def download_single_document_at(self, locator, index, dst_path = './') :
+    def download_single_document_at(self, locator, index, dst_path='./') :
         """
         Download document by position from the set of documents to a folder (default: current folder).
 
@@ -543,14 +543,14 @@ class RestChain :
             dst_path (:obj:`str`): Download the file to this folder.
 
         Example:
-            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> node = RestNode(cert_file='documenter.pfx', cert_pass='password')
             >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
             >>> chain.download_single_document_at('EbAfcWGwCwzuiEtSwIwYQYIHy-g05CZl6jrcBAYuYRIe', 0, '/path/to/download/')
         """
         self.__rest._download_file(f"/documents/{locator}/{index}", dst_path=dst_path)
         return
 
-    def download_documents_as_zip(self, locator, dst_path = './') :
+    def download_documents_as_zip(self, locator, dst_path='./') :
         """
         Download a compressed file with all documents to a folder (default: current folder).
 
@@ -559,7 +559,7 @@ class RestChain :
             dst_path (:obj:`str`): Download the file to this folder.
 
         Example:
-            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> node = RestNode(cert_file='documenter.pfx', cert_pass='password')
             >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
             >>> chain.download_documents_as_zip('EbAfcWGwCwzuiEtSwIwYQYIHy-g05CZl6jrcBAYuYRIe', '/path/to/download/')
         """
@@ -568,7 +568,7 @@ class RestChain :
 
     
 
-    def documents_begin_transaction(self, comment = None, compression = None, generatePublicDirectory = None, iterations = None, encryption = None, password = None, model = None) :
+    def documents_begin_transaction(self, comment=None, compression=None, generatePublicDirectory=None, iterations=None, encryption=None, password=None, model=None) :
         """
         Begin a transaction to store a set of documents. May rollback on timeout or errors.
         
@@ -597,18 +597,18 @@ class RestChain :
             Begin transaction using a :obj:`il2_rest.models.DocumentsBeginTransactionModel`:
             
             >>> from il2_rest.models import DocumentsBeginTransactionModel
-            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> node = RestNode(cert_file='documenter.pfx', cert_pass='password')
             >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
-            >>> model = DocumentsBeginTransactionModel(chain = 'EbAfcWGwCwzuiEtSwIwYQYIHy-g05CZl6jrcBAYuYRI', 
-            ...                                        comment ='Using model')
+            >>> model = DocumentsBeginTransactionModel(chain='EbAfcWGwCwzuiEtSwIwYQYIHy-g05CZl6jrcBAYuYRI', 
+            ...                                        comment='Using model')
             >>> resp = chain.documents_transaction_metadata('EbAfcWGwCwzuiEtSwIwYQYIHy-g05CZl6jrcBAYuYRIe')
             >>> print(resp)
 
             The same can be done passing all the information as parameters:
             
-            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> node = RestNode(cert_file='documenter.pfx', cert_pass='password')
             >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
-            >>> resp = chain.documents_begin_transaction(comment ='Using parameters')
+            >>> resp = chain.documents_begin_transaction(comment='Using parameters')
             >>> print(resp)
 
 
@@ -619,10 +619,10 @@ class RestChain :
             if model.chain != self.id :
                 raise TypeError(f"self.id == '{self.id}' does not match model.chain == '{model.chain}'")
         else :
-            model = DocumentsBeginTransactionModel(chain = self.id, comment = comment, encryption = encryption, compression = compression, generatePublicDirectory = generatePublicDirectory, iterations = iterations, password = password)
+            model = DocumentsBeginTransactionModel(chain=self.id, comment=comment, encryption=encryption, compression=compression, generatePublicDirectory=generatePublicDirectory, iterations=iterations, password=password)
         return DocumentsTransactionModel.from_json(self.__rest._post("/documents/transaction", model))
             
-    def documents_transaction_add_item(self, transaction_id, name, filepath, content_type = None, comment = None) :
+    def documents_transaction_add_item(self, transaction_id, name, filepath, content_type=None, comment=None) :
         """
         Adds another document to a pending transaction of multi-documents.
 
@@ -638,12 +638,12 @@ class RestChain :
 
         Example:
             After beginning a transaction, you can add as many items as you wish:
-            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> node = RestNode(cert_file='documenter.pfx', cert_pass='password')
             >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
-            >>> resp = chain.documents_begin_transaction(comment ='Using parameters')
+            >>> resp = chain.documents_begin_transaction(comment='Using parameters')
             >>> transaction_id = resp.transactionId
             >>> chain.documents_transaction_add_item(transaction_id, "item1.txt", "./test.txt")
-            >>> chain.documents_transaction_add_item(transaction_id, "item2.txt", "./test2.txt", comment = "This file has a comment.")
+            >>> chain.documents_transaction_add_item(transaction_id, "item2.txt", "./test2.txt", comment="This file has a comment.")
         """
         query = f"/documents/transaction/{transaction_id}?name={name}"
         if comment :
@@ -671,9 +671,9 @@ class RestChain :
             :obj:`str`: Documents storage locator.
 
         Example:
-            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> node = RestNode(cert_file='documenter.pfx', cert_pass='password')
             >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
-            >>> resp = chain.documents_begin_transaction(comment ='Using parameters')
+            >>> resp = chain.documents_begin_transaction(comment='Using parameters')
             >>> transaction_id = resp.transactionId
             >>> chain.documents_transaction_add_item(transaction_id, "item1.txt", "text/plain", "./test.txt"
             >>> chain.documents_transaction_add_item(transaction_id, "item2.txt", "text/plain", "./test2.txt", "This file has a comment."
@@ -732,9 +732,9 @@ class RestNode :
         network (:obj:`RestNetwork`): Network information client.
     """
 
-    def __init__(self, cert_file, cert_pass, port = NetworkPredefinedPorts.MainNet.value, address = 'localhost', verify_ca=True) :
+    def __init__(self, cert_file, cert_pass, port=NetworkPredefinedPorts.MainNet.value, address='localhost', verify_ca=True) :
         if port is None :
-            port  = NetworkPredefinedPorts.MainNet.value
+            port = NetworkPredefinedPorts.MainNet.value
         
         self.verify_ca = verify_ca
         self.base_uri = uri.URI(f'https://{address}:{port}/')
@@ -832,7 +832,7 @@ class RestNode :
             :obj:`RestChain`: Chain instance with the corresponding id.
 
         Example:
-            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password', port = 32020)
+            >>> node = RestNode(cert_file='documenter.pfx', cert_pass='password', port=32020)
             >>> chain = node.chain_by_id('A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE')
             >>> print(chain)
             Chain '3.6.2 chain name' #A1wCG9hHhuVNb8hyOALHokYsWyTumHU0vRxtcK-iDKE
@@ -851,9 +851,9 @@ class RestNode :
             :obj:`il2_rest.models.ChainCreatedModel`: Chain created model.
 
         Example:
-            >>> node = RestNode(cert_file = 'admin.pfx', cert_pass = 'password', port = 32020)
-            >>> new_chain = ChainCreationModel(name = 'New chain name', description = 'New chain', 
-            ...         managementKeyPassword = 'keyPassword', emergencyClosingKeyPassword = 'closingPassword')
+            >>> node = RestNode(cert_file='admin.pfx', cert_pass='password', port=32020)
+            >>> new_chain = ChainCreationModel(name='New chain name', description='New chain', 
+            ...         managementKeyPassword='keyPassword', emergencyClosingKeyPassword='closingPassword')
             >>> resp = node.create_chain(new_chain)
             >>> print(resp)
             Chain 'New chain name' #cRPeHOITV_t1ZQS9CIL7Yi3djJ33ynZCdSRsEnOvX40
@@ -871,7 +871,7 @@ class RestNode :
             :obj:`list` of :obj:`il2_rest.models.InterlockingRecordModel`: List of interlockings.
 
         Example:
-            >>> node = RestNode(cert_file = 'documenter.pfx', cert_pass = 'password')
+            >>> node = RestNode(cert_file='documenter.pfx', cert_pass='password')
             >>> interlocks = node.interlocks_of('8fox30W54ZkzM-shfUeU5C7ad-_fsf5nICwNpkCUk5w')
             >>> for interlock in interlocks :
             ...     print(interlock)
@@ -899,10 +899,10 @@ class RestNode :
         return [InterlockingRecordModel.from_json(item) for item in json_data]
 
 
-    def _call_api_plain_doc(self, url, method, accept = "text/plain") :
+    def _call_api_plain_doc(self, url, method, accept="text/plain") :
         return self._prepare_request(url, method, accept).text
 
-    def _call_api_raw_doc(self, url, method, accept = "*") :
+    def _call_api_raw_doc(self, url, method, accept="*") :
         return self._get_raw_response(url, method, accept)
 
     def _get(self, url) :
@@ -918,7 +918,7 @@ class RestNode :
         return self._prepare_post_file_request(url, file_path, "application/json", contentType)
 
     
-    def _call_api(self, url, method, accept = "application/json") :
+    def _call_api(self, url, method, accept="application/json") :
         return self._prepare_request(url, method, accept)
 
     def __treat_response_error(self, response) :
@@ -932,10 +932,10 @@ class RestNode :
         
         return
     
-    def _download_file(self, url, dst_path = './') :
-        cur_uri = uri.URI(self.base_uri, path = url)
+    def _download_file(self, url, dst_path='./') :
+        cur_uri = uri.URI(self.base_uri, path=url)
         s = self._get_session()
-        with s.get(cur_uri, stream = True) as r:
+        with s.get(cur_uri, stream=True) as r:
             d = r.headers['content-disposition']
             filename = re.findall("filename=(.+);", d)[0]
             filepath = os.path.join(dst_path, filename)
@@ -944,57 +944,57 @@ class RestNode :
         return
 
     def _get_raw_response(self, url, method, accept) :
-        cur_uri = uri.URI(self.base_uri, path = url)
+        cur_uri = uri.URI(self.base_uri, path=url)
         s = self._get_session()
-        response = s.request(method = method, url = cur_uri, stream = True,
+        response = s.request(method=method, url=cur_uri, stream=True,
                                 headers={'Accept': accept})
         
         self.__treat_response_error(response)
         return response
 
     def _prepare_request(self, url, method, accept) :
-        cur_uri = uri.URI(self.base_uri, path = url)
+        cur_uri = uri.URI(self.base_uri, path=url)
         s = self._get_session()
-        response = s.request(method = method, url = cur_uri, stream = True,
+        response = s.request(method=method, url=cur_uri, stream=True,
                                 headers={'Accept': accept})
         
         self.__treat_response_error(response)
         return response
 
     def _prepare_post_request(self, url, body, accept) :
-        cur_uri = uri.URI(self.base_uri, path = url)
+        cur_uri = uri.URI(self.base_uri, path=url)
         
         if issubclass(type(body) ,BaseModel) :
             json_data = body.json()
         else :
             json_data = BaseModel.to_json(body)
         headers = {'Accept': accept,
-                   'Content-type' : "application/json; charset=utf-8"}
+                   'Content-type': "application/json; charset=utf-8"}
         s = self._get_session()
-        response = s.post(url = cur_uri, headers=headers, json = json_data)
+        response = s.post(url=cur_uri, headers=headers, json=json_data)
         
         self.__treat_response_error(response)
         return response
         
 
     def _prepare_post_raw_request(self, url, body, accept, contentType) :
-        cur_uri = uri.URI(self.base_uri, path = url)
+        cur_uri = uri.URI(self.base_uri, path=url)
         headers = {'Accept': accept,
-                   'Content-type' : contentType}
+                   'Content-type': contentType}
         
         s = self._get_session()
-        response = s.post(url = cur_uri, data = body, headers=headers)
+        response = s.post(url=cur_uri, data=body, headers=headers)
         self.__treat_response_error(response)
         return response
 
     def _prepare_post_file_request(self, url, file_path, accept, contentType) :
-        cur_uri = uri.URI(self.base_uri, path = url)
+        cur_uri = uri.URI(self.base_uri, path=url)
         headers = {'Accept': accept,
-                   'Content-type' : contentType}
+                   'Content-type': contentType}
         
         s = self._get_session()
         with open(file_path, 'rb') as f :
-            response = s.post(url = cur_uri, data = f, headers=headers)
+            response = s.post(url=cur_uri, data=f, headers=headers)
         self.__treat_response_error(response)
         return response
 

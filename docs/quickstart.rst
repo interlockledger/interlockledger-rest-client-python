@@ -63,7 +63,7 @@ The JSON Documents App allows you to store a custom JSON:
     ...         "value2" : 20
     ...     }
     ... }
-    >>> new_json_document = chain.chain.store_json_document(json_data)
+    >>> new_json_document = chain.store_json_document(json_data)
     >>> print(new_json_document)
 
 
