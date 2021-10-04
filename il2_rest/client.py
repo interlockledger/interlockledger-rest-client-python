@@ -119,11 +119,13 @@ class RestChain :
         json_data = self.__rest._get(f'/chain/{self.id}/key')
         return [KeyModel.from_json(item) for item in json_data]
     
+    '''
     @property
     def json_documents(self):
         """:obj:`list` of :obj:`il2_rest.models.JsonDocumentRecordModel`: List of JSON document records in the chain."""
         return self.json_documents_from()
-
+    '''
+    
     @property
     def summary(self):
         """:obj:`il2_rest.models.ChainSummaryModel`: Chain details"""
