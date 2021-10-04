@@ -356,7 +356,7 @@ class RestChain :
         return [KeyModel.from_json(item) for item in json_data]
 
     
-    def records(self, firstSerial = None, lastSerial = None, page = 0, pageSize = 10) :
+    def records(self, firstSerial = None, lastSerial = None, page = 0, pageSize = 10, lastToFirst=False) :
         """
         Get list of records starting from a given serial number.
 
@@ -365,21 +365,21 @@ class RestChain :
             lastSerial (:obj:`int`, optional): Last serial number.
             page (:obj:`int`, optional): Page to return (Default is 0).
             pageSize (:obj:`int`, optional): Number of items per page (Default is 10). If 0 returns all.
+            lastToFirst (:obj:`int`, optional): If True, return the list of records in reverse order (Default is False).
 
         Returns:
             :obj:`il2_rest.models.PageOfModel` of :obj:`il2_rest.models.RecordModel`: List of records in the given interval.
         """
-        cur_curl = f"/records@{self.id}?page={page}&pageSize={pageSize}"
+        cur_curl = f"/records@{self.id}?page={page}&pageSize={pageSize}&lastToFirst={lastToFirst}"
         if firstSerial :
             cur_curl += f"&firstSerial={firstSerial}"
         if lastSerial :
             cur_curl += f"&lastSerial={lastSerial}"
         json_data = self.__rest._get(cur_curl)
         json_data['itemClass'] = RecordModel
-        #return [RecordModel.from_json(item) for item in json_data['items']]
         return PageOfModel.from_json(json_data)
 
-    def records_as_json(self, firstSerial = None, lastSerial = None, page = 0, pageSize = 10) :
+    def records_as_json(self, firstSerial = None, lastSerial = None, page = 0, pageSize = 10, lastToFirst=False) :
         """
         Get list of records with payload mapped to JSON starting from a given serial number.
 
@@ -388,18 +388,18 @@ class RestChain :
             lastSerial (:obj:`int`, optional): Last serial number.
             page (:obj:`int`, optional): Page to return (Default is 0).
             pageSize (:obj:`int`, optional): Number of items per page (Default is 10). If 0 returns all.
+            lastToFirst (:obj:`int`, optional): If True, return the list of records in reverse order (Default is False).
 
         Returns:
             :obj:`il2_rest.models.PageOfModel` of :obj:`il2_rest.models.RecordModelAsJson`: List of records mapped to JSON in the given interval.
         """
-        cur_curl = f"/records@{self.id}/asJson?page={page}&pageSize={pageSize}"
+        cur_curl = f"/records@{self.id}/asJson?page={page}&pageSize={pageSize}&lastToFirst={lastToFirst}"
         if firstSerial :
             cur_curl += f"&firstSerial={firstSerial}"
         if lastSerial :
             cur_curl += f"&lastSerial={lastSerial}"
         json_data = self.__rest._get(cur_curl)
         json_data['itemClass'] = RecordModelAsJson
-        #return [RecordModelAsJson.from_json(item) for item in json_data['items']]
         return PageOfModel.from_json(json_data)
 
     def record_at(self, serial) :
@@ -426,6 +426,7 @@ class RestChain :
         """
         return RecordModelAsJson.from_json(self.__rest._get(f"/records@{self.id}/{serial}/asJson"))
 
+    '''
     def json_documents_from(self, firstSerial = None, lastSerial = None):
         """
         Get a list of JSON documents stored in the chain.
@@ -439,7 +440,8 @@ class RestChain :
         query_str = build_query(['firstSerial', 'lastSerial'],[firstSerial, lastSerial])
         json_data = self.__rest._get(f'/jsonDocuments@{self.id}{query_str}')
         return [JsonDocumentRecordModel.from_json(item) for item in json_data]
-    
+    '''
+
     def json_document_at(self, serial):
         """
         Get a specific JSON document stored in the chain.
@@ -451,6 +453,7 @@ class RestChain :
         """
         return JsonDocumentRecordModel.from_json(self.__rest._get(f'/jsonDocuments@{self.id}/{serial}'))
     
+    '''
     def json_document_at_as_str(self, serial):
         """
         Get a specific JSON document stored in the chain as a JSON string.
@@ -461,6 +464,7 @@ class RestChain :
             :obj:`str`: JSON document string.
         """
         return self.__rest._get(f'/jsonDocuments@{self.id}/{serial}/asJson')
+    '''
 
     def store_json_document(self, payload) :
         """
