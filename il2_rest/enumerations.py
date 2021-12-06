@@ -66,8 +66,12 @@ class CipherAlgorithms(AutoName) :
     """
     Enumeration of the cipher algorithms available in IL2.
     """
-    NONE = 'None'   # default
-    AES256 = auto()
+    NONE = 'None'   
+    AES256 = auto() # default
+    
+    @classmethod
+    def _missing_(cls, value):
+        return CipherAlgorithms.AES256   
 
 class HashAlgorithms(AutoName) :
     """
