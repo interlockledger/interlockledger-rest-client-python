@@ -1020,8 +1020,8 @@ class RecordModelBase(BaseModel) :
         
     """
 
-    def __init__(self, applicationId=None, chainId=None, createdAt=None, rec_hash=None, 
-                 payloadTagId=None, serial=None, rec_type=None, version=None, reference=None, network=None, **kwargs) :
+    def __init__(self, applicationId=0, chainId=None, createdAt=None, rec_hash=None, 
+                 payloadTagId=None, serial=0, rec_type=0, version=None, reference=None, network=None, **kwargs) :
         rec_hash = kwargs.get('hash', rec_hash)
         rec_type = kwargs.get('type', rec_type)
 
@@ -1052,8 +1052,8 @@ class RecordModel(RecordModelBase) :
         payloadBytes (:obj:`bytes`): The payload's bytes.
     """
 
-    def __init__(self, applicationId=None, chainId=None, createdAt=None, rec_hash=None, 
-                 payloadTagId=None, serial=None, rec_type=None, version=None, reference=None, network=None, 
+    def __init__(self, applicationId=0, chainId=None, createdAt=None, rec_hash=None, 
+                 payloadTagId=None, serial=0, rec_type=0, version=None, reference=None, network=None, 
                  payloadBytes=None, **kwargs) :
         rec_hash = kwargs.get('hash', rec_hash)
         rec_type = kwargs.get('type', rec_type)
@@ -1074,8 +1074,8 @@ class RecordModelAsJson(RecordModelBase) :
         payload (): Payload bytes.
     """
 
-    def __init__(self, applicationId=None, chainId=None, createdAt=None, rec_hash=None, 
-                 payloadTagId=None, serial=None, rec_type=None, version=None, reference=None, network=None, 
+    def __init__(self, applicationId=0, chainId=None, createdAt=None, rec_hash=None, 
+                 payloadTagId=None, serial=0, rec_type=0, version=None, reference=None, network=None, 
                  payload=None, **kwargs) :
         rec_hash = kwargs.get('hash', rec_hash)
         rec_type = kwargs.get('type', rec_type)
@@ -1095,8 +1095,8 @@ class InterlockingRecordModel(RecordModel) :
         interlockedRecordSerial (:obj:`int`): Interlocked Record Serial.
     """
 
-    def __init__(self, applicationId=None, chainId=None, createdAt=None, rec_hash=None, 
-                 payloadTagId=None, serial=None, rec_type=None, version=None, reference=None, network=None, 
+    def __init__(self, applicationId=0, chainId=None, createdAt=None, rec_hash=None, 
+                 payloadTagId=None, serial=0, rec_type=0, version=None, reference=None, network=None, 
                  payloadBytes=None, interlockedChainId=None, interlockedRecordHash=None, 
                  interlockedRecordOffset=None, interlockedRecordSerial=None, **kwargs) :
         rec_hash = kwargs.get('hash', rec_hash)
@@ -1120,8 +1120,8 @@ class JsonDocumentRecordModel(RecordModelBase) :
         jsonText (:obj:`str`): JSON document as string.
         encyptedJson (:obj:`EncryptedTextModel`): JSON Documents encrypted text.
     """
-    def __init__(self, applicationId=None, chainId=None, createdAt=None, rec_hash=None, 
-                 payloadTagId=None, serial=None, rec_type=None, version=None, reference=None, network=None,
+    def __init__(self, applicationId=0, chainId=None, createdAt=None, rec_hash=None, 
+                 payloadTagId=None, serial=0, rec_type=0, version=None, reference=None, network=None,
                  jsonText=None, encryptedJson=None, **kwargs) :
         rec_hash = kwargs.get('hash', rec_hash)
         rec_type = kwargs.get('type', rec_type)
@@ -1239,7 +1239,7 @@ class Versions(BaseModel) :
 
 
 class PageOfModel(BaseModel):
-    def __init__(self, items=None, page=None, pageSize=None, totalNumberOfPages=None, itemClass=None, **kwargs) :
+    def __init__(self, items=None, page=0, pageSize=None, totalNumberOfPages=None, itemClass=None, **kwargs) :
         if not itemClass :
             raise ValueError('itemClass must be specified.')
         #elif not issubclass(itemClass, BaseModel) :
