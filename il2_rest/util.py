@@ -37,6 +37,7 @@ import json
 import datetime
 import base64
 from OpenSSL import crypto
+from cryptography.x509 import NameOID
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.hazmat.primitives.asymmetric import padding
@@ -265,7 +266,15 @@ class PKCS12Certificate :
     def __init__(self, path, password) :
         self.__pkcs12_cert = self.__get_cert_from_file(path, password)
         self.__friendly_name = ''
-        
+    
+    @property
+    def common_name(self):
+        """:obj:`str`: Certificate Common Name. If none found, return empty string."""
+        cn = self.__pkcs12_cert[1].subject.get_attributes_for_oid(NameOID.COMMON_NAME)
+        if not cn :
+            return ''
+        return cn[0].value
+
     @property
     def friendly_name(self) :
         """:obj:`str`: Certificate friendly name (Not implemented)."""

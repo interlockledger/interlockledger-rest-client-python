@@ -41,7 +41,7 @@ def load_settings(filepath = './'):
     return settings
 
 
-class TestIl2Rest(unittest.TestCase) :
+class BaseTest(unittest.TestCase) :
     def setUp(self) :
         args = load_settings('./tests')
         self.cert_path = args['certificate']['path']
@@ -49,7 +49,9 @@ class TestIl2Rest(unittest.TestCase) :
         self.address = args['host']['address']
         self.port_number = args['host']['port']
 
-    #@unittest.SkipTest
+#@unittest.SkipTest
+class TestIl2Rest(BaseTest) :
+
     def test_rest_node_get(self) :
         print('Checking RestNode get methods...')
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
@@ -73,7 +75,6 @@ class TestIl2Rest(unittest.TestCase) :
         for mirror in mirrors :
             self.assertIsInstance(mirror, RestChain)
 
-    #@unittest.SkipTest
     def test_chains_get(self) :
         print('Checking RestChain get methods...')
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
@@ -100,7 +101,6 @@ class TestIl2Rest(unittest.TestCase) :
                 self.assertIsInstance(records.items[0], RecordModelAsJson)
             break
 
-    #@unittest.SkipTest
     def test_page_of_methods(self) :
         print('Checking records methods...')
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
@@ -131,7 +131,7 @@ class TestIl2Rest(unittest.TestCase) :
             self.assertEqual(records.pageSize, 20)
             break
     
-    #@unittest.SkipTest
+    @unittest.SkipTest
     def test_multi_document(self) :
         print('Checking Multi-Docs...')
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
@@ -150,7 +150,7 @@ class TestIl2Rest(unittest.TestCase) :
                 self.assertEqual(str_in, str_out)
 
 
-    #@unittest.SkipTest
+    
     def test_json_docs(self) :
         print('Checking JsonDocs...')
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
@@ -163,18 +163,19 @@ class TestIl2Rest(unittest.TestCase) :
         response_json = response.encryptedJson.decode_with(pkcs12_cert)
         self.assertEqual(json_body, response_json)
 
-    #@unittest.SkipTest
+
+#@unittest.SkipTest
+class TestUtil(BaseTest) :
+
     def test_pkcs12_certificate(self) :
         print('Checking PKCS12Certificate...')        
         certificate = PKCS12Certificate(path=self.cert_path, password = self.cert_pass)
         self.assertIsNotNone(certificate.friendly_name)
+        self.assertIsNotNone(certificate.common_name)
         self.assertIsNotNone(certificate.private_key)
         self.assertIsNotNone(certificate.public_certificate)
         self.assertIsInstance(certificate.public_exponent, int)
         self.assertIsInstance(certificate.public_modulus, int)
-
-
-        
 
 if __name__=='__main__' :
     unittest.main()
