@@ -54,7 +54,7 @@ from .enumerations import RecordType
 from .enumerations import CipherAlgorithms
 from .enumerations import NetworkProtocol
 from .enumerations import HashAlgorithms
-from .util import LimitedRange
+from .util import LimitedRange, PKCS12Certificate
 from .util import null_condition_attribute
 from .util import filter_none
 from .util import string2datetime
@@ -820,7 +820,29 @@ class KeyPermitModel(BaseModel) :
 
         if KeyPurpose.Action not in self.purposes and KeyPurpose.Protocol not in self.purposes :
             raise ValueError("This key doesn't have the required purposes to be permitted")
-        
+
+
+class CertificatePermitModel(BaseModel) :
+    def __init__(self, name, permissions,
+                 purposes, certificateInX509=None, pkcs12_certificate=None, **kwargs) :
+        self.name = name
+        self.permissions = [item if isinstance(item, AppPermissions) else AppPermissions.from_str(item) for item in permissions]
+        self.purposes = [item if isinstance(item, KeyPurpose) else KeyPurpose(item) for item in purposes]
+        self.certificateInX509 = certificateInX509
+        if pkcs12_certificate and isinstance(pkcs12_certificate, PKCS12Certificate) :
+            self.certificateInX509 = self.__b64_certificate_from_pkcs12(pkcs12_certificate)
+            self.__check_name_with_cn(pkcs12_certificate)
+    
+    def __b64_certificate_from_pkcs12(self, certificate) :
+        return (certificate
+                .public_certificate.decode('utf-8')
+                .replace('-----BEGIN CERTIFICATE-----','')
+                .replace('-----END CERTIFICATE-----','')
+                .replace('\n',''))
+    
+    def __check_name_with_cn(self, certificate) :
+        pass
+            
 
 #class MessageModel(BaseModel) :
 #    def __init__(self, applicationId=None, chainId=None, messageType=None,
