@@ -38,6 +38,7 @@ import re
 import datetime
 import functools
 import base64
+import warnings
 
 #from pyiltags.standard import ILInt
 from pyilint import ilint_decode
@@ -823,8 +824,26 @@ class KeyPermitModel(BaseModel) :
 
 
 class CertificatePermitModel(BaseModel) :
-    def __init__(self, name, permissions,
-                 purposes, certificateInX509=None, pkcs12_certificate=None, **kwargs) :
+    """
+    Certificate to permit when creating chain using REST API.
+
+    Args:
+        name (:obj:`str`): Key name. Must match the name imported in te node.
+        permissions (:obj:`list` of :obj:`AppPermissions`): List of Apps and Corresponding Actions to be permitted by numbers.
+        purposes (:obj:`list` of :obj:`il2_rest.enumerations.KeyPurpose`/:obj:`str`): Key valid purposes.
+        certificateInX509 (:obj:`str`): The public certificate in PEM encoding in base64.
+        pkcs12_certificate (:obj:`il2_rest.util.PKCS12Certificate`): The PKCS12 certificate. If is not None, will overwrite the certificateInX509 parameter.
+        **kwargs: Arbitrary keyword arguments.
+
+    Attributes:
+        name (:obj:`str`): Key name.
+        permissions (:obj:`list` of :obj:`AppPermissions`): List of Apps and Corresponding Actions to be permitted by numbers.
+        purposes (:obj:`list` of :obj:`il2_rest.enumerations.KeyPurpose`/:obj:`str`): Key valid purposes.
+        certificateInX509 (:obj:`str`): The public certificate in PEM encoding in base64.
+        
+    """
+    def __init__(self, name, permissions, purposes,
+                certificateInX509=None, pkcs12_certificate=None, **kwargs) :
         self.name = name
         self.permissions = [item if isinstance(item, AppPermissions) else AppPermissions.from_str(item) for item in permissions]
         self.purposes = [item if isinstance(item, KeyPurpose) else KeyPurpose(item) for item in purposes]
@@ -841,7 +860,9 @@ class CertificatePermitModel(BaseModel) :
                 .replace('\n',''))
     
     def __check_name_with_cn(self, certificate) :
-        pass
+        normalized_name = self.name.lower().replace(' ', '.')
+        if normalized_name != certificate.common_name :
+            warnings.warn('Certificate name and CN is too different')
             
 
 #class MessageModel(BaseModel) :

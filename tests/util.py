@@ -5,7 +5,7 @@ import re
 
 def is_base64(value) :
     pattern = r'^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$'
-    return re.match(pattern, value)
+    return re.match(pattern, value) != None
 
 def load_settings(filepath = './'):
     def mergedicts(dict1, dict2):
