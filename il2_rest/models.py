@@ -309,8 +309,11 @@ class AppPermissions(BaseModel) :
         return cls(appId=appId, actionIds=actionIds)
 
     def to_str(self) :
-        """ :obj:`str`: String representation of app permissions in the JSON format ('#<appId>,<actionId_1>,...,<actionId_n>')."""
-        return f"#{self.appId},{','.join([str(item) for item in self.actionIds])}"
+        """ :obj:`str`: String representation of app permissions in the JSON format ('#<appId>[,<actionId_1>,...,<actionId_n>]')."""
+        if self.actionIds :
+            return f"#{self.appId},{','.join([str(item) for item in self.actionIds])}"
+        else :
+            return f"#{self.appId}"
 
 
 

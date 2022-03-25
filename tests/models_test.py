@@ -4,6 +4,46 @@ from il2_rest import RestNode, RestChain
 from il2_rest.models import *
 from il2_rest.util import *
 
+class TestAppPermissionsModel(BaseTest):
+    
+    def test_apppermission_appid(self):
+        print('Checking AppPermission with app id only...')
+        app = AppPermissions(4)
+        app_json = app.json()
+        self.assertEqual(app_json, '#4')
+
+    def test_apppermission_with_actions(self):
+        print('Checking AppPermission with app id and actions...')
+        app = AppPermissions(4, [100])
+        app_json = app.json()
+        self.assertEqual(app_json, '#4,100')
+
+        app = AppPermissions(4, [100,200])
+        app_json = app.json()
+        self.assertEqual(app_json, '#4,100,200')
+    
+    def test_from_str(self) :
+        app = AppPermissions.from_str('#4')
+
+        self.assertEqual(app.appId, 4)
+        self.assertIsInstance(app.actionIds, list)
+        self.assertEqual(len(app.actionIds), 0)
+    
+    def test_from_str_with_actions(self) :
+        app = AppPermissions.from_str('#4,100')
+        self.assertEqual(app.appId, 4)
+        self.assertIsInstance(app.actionIds, list)
+        self.assertEqual(len(app.actionIds), 1)
+        self.assertTrue(100 in app.actionIds)
+
+        app = AppPermissions.from_str('#4,100,200')
+        self.assertEqual(app.appId, 4)
+        self.assertIsInstance(app.actionIds, list)
+        self.assertEqual(len(app.actionIds), 2)
+        self.assertTrue(100 in app.actionIds)
+        self.assertTrue(200 in app.actionIds)
+    
+
 
 class TestCertificatePermitModel(BaseTest) :
 
