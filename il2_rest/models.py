@@ -502,11 +502,12 @@ class ChainCreationModel(BaseModel) :
         name (:obj:`str`): Name of the chain.
         operatingKeyStrength (:obj:`il2_rest.enumerations.KeyStrength`): Operating key strength of key.
         parent (:obj:`str`): Parent record Id.
+        apiCertificates (:obj:list of :obj:`CertificatePermitModel`): List of certificates to permit in the chain.
     """
     def __init__(self, name, emergencyClosingKeyPassword, managementKeyPassword,
                 additionalApps=None, description=None, emergencyClosingKeyStrength=KeyStrength.ExtraStrong,
                 managementKeyStrength=KeyStrength.Strong, keysAlgorithm=Algorithms.RSA,
-                operatingKeyStrength=KeyStrength.Normal, parent=None, **kwargs) :
+                operatingKeyStrength=KeyStrength.Normal, parent=None, apiCertificates=None, **kwargs) :
         if additionalApps is None :
             self.additionalApps = None
         else :
@@ -520,6 +521,14 @@ class ChainCreationModel(BaseModel) :
         self.name = name 
         self.operatingKeyStrength = operatingKeyStrength if isinstance(operatingKeyStrength, KeyStrength) else KeyStrength(operatingKeyStrength)
         self.parent = parent
+        self.apiCertificates = apiCertificates
+        if isinstance(apiCertificates, list) :
+            if (not apiCertificates) :
+                raise ValueError('apiCertificates is empty')
+            
+            if (any(not isinstance(item, CertificatePermitModel) for item in apiCertificates)):
+                raise ValueError('apiCertificates is not list of CertificatePermitModel')
+            
 
 
 class ChainSummaryModel(ChainIdModel) :
