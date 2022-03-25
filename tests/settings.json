@@ -4,6 +4,7 @@
         "port": 32022
     },
     "certificate" :{
+        "name": "certificate name as imported in IL2",
         "path":"use local_settings.json to specify your path",
         "password":"use local_settings.json to specify the password"
     }
