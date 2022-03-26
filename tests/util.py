@@ -48,5 +48,6 @@ class BaseTest(unittest.TestCase) :
         self.cert_name = args['certificate']['name']
         self.cert_path = args['certificate']['path']
         self.cert_pass = args['certificate']['password']
+        self.default_chain = args['default_chain']
         self.address = args['host']['address']
         self.port_number = args['host']['port']
