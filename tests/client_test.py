@@ -9,7 +9,7 @@ from il2_rest.util import *
 class TestIl2Rest(BaseTest) :
 
     def test_rest_node_get(self) :
-        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=False)
+        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=self.verify_ca)
         
         details = node.details
         self.assertIsInstance(details, NodeDetailsModel)
@@ -31,7 +31,7 @@ class TestIl2Rest(BaseTest) :
             self.assertIsInstance(mirror, RestChain)
 
     def test_chains_get(self) :
-        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=False)
+        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=self.verify_ca)
         chain_list = node.chains
         self.assertIsInstance(chain_list, list)
         for chain in chain_list :
@@ -55,7 +55,7 @@ class TestIl2Rest(BaseTest) :
                 self.assertIsInstance(records.items[0], RecordModelAsJson)
     
     def test_get_chain_by_id(self) :
-        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=False)
+        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=self.verify_ca)
         chain = node.chain_by_id(self.default_chain)
         self.assertIsInstance(chain, RestChain)
         self.assertIsInstance(chain.summary, ChainSummaryModel)
@@ -77,12 +77,12 @@ class TestIl2Rest(BaseTest) :
             self.assertIsInstance(records.items[0], RecordModelAsJson)
 
     def test_get_chain_by_id_wrong(self) :
-        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=False)
+        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=self.verify_ca)
         with self.assertRaises(requests.exceptions.HTTPError) :
             chain = node.chain_by_id('wrong_chain_id')
     
     def test_create_chain(self):
-        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=False)
+        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=self.verify_ca)
 
         name = 'Chain Name'
         closingPassword = 'EmergencyStrongPassword'
@@ -96,7 +96,7 @@ class TestIl2Rest(BaseTest) :
         self.assertIsInstance(created_chain, ChainCreatedModel)
     
     def test_create_chain_with_certificate_permit(self):
-        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=False)
+        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=self.verify_ca)
 
         name = 'Chain Name With Certificate'
         closingPassword = 'EmergencyStrongPassword'
@@ -126,7 +126,7 @@ class TestIl2Rest(BaseTest) :
 #@unittest.SkipTest
 class TestRestChain(BaseTest) :
     def test_page_of_methods(self) :
-        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
+        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=self.verify_ca)
         chain_list = node.chains
         self.assertIsInstance(chain_list, list)
         for chain in chain_list :
@@ -155,7 +155,7 @@ class TestRestChain(BaseTest) :
             break
     
     def test_multi_document(self) :
-        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
+        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=self.verify_ca)
         chain = node.chains[0]
         response = chain.documents_begin_transaction(comment = 'Test transaction')
         self.assertIsInstance(response, DocumentsTransactionModel)
@@ -171,7 +171,7 @@ class TestRestChain(BaseTest) :
                 self.assertEqual(str_in, str_out)
     
     def test_json_docs(self) :
-        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number)
+        node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=self.verify_ca)
         chain = node.chains[0]
         long_attribute = ['0123456789']*25
         json_body = {"attribute_1":"value_1", "number_1": 1, "long_attribute":long_attribute}

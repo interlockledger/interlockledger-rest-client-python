@@ -51,3 +51,5 @@ class BaseTest(unittest.TestCase) :
         self.default_chain = args['default_chain']
         self.address = args['host']['address']
         self.port_number = args['host']['port']
+        self.verify_ca = args['host']['verify_ca']
+        
