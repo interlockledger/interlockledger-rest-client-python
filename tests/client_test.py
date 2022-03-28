@@ -101,7 +101,7 @@ class TestIl2Rest(BaseTest) :
         name = 'Chain Name With Certificate'
         closingPassword = 'EmergencyStrongPassword'
         management_password = 'ManagementStrongPassword'
-        certificate = PKCS12Certificate(path=self.cert_path, password = self.cert_pass)
+        certificate = PKCS12Certificate(path=self.cert_path, password=self.cert_pass)
         permissions = [AppPermissions(4), AppPermissions(8)]
         purposes = [KeyPurpose.Action, KeyPurpose.Protocol, KeyPurpose.ForceInterlock]
         cert_permit = CertificatePermitModel(

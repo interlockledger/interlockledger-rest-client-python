@@ -32,6 +32,7 @@ The `il2_rest` package was implemented using Python 3.6.9 and requires the follo
 * requests (2.22.0)
 * uri (2.0.1)
 * pyilint (0.2.0)
+* pyiltags>=0.0.1
 
 
 
