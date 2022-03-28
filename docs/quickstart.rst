@@ -112,13 +112,14 @@ Creating Chains
 
 If your are using a certificate with administration privileges, it is possible to create new chains.
 You can add a list of certificate to the chain's permissions by using the `apiCertificates` field with a list of ``CertificatePermitModel``.
+The certificate (key) name must match (case insensitive) the name of the certificate imported in the IL2 node.
 
 .. code-block:: python3
 
     >>> node = RestNode(cert_file='admin.pfx', cert_pass='password', port=32020)
     >>> certificate = PKCS12Certificate(
-    ...     path=self.cert_path,
-    ...     password=self.cert_pass
+    ...     path='admin.pfx',
+    ...     password='password'
     ... )
     >>> permissions = [
     ...     AppPermissions(4), 
@@ -130,7 +131,7 @@ You can add a list of certificate to the chain's permissions by using the `apiCe
     ...     KeyPurpose.ForceInterlock
     ... ]
     >>> cert_permit = CertificatePermitModel(
-    >>>     name=self.cert_name,
+    >>>     name='Certificate Name in IL2 Node',
     >>>     permissions=permissions,
     >>>     purposes=purposes,
     >>>     pkcs12_certificate=certificate
