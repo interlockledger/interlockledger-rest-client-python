@@ -853,8 +853,8 @@ class RestNode :
         Example:
             >>> node = RestNode(cert_file='admin.pfx', cert_pass='password', port=32020)
             >>> certificate = PKCS12Certificate(
-            ...     path=self.cert_path,
-            ...     password=self.cert_pass
+            ...     path='admin.pfx',
+            ...     password='password'
             ... )
             >>> permissions = [
             ...     AppPermissions(4), 
@@ -866,7 +866,7 @@ class RestNode :
             ...     KeyPurpose.ForceInterlock
             ... ]
             >>> cert_permit = CertificatePermitModel(
-            >>>     name=self.cert_name,
+            >>>     name='Certificate Name in IL2 Node',
             >>>     permissions=permissions,
             >>>     purposes=purposes,
             >>>     pkcs12_certificate=certificate
