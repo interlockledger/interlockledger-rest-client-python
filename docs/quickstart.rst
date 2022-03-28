@@ -25,7 +25,8 @@ With the ``RestNode`` class, it is possible to retrieve details of the node, suc
     Roles: Interlocking,Mirror,PeerRegistry,Relay,User
     Chains: 20i...<REDACTED>..._fc, 5rA...<REDACTED>...Pso
 
-To see and store records and documents, you need to use an instance of the ``RestChain``. You can get ``RestChain`` instances by retrieving the list of chains in the network:
+To see and store records and documents, you need to use an instance of the ``RestChain``.
+You can get ``RestChain`` instances by retrieving the list of chains in the network:
 
 .. code-block:: python3
 
@@ -93,7 +94,8 @@ When you are done, all you need to do is commit the transaction:
     >>> locator = chain.documents_transaction_commit(transaction_id)
 
 
-To download the files stored in a chain, you will need to use the locator of a multi-document record. You can store a single file of a multi-document record using the index of the file in the record:
+To download the files stored in a chain, you will need to use the locator of a multi-document record.
+You can store a single file of a multi-document record using the index of the file in the record:
 
 .. code-block:: python3
 
@@ -104,6 +106,45 @@ Or you can download all files in a compressed in a single file:
 .. code-block:: python3
 
     >>> chain.download_documents_as_zip(locator, '/path/to/download/')
+
+Creating Chains
+---------------
+
+If your are using a certificate with administration privileges, it is possible to create new chains.
+You can add a list of certificate to the chain's permissions by using the `apiCertificates` field with a list of ``CertificatePermitModel``.
+
+.. code-block:: python3
+
+    >>> node = RestNode(cert_file='admin.pfx', cert_pass='password', port=32020)
+    >>> certificate = PKCS12Certificate(
+    ...     path=self.cert_path,
+    ...     password=self.cert_pass
+    ... )
+    >>> permissions = [
+    ...     AppPermissions(4), 
+    ...     AppPermissions(8)
+    ... ]
+    >>> purposes = [
+    ...     KeyPurpose.Action,
+    ...     KeyPurpose.Protocol,
+    ...     KeyPurpose.ForceInterlock
+    ... ]
+    >>> cert_permit = CertificatePermitModel(
+    >>>     name=self.cert_name,
+    >>>     permissions=permissions,
+    >>>     purposes=purposes,
+    >>>     pkcs12_certificate=certificate
+    >>> )
+    >>> new_chain = ChainCreationModel(
+    ...     name='New chain name', 
+    ...     description='New chain', 
+    ...     managementKeyPassword='keyPassword',
+    ...     emergencyClosingKeyPassword='closingPassword',
+    ...     apiCertificates=[cert_permit]
+    ... )
+    >>> resp = node.create_chain(new_chain)
+    >>> print(resp)
+    Chain 'New chain name' #cRPeHOITV_t1ZQS9CIL7Yi3djJ33ynZCdSRsEnOvX40
 
 
 Managing Keys

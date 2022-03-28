@@ -38,6 +38,7 @@ import re
 import datetime
 import functools
 import base64
+import warnings
 
 #from pyiltags.standard import ILInt
 from pyilint import ilint_decode
@@ -54,7 +55,7 @@ from .enumerations import RecordType
 from .enumerations import CipherAlgorithms
 from .enumerations import NetworkProtocol
 from .enumerations import HashAlgorithms
-from .util import LimitedRange
+from .util import LimitedRange, PKCS12Certificate
 from .util import null_condition_attribute
 from .util import filter_none
 from .util import string2datetime
@@ -308,8 +309,11 @@ class AppPermissions(BaseModel) :
         return cls(appId=appId, actionIds=actionIds)
 
     def to_str(self) :
-        """ :obj:`str`: String representation of app permissions in the JSON format ('#<appId>,<actionId_1>,...,<actionId_n>')."""
-        return f"#{self.appId},{','.join([str(item) for item in self.actionIds])}"
+        """ :obj:`str`: String representation of app permissions in the JSON format ('#<appId>[,<actionId_1>,...,<actionId_n>]')."""
+        if self.actionIds :
+            return f"#{self.appId},{','.join([str(item) for item in self.actionIds])}"
+        else :
+            return f"#{self.appId}"
 
 
 
@@ -498,11 +502,12 @@ class ChainCreationModel(BaseModel) :
         name (:obj:`str`): Name of the chain.
         operatingKeyStrength (:obj:`il2_rest.enumerations.KeyStrength`): Operating key strength of key.
         parent (:obj:`str`): Parent record Id.
+        apiCertificates (:obj:list of :obj:`CertificatePermitModel`): List of certificates to permit in the chain.
     """
     def __init__(self, name, emergencyClosingKeyPassword, managementKeyPassword,
                 additionalApps=None, description=None, emergencyClosingKeyStrength=KeyStrength.ExtraStrong,
                 managementKeyStrength=KeyStrength.Strong, keysAlgorithm=Algorithms.RSA,
-                operatingKeyStrength=KeyStrength.Normal, parent=None, **kwargs) :
+                operatingKeyStrength=KeyStrength.Normal, parent=None, apiCertificates=None, **kwargs) :
         if additionalApps is None :
             self.additionalApps = None
         else :
@@ -516,6 +521,14 @@ class ChainCreationModel(BaseModel) :
         self.name = name 
         self.operatingKeyStrength = operatingKeyStrength if isinstance(operatingKeyStrength, KeyStrength) else KeyStrength(operatingKeyStrength)
         self.parent = parent
+        self.apiCertificates = apiCertificates
+        if isinstance(apiCertificates, list) :
+            if (not apiCertificates) :
+                raise ValueError('apiCertificates is empty')
+            
+            if (any(not isinstance(item, CertificatePermitModel) for item in apiCertificates)):
+                raise ValueError('apiCertificates is not list of CertificatePermitModel')
+            
 
 
 class ChainSummaryModel(ChainIdModel) :
@@ -820,7 +833,49 @@ class KeyPermitModel(BaseModel) :
 
         if KeyPurpose.Action not in self.purposes and KeyPurpose.Protocol not in self.purposes :
             raise ValueError("This key doesn't have the required purposes to be permitted")
+
+
+class CertificatePermitModel(BaseModel) :
+    """
+    Certificate to permit when creating chain using REST API.
+
+    Args:
+        name (:obj:`str`): Key name. Must match the name imported in te node.
+        permissions (:obj:`list` of :obj:`AppPermissions`): List of Apps and Corresponding Actions to be permitted by numbers.
+        purposes (:obj:`list` of :obj:`il2_rest.enumerations.KeyPurpose`/:obj:`str`): Key valid purposes.
+        certificateInX509 (:obj:`str`): The public certificate in PEM encoding in base64.
+        pkcs12_certificate (:obj:`il2_rest.util.PKCS12Certificate`): The PKCS12 certificate. If is not None, will overwrite the certificateInX509 parameter.
+        **kwargs: Arbitrary keyword arguments.
+
+    Attributes:
+        name (:obj:`str`): Key name.
+        permissions (:obj:`list` of :obj:`AppPermissions`): List of Apps and Corresponding Actions to be permitted by numbers.
+        purposes (:obj:`list` of :obj:`il2_rest.enumerations.KeyPurpose`/:obj:`str`): Key valid purposes.
+        certificateInX509 (:obj:`str`): The public certificate in PEM encoding in base64.
         
+    """
+    def __init__(self, name, permissions, purposes,
+                certificateInX509=None, pkcs12_certificate=None, **kwargs) :
+        self.name = name
+        self.permissions = [item if isinstance(item, AppPermissions) else AppPermissions.from_str(item) for item in permissions]
+        self.purposes = [item if isinstance(item, KeyPurpose) else KeyPurpose(item) for item in purposes]
+        self.certificateInX509 = certificateInX509
+        if pkcs12_certificate and isinstance(pkcs12_certificate, PKCS12Certificate) :
+            self.certificateInX509 = self.__b64_certificate_from_pkcs12(pkcs12_certificate)
+            self.__check_name_with_cn(pkcs12_certificate)
+    
+    def __b64_certificate_from_pkcs12(self, certificate) :
+        return (certificate
+                .public_certificate.decode('utf-8')
+                .replace('-----BEGIN CERTIFICATE-----','')
+                .replace('-----END CERTIFICATE-----','')
+                .replace('\n',''))
+    
+    def __check_name_with_cn(self, certificate) :
+        normalized_name = self.name.lower().replace(' ', '.')
+        if normalized_name != certificate.common_name :
+            warnings.warn('Certificate name and CN is too different')
+            
 
 #class MessageModel(BaseModel) :
 #    def __init__(self, applicationId=None, chainId=None, messageType=None,

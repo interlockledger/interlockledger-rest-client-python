@@ -8,18 +8,25 @@ Welcome to InterlockLedgerAPI's documentation!
 
 .. image:: /images/full-logo-dark.png
 
-This package is a python client to the InterlockLedger Node REST API. It connects to InterlockLedger nodes, allowing the creation of chains, interlocks, and storage of records and documents. This client requires the InterlockLedger Node Server version 5.6.61 and API v6.0.0.
+This package is a python client to the InterlockLedger Node REST API v3.1.0.
+It connects to InterlockLedger nodes, allowing the creation of chains, interlocks, and storage of records and documents.
+This client requires the InterlockLedger API v7.2.0.
 
 
 The InterlockLedger
 -------------------
 
-An InterlockLedger network is a peer-to-peer network of nodes. Each node runs the InterlockLedger software.  All communication between nodes is point-to-point and digitally signed, but not mandatorily encrypted.  This means that data is shared either publicly or on a need-to-know basis, depending on the application.
+An InterlockLedger network is a peer-to-peer network of nodes.
+Each node runs the InterlockLedger software.
+All communication between nodes is point-to-point and digitally signed, but not mandatorily encrypted.
+This means that data is shared either publicly or on a need-to-know basis, depending on the application.
 
-In the InterlockLedger, the ledger is composed of myriads of independently permissioned chains, comprised of blockchained records of data, under the control of their owners, but that are tied by Interlockings, that avoid them having their content/history being rewritten even by their owners. For each network the ledger is the sum of all chains in the participating nodes. 
+In the InterlockLedger, the ledger is composed of myriads of independently permissioned chains, comprised of blockchained records of data, under the control of their owners, but that are tied by Interlockings, that avoid them having their content/history being rewritten even by their owners.
+For each network the ledger is the sum of all chains in the participating nodes. 
 
-A chain is a sequential list of records, back chained with signatures/hashes to the previous records, so that no changes in them can go undetected. A record is tied to some enabled Application, that defines the metadata associate with it, and the constraints defined in this public metadata, forcibly stored in the network genesis chain, is akin to validation that each correct implementation of the node software is able to enforce, but more
-importantly, any external logic can validate the multiple dimensions of validity for records/chains/interlockings/the ledger.
+A chain is a sequential list of records, back chained with signatures/hashes to the previous records, so that no changes in them can go undetected.
+A record is tied to some enabled InterlockLedgerApplication (IL2App), that defines the metadata associate with it.
+The IL2App defines the constraints of a record as a public metadata, stored in the network genesis chain.
 
 .. toctree::
    :maxdepth: 4
@@ -33,7 +40,8 @@ importantly, any external logic can validate the multiple dimensions of validity
 About this documentation
 ========================
 
-This reference manual was partially created used using Sphinx and Google style docstrings. If you need/want to create this manual in another format (HTML, man, etc), you will need to install Sphinx and Sphinx-Napoleon extension:
+This reference manual was partially created used using Sphinx and Google style docstrings.
+If you need/want to create this manual in another format (HTML, man, etc), you will need to install Sphinx and Sphinx-Napoleon extension:
 
 .. code-block:: console
 

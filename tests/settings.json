@@ -1,9 +1,12 @@
 {
     "host":{
         "address":"node.il2",
-        "port": 32022
+        "port": 32022,
+        "verify_ca": true
     },
+    "default_chain": "default chain id",
     "certificate" :{
+        "name": "certificate name as imported in IL2",
         "path":"use local_settings.json to specify your path",
         "password":"use local_settings.json to specify the password"
     }

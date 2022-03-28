@@ -852,8 +852,32 @@ class RestNode :
 
         Example:
             >>> node = RestNode(cert_file='admin.pfx', cert_pass='password', port=32020)
-            >>> new_chain = ChainCreationModel(name='New chain name', description='New chain', 
-            ...         managementKeyPassword='keyPassword', emergencyClosingKeyPassword='closingPassword')
+            >>> certificate = PKCS12Certificate(
+            ...     path=self.cert_path,
+            ...     password=self.cert_pass
+            ... )
+            >>> permissions = [
+            ...     AppPermissions(4), 
+            ...     AppPermissions(8)
+            ... ]
+            >>> purposes = [
+            ...     KeyPurpose.Action,
+            ...     KeyPurpose.Protocol,
+            ...     KeyPurpose.ForceInterlock
+            ... ]
+            >>> cert_permit = CertificatePermitModel(
+            >>>     name=self.cert_name,
+            >>>     permissions=permissions,
+            >>>     purposes=purposes,
+            >>>     pkcs12_certificate=certificate
+            >>> )
+            >>> new_chain = ChainCreationModel(
+            ...     name='New chain name', 
+            ...     description='New chain', 
+            ...     managementKeyPassword='keyPassword',
+            ...     emergencyClosingKeyPassword='closingPassword',
+            ...     apiCertificates=[cert_permit]
+            ... )
             >>> resp = node.create_chain(new_chain)
             >>> print(resp)
             Chain 'New chain name' #cRPeHOITV_t1ZQS9CIL7Yi3djJ33ynZCdSRsEnOvX40
