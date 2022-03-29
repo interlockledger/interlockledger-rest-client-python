@@ -139,6 +139,7 @@ The certificate (key) name must match (case insensitive) the name of the certifi
     >>> new_chain = ChainCreationModel(
     ...     name='New chain name', 
     ...     description='New chain', 
+    ...     additionalApps=[4,8],
     ...     managementKeyPassword='keyPassword',
     ...     emergencyClosingKeyPassword='closingPassword',
     ...     apiCertificates=[cert_permit]

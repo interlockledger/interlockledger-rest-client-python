@@ -873,7 +873,8 @@ class RestNode :
             >>> )
             >>> new_chain = ChainCreationModel(
             ...     name='New chain name', 
-            ...     description='New chain', 
+            ...     description='New chain',
+            ...     additionalApps=[4,8],
             ...     managementKeyPassword='keyPassword',
             ...     emergencyClosingKeyPassword='closingPassword',
             ...     apiCertificates=[cert_permit]
