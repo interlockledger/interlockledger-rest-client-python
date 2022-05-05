@@ -622,19 +622,20 @@ class RestChain :
             model = DocumentsBeginTransactionModel(chain=self.id, comment=comment, encryption=encryption, compression=compression, generatePublicDirectory=generatePublicDirectory, iterations=iterations, password=password)
         return DocumentsTransactionModel.from_json(self.__rest._post("/documents/transaction", model))
             
-    def documents_transaction_add_item(self, transaction_id, name, filepath, content_type=None, comment=None) :
+    def documents_transaction_add_item(self, transaction_id, name, comment, filepath, relative_path=".", content_type=None) :
         """
         Adds another document to a pending transaction of multi-documents.
 
         Args:
             transaction_id (:obj:`str`): Id of the ongoing transaction.
             name (:obj:`str`): File name.
+            comment (:obj:`str`): Additional comment.
             filepath (:obj:`str`): Path to the file to upload.
+            relative_path (:obj:`str`, optional): Relative path of the file inside the record.
             content_type (:obj:`str`, optional): File mime-type. 
                 If None, it will try to guess the mime-type based on the file extension.
-            comment (:obj:`str`, optional): Additional comment.
         Returns:
-            :obj:`bool`: True if success
+            :obj:`il2_rest.models.DocumentsTransactionModel`: Status of the transaction. `None` if fail.
 
         Example:
             After beginning a transaction, you can add as many items as you wish:
@@ -645,7 +646,7 @@ class RestChain :
             >>> chain.documents_transaction_add_item(transaction_id, "item1.txt", "./test.txt")
             >>> chain.documents_transaction_add_item(transaction_id, "item2.txt", "./test2.txt", comment="This file has a comment.")
         """
-        query = f"/documents/transaction/{transaction_id}?name={name}"
+        query = f"/documents/transaction/{transaction_id}?path={relative_path}&name={name}"
         if comment :
             query += f"&comment={comment}"
         
@@ -654,9 +655,12 @@ class RestChain :
         
         resp = self.__rest._post_file(query, filepath, content_type)
         if resp.status_code == 200 :
-            return True
+            return DocumentsTransactionModel.from_json(resp.json())
         else :
-            return False
+            return None
+        
+        
+        
     
     def documents_transaction_commit(self, transaction_id) :
         """
