@@ -640,7 +640,7 @@ class DocumentsTransactionModel(BaseModel) :
     def __init__(self, chain=None, transactionId=None, canCommitNow=None, countOfUploadedDocuments=None, timeOutLimit=None, **kwargs) :
         self.chain = chain
         self.transactionId = transactionId
-        self.canCommitNow = transactionId
+        self.canCommitNow = canCommitNow
         self.countOfUploadedDocuments = countOfUploadedDocuments
         self.timeOutLimit = timeOutLimit if isinstance(timeOutLimit, datetime.datetime) else string2datetime(timeOutLimit)
 
