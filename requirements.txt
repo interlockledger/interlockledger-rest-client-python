@@ -2,4 +2,3 @@ colour>=0.1.5
 packaging>=19.2
 pyOpenSSL>=19.1.0
 requests>=2.22.0
-uri>=2.0.1

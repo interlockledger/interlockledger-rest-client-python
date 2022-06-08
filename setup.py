@@ -44,7 +44,6 @@ setuptools.setup(
     install_requires=[
           'colour>=0.1.5',
           'packaging>=19.2',
-          'uri>=2.0.1',
           'requests>=2.22.0',
           'pyOpenSSL>= 19.1.0',
           'pyilint>=0.2.0',
