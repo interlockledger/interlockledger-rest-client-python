@@ -955,7 +955,7 @@ class RestNode :
             if response.text :
                 msg = response.text
                 #msg = f"{response.status_code} {response.reason}: ({response.json()['exceptionType']}) {response.json()['message']}"
-                raise requests.HTTPError(msg)
+                raise requests.HTTPError(msg, response=response)
             else :
                 response.raise_for_status()
         
