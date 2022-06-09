@@ -772,6 +772,21 @@ class RestNode :
         f_pem.write(self.__certificate.public_certificate)
         f_pem.close()
 
+    @property
+    def public_certificate(self):
+        """:obj:`str`: Public certificate in PEM format."""
+        return self.__certificate.public_certificate
+
+    @property
+    def public_certificate_in_x509(self):
+        """:obj:`str`: Public certificate in X509 format."""
+        x509 = (
+            self.public_certificate
+                .replace(b'-----BEGIN CERTIFICATE-----\n', b'')
+                .replace(b'-----END CERTIFICATE-----\n', b'')
+                .replace(b'\n', b'')
+        )
+        return x509
 
     @property
     def api_version(self) :
