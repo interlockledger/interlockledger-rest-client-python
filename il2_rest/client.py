@@ -29,7 +29,6 @@
 import os
 import contextlib
 import tempfile
-import uri
 import requests
 import json
 import base64
@@ -60,7 +59,7 @@ from .models import DocumentsTransactionModel
 from .models import DocumentsMetadataModel
 from .models import PageOfModel
 from .util import build_query
-from .util import PKCS12Certificate
+from .util import PKCS12Certificate, SimpleUri
 
 
 class RestChain :
@@ -741,7 +740,7 @@ class RestNode :
             port = NetworkPredefinedPorts.MainNet.value
         
         self.verify_ca = verify_ca
-        self.base_uri = uri.URI(f'https://{address}:{port}/')
+        self.base_uri = SimpleUri(address=address, port=port)
         #self.__certificate = self.__get_cert_from_file(cert_file, cert_pass)
         self.__certificate = PKCS12Certificate(cert_file, cert_pass)
         self.network = RestNetwork(self)
@@ -962,7 +961,7 @@ class RestNode :
         return
     
     def _download_file(self, url, dst_path='./') :
-        cur_uri = uri.URI(self.base_uri, path=url)
+        cur_uri = self.base_uri.build(path=url)
         s = self._get_session()
         with s.get(cur_uri, stream=True) as r:
             d = r.headers['content-disposition']
@@ -973,7 +972,7 @@ class RestNode :
         return
 
     def _get_raw_response(self, url, method, accept) :
-        cur_uri = uri.URI(self.base_uri, path=url)
+        cur_uri = self.base_uri.build(path=url)
         s = self._get_session()
         response = s.request(method=method, url=cur_uri, stream=True,
                                 headers={'Accept': accept})
@@ -982,7 +981,7 @@ class RestNode :
         return response
 
     def _prepare_request(self, url, method, accept) :
-        cur_uri = uri.URI(self.base_uri, path=url)
+        cur_uri = self.base_uri.build(path=url)
         s = self._get_session()
         response = s.request(method=method, url=cur_uri, stream=True,
                                 headers={'Accept': accept})
@@ -991,7 +990,7 @@ class RestNode :
         return response
 
     def _prepare_post_request(self, url, body, accept) :
-        cur_uri = uri.URI(self.base_uri, path=url)
+        cur_uri = self.base_uri.build(path=url)
         
         if issubclass(type(body) ,BaseModel) :
             json_data = body.json()
@@ -1007,7 +1006,7 @@ class RestNode :
         
 
     def _prepare_post_raw_request(self, url, body, accept, contentType) :
-        cur_uri = uri.URI(self.base_uri, path=url)
+        cur_uri = self.base_uri.build(path=url)
         headers = {'Accept': accept,
                    'Content-type': contentType}
         
@@ -1017,7 +1016,7 @@ class RestNode :
         return response
 
     def _prepare_post_file_request(self, url, file_path, accept, contentType) :
-        cur_uri = uri.URI(self.base_uri, path=url)
+        cur_uri = self.base_uri.build(path=url)
         headers = {'Accept': accept,
                    'Content-type': contentType}
         

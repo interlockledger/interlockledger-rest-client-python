@@ -81,6 +81,7 @@ class TestIl2Rest(BaseTest) :
         with self.assertRaises(requests.exceptions.HTTPError) :
             chain = node.chain_by_id('wrong_chain_id')
     
+    @unittest.SkipTest
     def test_create_chain(self):
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=self.verify_ca)
 
@@ -95,6 +96,7 @@ class TestIl2Rest(BaseTest) :
         created_chain = node.create_chain(chain)
         self.assertIsInstance(created_chain, ChainCreatedModel)
     
+    @unittest.SkipTest
     def test_create_chain_with_certificate_permit(self):
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=self.verify_ca)
 
@@ -154,13 +156,14 @@ class TestRestChain(BaseTest) :
             self.assertEqual(records.pageSize, 20)
             break
     
+    #@unittest.SkipTest
     def test_multi_document(self) :
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=self.verify_ca)
         chain = node.chains[0]
         response = chain.documents_begin_transaction(comment = 'Test transaction')
         self.assertIsInstance(response, DocumentsTransactionModel)
         transaction_id = response.transactionId
-        chain.documents_transaction_add_item(transaction_id, name="item.txt", content_type="text/plain", filepath="./tests/test.txt")
+        chain.documents_transaction_add_item(transaction_id, name="item.txt", content_type="text/plain", filepath="./tests/test.txt", comment="Test comment")
         locator = chain.documents_transaction_commit(transaction_id)
 
         chain.download_single_document_at(locator, 0, './tests/')
@@ -170,6 +173,7 @@ class TestRestChain(BaseTest) :
                 str_out = f_out.readline()
                 self.assertEqual(str_in, str_out)
     
+    #@unittest.SkipTest
     def test_json_docs(self) :
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=self.verify_ca)
         chain = node.chains[0]
