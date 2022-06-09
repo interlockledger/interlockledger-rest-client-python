@@ -23,7 +23,6 @@ To use the `il2_rest` package, you can add the interlockledger_rest folder to yo
     * packaging (19.2)
     * pyOpenSSL (19.1.0)
     * requests (2.22.0)
-    * uri (2.0.1)
     * pyilint (0.2.0)
     * pyiltags (0.0.1)
 * InterlockLedger :
