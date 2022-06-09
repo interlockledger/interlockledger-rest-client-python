@@ -108,7 +108,12 @@ class RestChain :
         Returns:
             :obj:`il2_rest.models.PageOfModel` of :obj:`il2_rest.models.InterlockingRecordModel`: List of interlocks registered in the chain.
         """
-        json_data = self.__rest._get(f'/chain/{self.id}/interlockings?howManyFromLast={howManyFromLast}&page={page}&pageSize={pageSize}')
+        params = {
+            "howManyFromLast": howManyFromLast,
+            "page": page,
+            "pageSize": pageSize
+        }
+        json_data = self.__rest._get(f'/chain/{self.id}/interlockings', params=params)
         json_data['itemClass'] = InterlockingRecordModel
         return PageOfModel.from_json(json_data)
         
@@ -194,8 +199,13 @@ class RestChain :
                 "payloadBytes": "+DQHBQAAFAIBBA=="
             }
         """
-        cur_url = f"/records@{self.id}/with?applicationId={applicationId}&payloadTagId={payloadTagId}&type={rec_type.value}"
-        return RecordModel.from_json(self.__rest._post_raw(cur_url, rec_bytes, "application/interlockledger"))
+        params = {
+            "applicationId": applicationId,
+            "payloadTagId": payloadTagId,
+            "type": rec_type.value,
+        }
+        cur_url = f"/records@{self.id}/with"
+        return RecordModel.from_json(self.__rest._post_raw(cur_url, rec_bytes, "application/interlockledger", params=params))
         
 
     def add_record_as_json(self, applicationId=None, payloadTagId=None, payload=None, rec_type=RecordType.Data, model=None) :
@@ -371,12 +381,18 @@ class RestChain :
         Returns:
             :obj:`il2_rest.models.PageOfModel` of :obj:`il2_rest.models.RecordModel`: List of records in the given interval.
         """
-        cur_curl = f"/records@{self.id}?page={page}&pageSize={pageSize}&lastToFirst={lastToFirst}"
+        params = {
+            "page": page,
+            "pageSize": pageSize,
+            "lastToFirst": lastToFirst,
+        }
         if firstSerial :
-            cur_curl += f"&firstSerial={firstSerial}"
+            params["firstSerial"] = firstSerial
         if lastSerial :
-            cur_curl += f"&lastSerial={lastSerial}"
-        json_data = self.__rest._get(cur_curl)
+            params["lastSerial"] = lastSerial
+        
+        cur_curl = f"/records@{self.id}"
+        json_data = self.__rest._get(cur_curl, params=params)
         json_data['itemClass'] = RecordModel
         return PageOfModel.from_json(json_data)
 
@@ -394,12 +410,18 @@ class RestChain :
         Returns:
             :obj:`il2_rest.models.PageOfModel` of :obj:`il2_rest.models.RecordModelAsJson`: List of records mapped to JSON in the given interval.
         """
-        cur_curl = f"/records@{self.id}/asJson?page={page}&pageSize={pageSize}&lastToFirst={lastToFirst}"
+        params = {
+            "page": page,
+            "pageSize": pageSize,
+            "lastToFirst": lastToFirst,
+        }
         if firstSerial :
-            cur_curl += f"&firstSerial={firstSerial}"
+            params["firstSerial"] = firstSerial
         if lastSerial :
-            cur_curl += f"&lastSerial={lastSerial}"
-        json_data = self.__rest._get(cur_curl)
+            params["lastSerial"] = lastSerial
+        
+        cur_curl = f"/records@{self.id}/asJson"
+        json_data = self.__rest._get(cur_curl, params=params)
         json_data['itemClass'] = RecordModelAsJson
         return PageOfModel.from_json(json_data)
 
@@ -621,7 +643,7 @@ class RestChain :
             model = DocumentsBeginTransactionModel(chain=self.id, comment=comment, encryption=encryption, compression=compression, generatePublicDirectory=generatePublicDirectory, iterations=iterations, password=password)
         return DocumentsTransactionModel.from_json(self.__rest._post("/documents/transaction", model))
             
-    def documents_transaction_add_item(self, transaction_id, name, comment, filepath, relative_path=".", content_type=None) :
+    def documents_transaction_add_item(self, transaction_id, name, comment, filepath, relative_path="/", content_type=None) :
         """
         Adds another document to a pending transaction of multi-documents.
 
@@ -645,14 +667,17 @@ class RestChain :
             >>> chain.documents_transaction_add_item(transaction_id, "item1.txt", "./test.txt")
             >>> chain.documents_transaction_add_item(transaction_id, "item2.txt", "./test2.txt", comment="This file has a comment.")
         """
-        query = f"/documents/transaction/{transaction_id}?path={relative_path}&name={name}"
-        if comment :
-            query += f"&comment={comment}"
+        params = {
+            "path": relative_path,
+            "name": name,
+            "comment": comment
+        }
+        query = f"/documents/transaction/{transaction_id}"
         
         if not content_type :
             content_type = mimetypes.MimeTypes().guess_type(filepath)[0]
         
-        resp = self.__rest._post_file(query, filepath, content_type)
+        resp = self.__rest._post_file(query, filepath, content_type, params=params)
         if resp.status_code == 200 :
             return DocumentsTransactionModel.from_json(resp.json())
         else :
@@ -927,27 +952,27 @@ class RestNode :
         return [InterlockingRecordModel.from_json(item) for item in json_data]
 
 
-    def _call_api_plain_doc(self, url, method, accept="text/plain") :
-        return self._prepare_request(url, method, accept).text
+    def _call_api_plain_doc(self, url, method, accept="text/plain", params={}) :
+        return self._prepare_request(url, method, accept, params=params).text
 
-    def _call_api_raw_doc(self, url, method, accept="*") :
-        return self._get_raw_response(url, method, accept)
+    def _call_api_raw_doc(self, url, method, accept="*", params={}) :
+        return self._get_raw_response(url, method, accept, params=params)
 
-    def _get(self, url) :
-        return self._call_api(url, 'GET').json()
+    def _get(self, url, params={}) :
+        return self._call_api(url, 'GET', params=params).json()
 
-    def _post(self, url, body) :
-        return self._prepare_post_request(url, body, "application/json").json()
+    def _post(self, url, body, params={}) :
+        return self._prepare_post_request(url, body, "application/json", params=params).json()
 
-    def _post_raw(self, url, body, contentType) :
-        return self._prepare_post_raw_request(url, body, "application/json", contentType)
+    def _post_raw(self, url, body, contentType, params={}) :
+        return self._prepare_post_raw_request(url, body, "application/json", contentType, params=params)
 
-    def _post_file(self, url, file_path, contentType) :
-        return self._prepare_post_file_request(url, file_path, "application/json", contentType)
+    def _post_file(self, url, file_path, contentType, params={}) :
+        return self._prepare_post_file_request(url, file_path, "application/json", contentType, params=params)
 
     
-    def _call_api(self, url, method, accept="application/json") :
-        return self._prepare_request(url, method, accept)
+    def _call_api(self, url, method, accept="application/json", params={}) :
+        return self._prepare_request(url, method, accept, params=params)
 
     def __treat_response_error(self, response) :
         if 400<= response.status_code and response.status_code < 600 :
@@ -971,25 +996,25 @@ class RestNode :
                 shutil.copyfileobj(r.raw, f)
         return
 
-    def _get_raw_response(self, url, method, accept) :
+    def _get_raw_response(self, url, method, accept, params={}) :
         cur_uri = self.base_uri.build(path=url)
         s = self._get_session()
         response = s.request(method=method, url=cur_uri, stream=True,
-                                headers={'Accept': accept})
+                                headers={'Accept': accept}, params=params)
         
         self.__treat_response_error(response)
         return response
 
-    def _prepare_request(self, url, method, accept) :
+    def _prepare_request(self, url, method, accept, params={}) :
         cur_uri = self.base_uri.build(path=url)
         s = self._get_session()
         response = s.request(method=method, url=cur_uri, stream=True,
-                                headers={'Accept': accept})
+                                headers={'Accept': accept}, params=params)
         
         self.__treat_response_error(response)
         return response
 
-    def _prepare_post_request(self, url, body, accept) :
+    def _prepare_post_request(self, url, body, accept, params={}) :
         cur_uri = self.base_uri.build(path=url)
         
         if issubclass(type(body) ,BaseModel) :
@@ -999,30 +1024,30 @@ class RestNode :
         headers = {'Accept': accept,
                    'Content-type': "application/json; charset=utf-8"}
         s = self._get_session()
-        response = s.post(url=cur_uri, headers=headers, json=json_data)
+        response = s.post(url=cur_uri, headers=headers, json=json_data, params=params)
         
         self.__treat_response_error(response)
         return response
         
 
-    def _prepare_post_raw_request(self, url, body, accept, contentType) :
+    def _prepare_post_raw_request(self, url, body, accept, contentType, params={}) :
         cur_uri = self.base_uri.build(path=url)
         headers = {'Accept': accept,
                    'Content-type': contentType}
         
         s = self._get_session()
-        response = s.post(url=cur_uri, data=body, headers=headers)
+        response = s.post(url=cur_uri, data=body, headers=headers, params=params)
         self.__treat_response_error(response)
         return response
 
-    def _prepare_post_file_request(self, url, file_path, accept, contentType) :
+    def _prepare_post_file_request(self, url, file_path, accept, contentType, params={}) :
         cur_uri = self.base_uri.build(path=url)
         headers = {'Accept': accept,
                    'Content-type': contentType}
         
         s = self._get_session()
         with open(file_path, 'rb') as f :
-            response = s.post(url=cur_uri, data=f, headers=headers)
+            response = s.post(url=cur_uri, data=f, headers=headers, params=params)
         self.__treat_response_error(response)
         return response
 
