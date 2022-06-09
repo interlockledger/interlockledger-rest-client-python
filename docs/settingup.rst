@@ -24,15 +24,14 @@ The package can also be installed by running the following command on the ``setu
 Dependencies
 ------------
 
-The `il2_rest` package was implemented using Python 3.6.9 and requires the following packages:
+The `il2_rest` package was implemented using Python 3.7.15+ and requires the following packages:
 
 * colour (0.1.5)
 * packaging (19.2)
 * pyOpenSSL (19.1.0)
 * requests (2.22.0)
-* uri (2.0.1)
-* pyilint (0.2.0)
-* pyiltags>=0.0.1
+* pyilint (0.2.2)
+* pyiltags (0.1.1)
 
 
 

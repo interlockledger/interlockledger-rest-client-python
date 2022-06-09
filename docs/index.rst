@@ -8,9 +8,9 @@ Welcome to InterlockLedgerAPI's documentation!
 
 .. image:: /images/full-logo-dark.png
 
-This package is a python client to the InterlockLedger Node REST API v3.1.0.
+This package is a python client to the InterlockLedger Node REST API v3.1.2.
 It connects to InterlockLedger nodes, allowing the creation of chains, interlocks, and storage of records and documents.
-This client requires the InterlockLedger API v7.2.0.
+This client requires the InterlockLedger API v7.5.0.
 
 
 The InterlockLedger
