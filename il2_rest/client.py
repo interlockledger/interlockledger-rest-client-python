@@ -991,7 +991,7 @@ class RestNode :
         with s.get(cur_uri, stream=True) as r:
             d = r.headers['content-disposition']
             filename = re.findall("filename=(.+);", d)[0]
-            filepath = os.path.join(dst_path, filename)
+            filepath = os.path.expanduser(os.path.join(dst_path, filename))
             with open(filepath, 'wb') as f :
                 shutil.copyfileobj(r.raw, f)
         return
@@ -1046,7 +1046,7 @@ class RestNode :
                    'Content-type': contentType}
         
         s = self._get_session()
-        with open(file_path, 'rb') as f :
+        with open(os.path.expanduser(file_path), 'rb') as f :
             response = s.post(url=cur_uri, data=f, headers=headers, params=params)
         self.__treat_response_error(response)
         return response

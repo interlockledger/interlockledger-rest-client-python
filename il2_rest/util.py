@@ -31,6 +31,7 @@
 """
 Utility classes and functions for the InterlockLedger API.
 """
+import os
 import io
 import re
 import json
@@ -459,7 +460,7 @@ class PKCS12Certificate:
         return msg
 
     def __get_cert_from_file(self, cert_path, cert_pass) :
-        with open(cert_path, 'rb') as f :
+        with open(os.path.expanduser(cert_path), 'rb') as f :
             pkcs_cert = serialization.pkcs12.load_key_and_certificates(f.read(), cert_pass.encode())
         return pkcs_cert
 
