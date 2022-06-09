@@ -11,6 +11,14 @@ LimitedRange
     :undoc-members:
     :show-inheritance:
 
+
+SimpleUri
+-----------------
+.. autoclass:: il2_rest.util.SimpleUri
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 PKCS12Certificate
 -----------------
 .. autoclass:: il2_rest.util.PKCS12Certificate

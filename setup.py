@@ -34,7 +34,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="il2_rest", # Replace with your own username
-    version="3.1.0",
+    version="3.1.2",
     author="Daniel Chino",
     author_email="dchino@interlockledger.network",
     description="A python client to InterlockLedger Node REST API",
@@ -44,16 +44,15 @@ setuptools.setup(
     install_requires=[
           'colour>=0.1.5',
           'packaging>=19.2',
-          'uri>=2.0.1',
           'requests>=2.22.0',
           'pyOpenSSL>= 19.1.0',
-          'pyilint>=0.2.0',
-          'pyiltags>=0.0.1'
+          'pyilint>=0.2.2',
+          'pyiltags>=0.1.1'
       ],
     classifiers=[
         "Programming Language :: Python :: 3",
         'License :: OSI Approved :: BSD License'
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.6.9',
+    python_requires='>=3.7',
 )

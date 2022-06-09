@@ -31,6 +31,7 @@
 """
 Utility classes and functions for the InterlockLedger API.
 """
+import os
 import io
 import re
 import json
@@ -44,6 +45,9 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
+import urllib.parse
+
+from typing import Optional
 from enum import Enum
 from packaging import version
 from colour import Color
@@ -253,9 +257,95 @@ class LimitedRange :
             :obj:`bool`: Return True if there is an overlap.
         """
         return other.start in self or other.end in self or self in other
-    
 
-class PKCS12Certificate :
+class SimpleUri:
+    """
+    A simple class to treat URI for IL2 nodes.
+    IL2 nodes addresses are usually in the format https://hostname:api_port/
+    
+    Args:
+        address (:obj:`str`): Address in the format [scheme://]hostname[:port][/]. 
+            If scheme/port is provided in the address, it will ignore the port/scheme parameters.
+        port (:obj:`int`): Port number. 
+        scheme (:obj:`str`, optional): Protocol scheme. Default value is 'https://'.
+    
+    Raises:
+            ValueError: If `address` is not in the format [scheme://]hostname[:port][/].
+                Or if `scheme` is not in the format scheme[://].
+
+    Attributes:
+        scheme (:obj:`str`): Protocol scheme.
+        hostname (:obj:`str`): Hostname address.
+        port (:obj:`int`): Port number.
+    """    
+    def __init__(self, address: str, port: Optional[int]=None, scheme: str='https') -> None:
+        self.port = port
+        self.scheme = self.__treat_scheme(scheme)
+        self.__parse_address(address)
+
+    def build(self, path: Optional[str]=None) -> str:
+        """
+        Build the URI full path. Does not consider query parameters.
+
+        Args:
+            path (`str`, optional): URI path.
+        
+        Returns:
+            :obj:`str`: URI full path.
+        """
+        port_str = f':{self.port}'
+        if not self.port:
+            port_str = ''
+        base = f'{self.scheme}{self.hostname}{port_str}'
+        return urllib.parse.urljoin(base, urllib.parse.urlparse(path).path)
+    
+    def __parse_address(self, address: str) -> None:
+        """
+        Check if address is in the correct format: [scheme://]hostname[:port][/].
+        If {scheme} and {port} is found, will overwrite `self.scheme` and `self.port`.
+
+        Args:
+            address (:obj:`str`): Address in the format [scheme://]hostname[:port][/].
+        
+        Raises:
+            ValueError: If address is not in the format [scheme://]hostname[:port][/].
+        """
+        pattern = r'^([a-zA-Z][a-zA-Z0-9+-\.]*://)?([0-9a-zA-Z][0-9a-zA-Z\-\.]*[0-9a-zA-Z]):?([0-9]+)?/?$'
+        p = re.search(pattern, address)
+        if not p:
+            raise ValueError(f"Invalid address '{address}'. Must be in format [scheme://]hostname[:port][/]")
+        self.hostname = p.groups()[1]
+        if p.groups()[0]:
+            self.scheme = p.groups()[0]
+        if p.groups()[2]:
+            self.port = int(p.groups()[2])
+    
+    def __treat_scheme(self, scheme: str) -> str:
+        """
+        Check if scheme is in the correct format: scheme[://].
+        
+        Args:
+            scheme (:obj:`str`): Protocol scheme.
+        
+        Raises:
+            ValueError: If scheme is not in the format scheme[://].
+        
+        Returns:
+            `str`: Scheme in the format scheme://
+        """
+        if not scheme:
+            raise ValueError(f'Invalid protocol scheme. Must be in format scheme[://].')
+        pattern = r'^([a-zA-Z][a-zA-Z0-9+-\.]*)(://)?'
+        p = re.search(pattern, scheme)
+        if not p:
+            raise ValueError(f'Invalid protocol scheme. Must be in format scheme[://].')
+        x = p.groups()
+        if not p.groups()[1]:
+            return p.groups()[0] + '://'
+        return scheme
+
+
+class PKCS12Certificate:
     """ 
     A PKCS12 certificate interface.    
     
@@ -370,7 +460,7 @@ class PKCS12Certificate :
         return msg
 
     def __get_cert_from_file(self, cert_path, cert_pass) :
-        with open(cert_path, 'rb') as f :
+        with open(os.path.expanduser(cert_path), 'rb') as f :
             pkcs_cert = serialization.pkcs12.load_key_and_certificates(f.read(), cert_pass.encode())
         return pkcs_cert
 

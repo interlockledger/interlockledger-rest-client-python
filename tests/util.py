@@ -41,15 +41,17 @@ def load_settings(filepath = './'):
 
     return settings
 
+TEST_SETTINGS = load_settings('./tests')
 
 class BaseTest(unittest.TestCase) :
+    skip_remote = []
     def setUp(self) :
         args = load_settings('./tests')
-        self.cert_name = args['certificate']['name']
-        self.cert_path = args['certificate']['path']
-        self.cert_pass = args['certificate']['password']
-        self.default_chain = args['default_chain']
-        self.address = args['host']['address']
-        self.port_number = args['host']['port']
-        self.verify_ca = args['host']['verify_ca']
+        self.cert_name = TEST_SETTINGS['certificate']['name']
+        self.cert_path = TEST_SETTINGS['certificate']['path']
+        self.cert_pass = TEST_SETTINGS['certificate']['password']
+        self.default_chain = TEST_SETTINGS['default_chain']
+        self.address = TEST_SETTINGS['host']['address']
+        self.port_number = TEST_SETTINGS['host']['port']
+        self.verify_ca = TEST_SETTINGS['host']['verify_ca']
         
