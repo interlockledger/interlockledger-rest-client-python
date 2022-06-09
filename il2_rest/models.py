@@ -1002,12 +1002,14 @@ class NodeDetailsModel(NodeCommonModel) :
     
     Attributes:
         chains (:obj:`list` of :obj:`str`): List of owned records, only the ids
+        peerAddress (:obj:`str`): Peer address
     """
 
-    def __init__(self, color=None, node_id=None, name=None, network=None, ownerId=None, ownerName=None, roles=None, softwareVersions=None, chains=[], **kwargs) :
+    def __init__(self, color=None, node_id=None, name=None, network=None, ownerId=None, ownerName=None, roles=None, softwareVersions=None, chains=[], peerAddress=None, **kwargs) :
         node_id = kwargs.get('id', node_id)
         super().__init__(color, node_id, name, network, ownerId, ownerName, roles, softwareVersions, **kwargs)
         self.chains = chains
+        self.peerAddress = peerAddress
 
     @property
     def _extras(self):
