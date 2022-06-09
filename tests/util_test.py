@@ -7,15 +7,15 @@ from il2_rest.util import *
 class TestSimpleUri(BaseTest):
     def test_hostname_only(self):
         uri = SimpleUri(address='address.com', port=None)
-        self.assertEqual(uri.build(), 'https://address.com/')
+        self.assertEqual(uri.build(), 'https://address.com')
     
     def test_hostname_port(self):
         uri = SimpleUri(address='address.com', port=32024)
-        self.assertEqual(uri.build(), 'https://address.com:32024/')
+        self.assertEqual(uri.build(), 'https://address.com:32024')
     
     def test_hostname_wrong_scheme(self):
         uri = SimpleUri(address='address.com', scheme='ftp:')
-        self.assertEqual(uri.build(), 'ftp://address.com/')
+        self.assertEqual(uri.build(), 'ftp://address.com')
 
     def test_hostname_empty_scheme(self):
         with self.assertRaises(ValueError):
@@ -27,19 +27,19 @@ class TestSimpleUri(BaseTest):
 
     def test_hostname_port_scheme(self):
         uri = SimpleUri(address='address.com', port=32024, scheme='http')
-        self.assertEqual(uri.build(), 'http://address.com:32024/')
+        self.assertEqual(uri.build(), 'http://address.com:32024')
     
     def test_address_with_scheme(self):
         uri = SimpleUri(address='http://address.com', scheme='https')
-        self.assertEqual(uri.build(), 'http://address.com/')
+        self.assertEqual(uri.build(), 'http://address.com')
     
     def test_address_with_port(self):
         uri = SimpleUri(address='address.com:88', port=32024)
-        self.assertEqual(uri.build(), 'https://address.com:88/')
+        self.assertEqual(uri.build(), 'https://address.com:88')
 
     def test_address_with_port_scheme(self):
         uri = SimpleUri(address='http://address.com:88', port=32024, scheme='ftp')
-        self.assertEqual(uri.build(), 'http://address.com:88/')
+        self.assertEqual(uri.build(), 'http://address.com:88')
     
     def test_path(self):
         uri = SimpleUri(address='address.com')
@@ -49,7 +49,7 @@ class TestSimpleUri(BaseTest):
         self.assertEqual(uri.build('///path//to'), 'https://address.com/path//to')
         self.assertEqual(uri.build('path/to'), 'https://address.com/path/to')
         self.assertEqual(uri.build('path/to/'), 'https://address.com/path/to/')
-        self.assertEqual(uri.build('path/to//'), 'https://address.com/path/to//')
+        self.assertEqual(uri.build('path/to//'), 'https://address.com/path/to/')
     
     
     

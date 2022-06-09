@@ -44,6 +44,8 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
+import urllib.parse
+
 from typing import Optional
 from enum import Enum
 from packaging import version
@@ -290,11 +292,11 @@ class SimpleUri:
         Returns:
             :obj:`str`: URI full path.
         """
-        path = self.__treat_path(path)
         port_str = f':{self.port}'
         if not self.port:
             port_str = ''
-        return f'{self.scheme}{self.hostname}{port_str}/{path}'
+        base = f'{self.scheme}{self.hostname}{port_str}'
+        return urllib.parse.urljoin(base, urllib.parse.urlparse(path).path)
     
     def __parse_address(self, address: str) -> None:
         """
@@ -307,7 +309,7 @@ class SimpleUri:
         Raises:
             ValueError: If address is not in the format [scheme://]hostname[:port][/].
         """
-        pattern = r'^([^:]+://)?([0-9a-zA-Z][0-9a-zA-Z\-\.]*[0-9a-zA-Z]):?([0-9]+)?/?$'
+        pattern = r'^([a-zA-Z][a-zA-Z0-9+-\.]*://)?([0-9a-zA-Z][0-9a-zA-Z\-\.]*[0-9a-zA-Z]):?([0-9]+)?/?$'
         p = re.search(pattern, address)
         if not p:
             raise ValueError(f"Invalid address '{address}'. Must be in format [scheme://]hostname[:port][/]")
@@ -332,7 +334,7 @@ class SimpleUri:
         """
         if not scheme:
             raise ValueError(f'Invalid protocol scheme. Must be in format scheme[://].')
-        pattern = r'^([^:]+)(://)?'
+        pattern = r'^([a-zA-Z][a-zA-Z0-9+-\.]*)(://)?'
         p = re.search(pattern, scheme)
         if not p:
             raise ValueError(f'Invalid protocol scheme. Must be in format scheme[://].')
@@ -341,20 +343,6 @@ class SimpleUri:
             return p.groups()[0] + '://'
         return scheme
 
-    def __treat_path(self, path: str) -> str:
-        """
-        Treat the path to build the full URI.
-        Remove leading slash characters. 
-        
-        Args:
-            path (:obj:`str`): URI path.
-
-        Returns:
-            `str`: Treated path. If `path` is None returns an empty string.
-        """
-        if not path:
-            return ''
-        return path.lstrip('/')
 
 class PKCS12Certificate:
     """ 
