@@ -9,5 +9,10 @@
         "name": "certificate name as imported in IL2",
         "path":"use local_settings.json to specify your path",
         "password":"use local_settings.json to specify the password"
-    }
+    },
+    "skip_remote":[
+        "get",
+        "post",
+        "create_chain"
+    ]
 }

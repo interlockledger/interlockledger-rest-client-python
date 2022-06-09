@@ -1,13 +1,16 @@
 import requests
+import time
+
 from .util import *
 
 from il2_rest import RestNode, RestChain
 from il2_rest.models import *
 from il2_rest.util import *
 
-#@unittest.SkipTest
+
 class TestIl2Rest(BaseTest) :
 
+    @unittest.skipUnless('get' not in TEST_SETTINGS['skip_remote'], '(GET) Remote tests are disabled.')
     def test_rest_node_get(self) :
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=self.verify_ca)
         
@@ -30,6 +33,7 @@ class TestIl2Rest(BaseTest) :
         for mirror in mirrors :
             self.assertIsInstance(mirror, RestChain)
 
+    @unittest.skipUnless('get' not in TEST_SETTINGS['skip_remote'], '(GET) Remote tests are disabled.')
     def test_chains_get(self) :
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=self.verify_ca)
         chain_list = node.chains
@@ -54,6 +58,7 @@ class TestIl2Rest(BaseTest) :
             if records.items :
                 self.assertIsInstance(records.items[0], RecordModelAsJson)
     
+    @unittest.skipUnless('get' not in TEST_SETTINGS['skip_remote'], '(GET) Remote tests are disabled.')
     def test_get_chain_by_id(self) :
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=self.verify_ca)
         chain = node.chain_by_id(self.default_chain)
@@ -76,12 +81,13 @@ class TestIl2Rest(BaseTest) :
         if records.items :
             self.assertIsInstance(records.items[0], RecordModelAsJson)
 
+    @unittest.skipUnless('get' not in TEST_SETTINGS['skip_remote'], '(GET) Remote tests are disabled.')
     def test_get_chain_by_id_wrong(self) :
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=self.verify_ca)
         with self.assertRaises(requests.exceptions.HTTPError) :
             chain = node.chain_by_id('wrong_chain_id')
     
-    @unittest.SkipTest
+    @unittest.skipUnless('create_chain' not in TEST_SETTINGS['skip_remote'], '(POST) Remote tests are disabled.')
     def test_create_chain(self):
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=self.verify_ca)
 
@@ -95,8 +101,12 @@ class TestIl2Rest(BaseTest) :
         
         created_chain = node.create_chain(chain)
         self.assertIsInstance(created_chain, ChainCreatedModel)
+
+        # Waiting for node to process the new chain creation
+        # this way the other write methods are not affected.
+        time.sleep(60)
     
-    @unittest.SkipTest
+    @unittest.skipUnless('create_chain' not in TEST_SETTINGS['skip_remote'], '(POST) Remote tests are disabled.')
     def test_create_chain_with_certificate_permit(self):
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=self.verify_ca)
 
@@ -123,43 +133,44 @@ class TestIl2Rest(BaseTest) :
         created_chain = node.create_chain(chain)
         self.assertIsInstance(created_chain, ChainCreatedModel)
 
+        # Waiting for node to process the new chain creation
+        # this way the other write methods are not affected.
+        time.sleep(60)
+
     
 
-#@unittest.SkipTest
 class TestRestChain(BaseTest) :
+    @unittest.skipUnless('get' not in TEST_SETTINGS['skip_remote'], '(GET) Remote tests are disabled.')
     def test_page_of_methods(self) :
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=self.verify_ca)
-        chain_list = node.chains
-        self.assertIsInstance(chain_list, list)
-        for chain in chain_list :
-            interlocks = chain.interlocks()
-            self.assertEqual(interlocks.page, 0)
-            self.assertEqual(interlocks.pageSize, 10)
-            interlocks = chain.interlocks(pageSize = 20)
-            self.assertEqual(interlocks.pageSize, 20)           
-            
-            
-            records = chain.records()
-            self.assertEqual(records.page, 0)
-            self.assertEqual(records.pageSize, 10)
-            records = chain.records(page = 1)
-            self.assertEqual(records.page, 1)
-            records = chain.records(pageSize = 20)
-            self.assertEqual(records.pageSize, 20)
+        chain = node.chain_by_id(self.default_chain)
+        interlocks = chain.interlocks()
+        self.assertEqual(interlocks.page, 0)
+        self.assertEqual(interlocks.pageSize, 10)
+        interlocks = chain.interlocks(pageSize = 20)
+        self.assertEqual(interlocks.pageSize, 20)           
+        
+        
+        records = chain.records()
+        self.assertEqual(records.page, 0)
+        self.assertEqual(records.pageSize, 10)
+        records = chain.records(page = 1)
+        self.assertEqual(records.page, 1)
+        records = chain.records(pageSize = 20)
+        self.assertEqual(records.pageSize, 20)
 
-            records = chain.records_as_json()
-            self.assertEqual(records.page, 0)
-            self.assertEqual(records.pageSize, 10)
-            records = chain.records_as_json(page = 1)
-            self.assertEqual(records.page, 1)
-            records = chain.records_as_json(pageSize = 20)
-            self.assertEqual(records.pageSize, 20)
-            break
+        records = chain.records_as_json()
+        self.assertEqual(records.page, 0)
+        self.assertEqual(records.pageSize, 10)
+        records = chain.records_as_json(page = 1)
+        self.assertEqual(records.page, 1)
+        records = chain.records_as_json(pageSize = 20)
+        self.assertEqual(records.pageSize, 20)
     
-    #@unittest.SkipTest
+    @unittest.skipUnless('post' not in TEST_SETTINGS['skip_remote'], '(POST) Remote tests are disabled.')
     def test_multi_document(self) :
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=self.verify_ca)
-        chain = node.chains[0]
+        chain = node.chain_by_id(self.default_chain)
         response = chain.documents_begin_transaction(comment = 'Test transaction')
         self.assertIsInstance(response, DocumentsTransactionModel)
         transaction_id = response.transactionId
@@ -173,10 +184,10 @@ class TestRestChain(BaseTest) :
                 str_out = f_out.readline()
                 self.assertEqual(str_in, str_out)
     
-    #@unittest.SkipTest
+    @unittest.skipUnless('post' not in TEST_SETTINGS['skip_remote'], '(POST) Remote tests are disabled.')
     def test_json_docs(self) :
         node = RestNode(cert_file=self.cert_path,cert_pass=self.cert_pass, address=self.address, port =self.port_number, verify_ca=self.verify_ca)
-        chain = node.chains[0]
+        chain = node.chain_by_id(self.default_chain)
         long_attribute = ['0123456789']*25
         json_body = {"attribute_1":"value_1", "number_1": 1, "long_attribute":long_attribute}
         response = chain.store_json_document(json_body)
