@@ -63,7 +63,13 @@ from .util import build_query
 from .util import PKCS12Certificate
 
 
+class UrlJoinException:
+    ...
+
+
 def urljoin(base, path):
+    if urllib.parse.urlsplit(path).netloc != '':
+        raise UrlJoinException()
     return urllib.parse.urljoin(base, urllib.parse.urlparse(path).path)
 
 
