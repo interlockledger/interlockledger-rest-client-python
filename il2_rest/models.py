@@ -1184,7 +1184,9 @@ class JsonDocumentRecordModel(RecordModelBase) :
         rec_type = kwargs.get('type', rec_type)
         super().__init__(applicationId, chainId, createdAt, rec_hash, payloadTagId, serial, rec_type, version, reference, network, **kwargs)
         self.jsonText = jsonText
-        self.encryptedJson = encryptedJson if isinstance(encryptedJson, EncryptedTextModel) else EncryptedTextModel.from_json(encryptedJson)
+        self.encryptedJson = encryptedJson
+        if encryptedJson:
+            self.encryptedJson = encryptedJson if isinstance(encryptedJson, EncryptedTextModel) else EncryptedTextModel.from_json(encryptedJson)
     
 class EncryptedTextModel(BaseModel) :
     """
