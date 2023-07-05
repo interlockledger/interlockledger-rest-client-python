@@ -777,10 +777,10 @@ class RestNode :
         self.verify_ca = verify_ca
         self.base_uri = SimpleUri(address=address, port=port)
         #self.__certificate = self.__get_cert_from_file(cert_file, cert_pass)
-        self.__certificate = PKCS12Certificate(cert_file, cert_pass)
-        self.network = RestNetwork(self)
         self._session = None
         self.__pem_file = None
+        self.__certificate = PKCS12Certificate(cert_file, cert_pass)
+        self.network = RestNetwork(self)
         self._connect_timeout=connect_timeout
         self._read_timeout=read_timeout
 
