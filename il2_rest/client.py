@@ -587,7 +587,31 @@ class RestChain :
         self.__rest._download_file(f"/documents/{locator}/zip", dst_path=dst_path)
         return
 
-    
+    def download_single_document_request(self, locator, index):
+        """
+        Get the request response to download document by position from the set of documents.
+
+        *Note:* For advance use only.
+
+        Args:
+            locator (:obj:`str`): A Documents Storage Locator.
+            index (:obj:`int`): Index of the file.
+            dst_path (:obj:`str`): Download the file to this folder.
+
+        """
+        return self.__rest._download_request(f"/documents/{locator}/{index}")
+
+    def download_documents_zip_request(self, locator):
+        """
+        Get the request response to download a compressed file with all documents.
+
+        *Note:* For advance use only.
+
+        Args:
+            locator (:obj:`str`): A Documents Storage Locator.
+
+        """
+        return self.__rest._download_request(f"/documents/{locator}/zip")
 
     def documents_begin_transaction(self, comment=None, compression=None, generatePublicDirectory=None, iterations=None, encryption=None, password=None, model=None) :
         """
@@ -1022,6 +1046,12 @@ class RestNode :
             with open(filepath, 'wb') as f :
                 shutil.copyfileobj(r.raw, f)
         return
+
+    def _download_request(self, url):
+        cur_uri = self.base_uri.build(path=url)
+        s = self._get_session()
+        return s.get(cur_uri, stream=True, timeout=(self._connect_timeout, self._read_timeout))
+
 
     def _get_raw_response(self, url, method, accept, params={}) :
         cur_uri = self.base_uri.build(path=url)
