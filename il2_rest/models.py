@@ -696,11 +696,13 @@ class DocumentsMetadataModel(BaseModel) :
             name (:obj:`str`): Document file name.
             iterations (:obj:`str`): Any provided additional information about the document file.
             mimeType (:obj:`str`): Mime Type for the document content
+            path (:obj:`str`): Path of the file in the public directory
         """
-        def __init__(self, name=None, comment=None, mimeType=None, **kwargs) :
+        def __init__(self, name=None, comment=None, mimeType=None, path=None, **kwargs) :
             self.name = name 
             self.comment = comment
             self.mimeType = mimeType
+            self.path = path
         
 
 class ForceInterlockModel(BaseModel) :
