@@ -754,13 +754,23 @@ class RestNode :
         port (:obj:`int`): Port number to connect.
         address (:obj:`str`): Address of the node.
         verify_ca (:obj:`bool`): If True, checks CA.
+        connect_timeout (:obj:`int`): Connect timeout in seconds (default: 5s).
+        read_timeout (:obj:`int`): Read timeout in seconds (default 15s).
 
     Attributes:
         base_uri (:obj:`uri.URI`): The base URI address of the node.
         network (:obj:`RestNetwork`): Network information client.
     """
 
-    def __init__(self, cert_file, cert_pass, port=NetworkPredefinedPorts.MainNet.value, address='localhost', verify_ca=True) :
+    def __init__(self,
+            cert_file,
+            cert_pass,
+            port=NetworkPredefinedPorts.MainNet.value,
+            address='localhost',
+            verify_ca=True,
+            connect_timeout=5,
+            read_timeout=15
+            ) :
         if port is None :
             port = NetworkPredefinedPorts.MainNet.value
         
@@ -771,6 +781,8 @@ class RestNode :
         self.network = RestNetwork(self)
         self._session = None
         self.__pem_file = None
+        self._connect_timeout=connect_timeout
+        self._read_timeout=read_timeout
 
     def __del__(self) :
         if self.__pem_file :
@@ -1003,7 +1015,7 @@ class RestNode :
     def _download_file(self, url, dst_path='./') :
         cur_uri = self.base_uri.build(path=url)
         s = self._get_session()
-        with s.get(cur_uri, stream=True) as r:
+        with s.get(cur_uri, stream=True, timeout=(self._connect_timeout, self._read_timeout)) as r:
             d = r.headers['content-disposition']
             filename = re.findall("filename=(.+);", d)[0]
             filepath = os.path.expanduser(os.path.join(dst_path, filename))
@@ -1014,8 +1026,14 @@ class RestNode :
     def _get_raw_response(self, url, method, accept, params={}) :
         cur_uri = self.base_uri.build(path=url)
         s = self._get_session()
-        response = s.request(method=method, url=cur_uri, stream=True,
-                                headers={'Accept': accept}, params=params)
+        response = s.request(
+            method=method,
+            url=cur_uri,
+            stream=True,
+            headers={'Accept': accept},
+            params=params,
+            timeout=(self._connect_timeout, self._read_timeout),
+        )
         
         self.__treat_response_error(response)
         return response
@@ -1023,8 +1041,14 @@ class RestNode :
     def _prepare_request(self, url, method, accept, params={}) :
         cur_uri = self.base_uri.build(path=url)
         s = self._get_session()
-        response = s.request(method=method, url=cur_uri, stream=True,
-                                headers={'Accept': accept}, params=params)
+        response = s.request(
+            method=method,
+            url=cur_uri,
+            stream=True,
+            headers={'Accept': accept},
+            params=params,
+            timeout=(self._connect_timeout, self._read_timeout),
+        )
         
         self.__treat_response_error(response)
         return response
@@ -1039,7 +1063,13 @@ class RestNode :
         headers = {'Accept': accept,
                    'Content-type': "application/json; charset=utf-8"}
         s = self._get_session()
-        response = s.post(url=cur_uri, headers=headers, json=json_data, params=params)
+        response = s.post(
+            url=cur_uri,
+            headers=headers,
+            json=json_data,
+            params=params,
+            timeout=(self._connect_timeout, self._read_timeout),
+        )
         
         self.__treat_response_error(response)
         return response
@@ -1051,7 +1081,13 @@ class RestNode :
                    'Content-type': contentType}
         
         s = self._get_session()
-        response = s.post(url=cur_uri, data=body, headers=headers, params=params)
+        response = s.post(
+            url=cur_uri,
+            data=body,
+            headers=headers,
+            params=params,
+            timeout=(self._connect_timeout, self._read_timeout),
+        )
         self.__treat_response_error(response)
         return response
 
@@ -1062,7 +1098,13 @@ class RestNode :
         
         s = self._get_session()
         with open(os.path.expanduser(file_path), 'rb') as f :
-            response = s.post(url=cur_uri, data=f, headers=headers, params=params)
+            response = s.post(
+                url=cur_uri,
+                data=f,
+                headers=headers,
+                params=params,
+                timeout=(self._connect_timeout, self._read_timeout),
+            )
         self.__treat_response_error(response)
         return response
 
