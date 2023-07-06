@@ -1050,7 +1050,10 @@ class RestNode :
     def _download_request(self, url):
         cur_uri = self.base_uri.build(path=url)
         s = self._get_session()
-        return s.get(cur_uri, stream=True, timeout=(self._connect_timeout, self._read_timeout))
+        response = s.get(cur_uri, stream=True, timeout=(
+            self._connect_timeout, self._read_timeout))
+        self.__treat_response_error(response)
+        return response
 
 
     def _get_raw_response(self, url, method, accept, params={}) :
