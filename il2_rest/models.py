@@ -653,6 +653,9 @@ class DocumentsMetadataModel(BaseModel) :
         compression (:obj:`str`): Compression algorithm.
         encryption (:obj:`str`): The encryption descriptor in the <pbe>-<hash>-<cipher>-<level> format.
         encryptionParameters (:obj:`list` of :obj:`EncryptionParameters`/:obj:`list` of :obj:`str`): The parameters used to make the encryption of the set of documents.
+        recordReference (:obj:`str`): Universal reference of this record.
+        creationTime (:obj:`datetime.datetime`/:obj:`str`): Time of record creation.
+            If a string is passed, it will be automatically converted to datetime.datetime, as long as the string is in the 'yyyy-mm-ddTHH:MM:SS+HH:MM' format.
         publicDirectory (:obj:`DirectoryEntry`/:obj:`str`): List of stored documents.
 
     Attributes:
@@ -660,17 +663,20 @@ class DocumentsMetadataModel(BaseModel) :
         compression (:obj:`str`): Compression algorithm.
         encryption (:obj:`str`): The encryption descriptor in the <pbe>-<hash>-<cipher>-<level> format.
         encryptionParameters (:obj:`list` of :obj:`EncryptionParameters`): The parameters used to make the encryption of the set of documents.
+        
         publicDirectory (:obj:`DirectoryEntry`): List of stored documents.
     """
-    def __init__(self, comment=None, compression=None, encryption=None, encryptionParameters=None, publicDirectory=None, **kwargs) :
+    def __init__(self, comment=None, compression=None, encryption=None, encryptionParameters=None, 
+                 recordReference=None, creationTime=None, publicDirectory=None, **kwargs) :
         self.comment = comment 
         self.compression = compression 
         self.encryption = encryption 
+        self.recordReference = recordReference
+        self.creationTime = creationTime if isinstance(creationTime, datetime.datetime) else string2datetime(creationTime)
         if encryptionParameters :
             self.encryptionParameters = encryptionParameters if isinstance(encryptionParameters, DocumentsMetadataModel.EncryptionParameters) else DocumentsMetadataModel.EncryptionParameters.from_json(encryptionParameters)
         else :
             self.encryptionParameters = encryptionParameters
-        
         if publicDirectory :
             self.publicDirectory = [item if isinstance(item, DocumentsMetadataModel.DirectoryEntry) else DocumentsMetadataModel.DirectoryEntry.from_json(item) for item in publicDirectory]
         else:
